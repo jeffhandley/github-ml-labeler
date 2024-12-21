@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  generate-info-json:
+  create-model-cache:
     runs-on: ubuntu-latest
 
     steps:
