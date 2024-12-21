@@ -6,6 +6,10 @@ on:
 
   workflow_dispatch:
 
+permissions:
+  issues: read
+  pull-requests: read
+
 jobs:
   create-model-cache:
     runs-on: ubuntu-latest
