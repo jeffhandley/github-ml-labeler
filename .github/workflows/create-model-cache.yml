@@ -14,19 +14,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Get repository info
-        id: repo-info
+      - name: Capture repository state
+        id: github-ml-labeler-state
         run: |
           owner=$(echo ${GITHUB_REPOSITORY} | cut -d'/' -f1)
           repo=$(echo ${GITHUB_REPOSITORY} | cut -d'/' -f2)
           date=$(date -u +%Y-%m-%d)
-          issues_count=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues?state=all" | jq 'if type=="array" then . | length else 0 end')
-          pulls_count=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls?state=all" | jq 'if type=="array" then . | length else 0 end')
+          newest_issue=$(curl -s -L \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues?state=all&sort=created&per_page=1" \
+            | jq 'if .[0] then .[0].number // 0 else 0 end')
 
-          echo "{ \"owner\": \"$owner\", \"repo\": \"$repo\", \"date\": \"$date\", \"issues_count\": $issues_count, \"pulls_count\": $pulls_count }" > repo-info.json
+          echo "{ \"owner\": \"$owner\", \"repo\": \"$repo\", \"date\": \"$date\", \"newest_issue\": $newest_issue }" > github-ml-labeler-state.json
 
-      - name: Cache JSON file
+      - name: Cache the github-ml-labeler-state.json file
         uses: actions/cache@v2
         with:
-          path: repo-info.json
+          path: github-ml-labeler-state.json
           key: "github-ml-labeler:${GITHUB_REPOSITORY}"
