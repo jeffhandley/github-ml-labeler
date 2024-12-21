@@ -12,10 +12,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Capture repository state
-        id: github-ml-labeler-state
+        id: capture-repo-state
         run: |
           owner=$(echo ${GITHUB_REPOSITORY} | cut -d'/' -f1)
           repo=$(echo ${GITHUB_REPOSITORY} | cut -d'/' -f2)
@@ -42,7 +42,8 @@ jobs:
           echo "{ \"owner\": \"$owner\", \"repo\": \"$repo\", \"date\": \"$date\", \"newest_issue\": $newest_issue }" > github-ml-labeler-state.json
 
       - name: Cache the github-ml-labeler-state.json file
-        uses: actions/cache@v2
+        id: cache-repo-state
+        uses: actions/cache@v4
         with:
           path: github-ml-labeler-state.json
-          key: "github-ml-labeler:${GITHUB_REPOSITORY}"
+          key: "github-ml-labeler"
