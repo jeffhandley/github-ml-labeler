@@ -1,0 +1,32 @@
+name: Create and Cache ML Model for Predicting GitHub Issue and PR Labels
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+
+  workflow_dispatch:
+
+jobs:
+  generate-info-json:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Get repository info
+        id: repo-info
+        run: |
+          owner=$(echo ${GITHUB_REPOSITORY} | cut -d'/' -f1)
+          repo=$(echo ${GITHUB_REPOSITORY} | cut -d'/' -f2)
+          date=$(date +%Y-%m-%d)
+          issues_count=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues?state=all" | jq '. | length')
+          pulls_count=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls?state=all" | jq '. | length')
+
+          echo "{ \"owner\": \"$owner\", \"repo\": \"$repo\", \"date\": \"$date\", \"issues_count\": $issues_count, \"pulls_count\": $pulls_count }" > repo-info.json
+
+      - name: Cache JSON file
+        uses: actions/cache@v2
+        with:
+          path: repo-info.json
+          key: ${{ steps.repo-info.outputs.owner }}-${{ steps.repo-info.outputs.repo }}
