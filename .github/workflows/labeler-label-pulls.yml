@@ -1,0 +1,38 @@
+name: "Labeler: Label Pulls"
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+
+  workflow_dispatch:
+
+jobs:
+  label-pulls:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Restore cache
+        id: restore-cache
+        uses: actions/cache@v4
+        with:
+          path: labeler-cache
+          key: github-ml-labeler
+
+      - name: Read repository state
+        if: steps.restore-cache.outputs.cache-hit == 'true'
+        id: read-json
+        run: |
+          if [ -f labeler-cache/repo-state.json ] && jq empty labeler-cache/repo-state.json; then
+            newest_issue=$(jq '.newest_issue // 0' labeler-cache/repo-state.json)
+          else
+            echo 'Invalid or missing JSON file: labeler-cache/repo-state.json'
+            exit 1
+          fi
+
+          echo "Newest issue: $newest_issue"
+
+      - name: Handle cache miss
+        id: handle-cache-miss
+        if: steps.restore-cache.outputs.cache-hit != 'true'
+        run: |
+          echo "Cache miss: labeler-cache/repo-state.json not found in cache"

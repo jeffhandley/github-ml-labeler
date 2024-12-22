@@ -1,4 +1,4 @@
-name: Create and Cache ML Model for Predicting GitHub Issue and PR Labels
+name: "Labeler: Create Model"
 
 on:
   schedule:
@@ -38,11 +38,13 @@ jobs:
           echo "newest_issue=$newest_issue"
           echo "::endgroup::"
 
-          echo "{ \"owner\": \"$owner\", \"repo\": \"$repo\", \"date\": \"$date\", \"newest_issue\": $newest_issue }" > github-ml-labeler-state.json
+          mkdir labeler-cache
 
-      - name: Cache the github-ml-labeler-state.json file
-        id: cache-repo-state
+          echo "{ \"owner\": \"$owner\", \"repo\": \"$repo\", \"date\": \"$date\", \"newest_issue\": $newest_issue }" > labeler-cache/repo-state.json
+
+      - name: Cache results
+        id: cache-results
         uses: actions/cache@v4
         with:
-          path: github-ml-labeler-state.json
-          key: "github-ml-labeler"
+          path: labeler-cache
+          key: github-ml-labeler
