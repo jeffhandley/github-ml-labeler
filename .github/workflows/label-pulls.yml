@@ -1,0 +1,31 @@
+name: Label Pull Requests
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+
+  workflow_dispatch:
+
+jobs:
+  load-model:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Restore from cache
+        id: restore-cache
+        uses: actions/cache@v2
+        with:
+          path: github-ml-labeler-state.json
+          key: github-ml-labeler
+
+      - name: Read repository state
+        if: steps.restore-cache.outputs.cache-hit == 'true'
+        id: read-json
+        run: |
+          newest_issue=$(jq '.newest_issue // 0' github-ml-labeler-state.json)
+          echo "Newest issue: $newest_issue"
+
+      - name: Handle cache miss
+        if: steps.restore-cache.outputs.cache-hit != 'true'
+        run: |
+          echo "Cache miss: github-ml-labeler-state.json not found in cache"
