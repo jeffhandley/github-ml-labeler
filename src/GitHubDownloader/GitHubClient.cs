@@ -44,15 +44,16 @@ public partial class GitHubClient
     {
         int pageNumber = 1;
         string? after = null;
+        bool hasNextPage = true;
         int loadedCount = 0;
         int? totalCount = null;
         byte retries = 0;
 
         const byte retryLimit = 5;
 
-        do
+        while (hasNextPage && pageNumber < pageLimit)
         {
-            Console.WriteLine($"Downloading {itemQueryName} page {pageNumber} of {pageLimit}...{(retries > 0 ? $" (Retry {retries} of {retryLimit})" : "")}");
+            Console.WriteLine($"Downloading {itemQueryName} page {pageNumber}... (limit: {pageLimit}){(retries > 0 ? $" (retry: {retries} of {retryLimit})" : "")}");
 
             Page<T> page;
 
@@ -83,29 +84,37 @@ public partial class GitHubClient
 
             pageNumber++;
             after = page.EndCursor;
+            hasNextPage = page.HasNextPage;
             loadedCount += page.Nodes.Length;
             totalCount ??= page.TotalCount;
             retries = 0;
 
-            Console.WriteLine($"Total {itemQueryName}: {loadedCount} of {totalCount}. Cursor: '{after}'.");
+            Console.WriteLine($"Total {itemQueryName} downloaded: {loadedCount} of {totalCount}. Cursor: '{after}'.");
 
             foreach (T item in page.Nodes)
             {
                 // If there are more labels, there might be other applicable
                 // labels that were not loaded and the model is incomplete.
-                if (item.Labels.HasNextPage) continue;
+                if (item.Labels.HasNextPage)
+                {
+                    Console.WriteLine($"{itemQueryName} {org}/{repo}#{item.Number} - Excluded from output. Not all labels were loaded.");
+                    continue;
+                }
 
                 // Only items with exactly one applicable label are used for the model.
                 string[] labels = Array.FindAll(item.LabelNames, label => label.StartsWith("area-"));
-                if (labels.Length != 1) continue;
+                if (labels.Length != 1)
+                {
+                    Console.WriteLine($"{itemQueryName} {org}/{repo}#{item.Number} - Excluded from output. {labels.Length} applicable labels found.");
+                    continue;
+                }
 
                 // Exactly one applicable label was found on the item. Include it in the model.
-                Console.WriteLine($"{itemQueryName} {org}/{repo}#{item.Number} {labels[0]}");
+                Console.WriteLine($"{itemQueryName} {org}/{repo}#{item.Number} - Included in output. Applicable label: '{labels[0]}'.");
 
                 yield return (item, labels[0]);
             }
         }
-        while (pageNumber <= pageLimit);
     }
 
     private static async Task<Page<T>> GetItemsPage<T>(string githubToken, string org, string repo, string? after, string itemQueryName) where T : Issue
