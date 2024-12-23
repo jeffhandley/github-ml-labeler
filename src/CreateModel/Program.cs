@@ -1,4 +1,6 @@
-﻿void ShowUsage() => Console.WriteLine("Expected: {org/repo} {github_token} [-i {issues-model-output-path}] [-p {pulls-model-output-path}] [--page-limit {pages}]");
+﻿using GitHubModel;
+
+void ShowUsage() => Console.WriteLine("Expected: {org/repo} {github_token} [-i {issues-model-output-path}] [-p {pulls-model-output-path}] [--page-limit {pages}]");
 
 if (args is null || args.Length < 4 || !args[0].Contains('/'))
 {
@@ -70,8 +72,21 @@ async Task<bool> CreateIssueModel()
     string issuesDataPath = Path.Join(dataPath.FullName, "issues.tsv");
     Console.WriteLine($"Issues Data Path: {issuesDataPath}");
 
+    byte perFlushCount = 0;
+
     using StreamWriter writer = new StreamWriter(issuesDataPath);
-    if (!await GitHubClient.DownloadIssues(githubToken, org, repo, writer, pageLimit)) return false;
+    await foreach (var issue in GitHubClient.DownloadIssues(githubToken, org, repo, pageLimit))
+    {
+        writer.WriteLine(FormatIssueRecord(issue.Issue, issue.Label));
+
+        if (++perFlushCount == 100)
+        {
+            writer.Flush();
+            perFlushCount = 0;
+        }
+    }
+
+    writer.Close();
 
     DirectoryInfo modelPath = new(Path.Join(currentDirectory, issueModelPath));
     Console.WriteLine($"Issues Model Path: {modelPath.FullName}");
@@ -88,8 +103,21 @@ async Task<bool> CreatePullRequestsModel()
     string pullsDataPath = Path.Join(dataPath.FullName, "pulls.tsv");
     Console.WriteLine($"Pulls Data Path: {pullsDataPath}");
 
+    byte perFlushCount = 0;
+
     using StreamWriter writer = new StreamWriter(pullsDataPath);
-    if (!await GitHubClient.DownloadPullRequests(githubToken, org, repo, writer, pageLimit)) return false;
+    await foreach (var pullRequest in GitHubClient.DownloadPullRequests(githubToken, org, repo, pageLimit))
+    {
+        writer.WriteLine(FormatPullRequestRecord(pullRequest.PullRequest, pullRequest.Label));
+
+        if (++perFlushCount == 100)
+        {
+            writer.Flush();
+            perFlushCount = 0;
+        }
+    }
+
+    writer.Close();
 
     DirectoryInfo modelPath = new(Path.Join(currentDirectory, pullModelPath));
     Console.WriteLine($"Pulls Model Path: {modelPath.FullName}");
@@ -100,6 +128,20 @@ async Task<bool> CreatePullRequestsModel()
 
     return true;
 }
+
+static string SanitizeText(string text) => text
+    .Replace('\r', ' ')
+    .Replace('\n', ' ')
+    .Replace('\t', ' ')
+    .Replace('"', '`');
+
+static string SanitizeTextArray(string[] texts) => string.Join(" ", texts.Select(SanitizeText));
+
+static string FormatIssueRecord(Issue issue, string label) =>
+    $"issue\t{issue.Number}\t{label}\t{SanitizeText(issue.Title)}\t{SanitizeText(issue.BodyText)}";
+
+static string FormatPullRequestRecord(PullRequest pull, string label) =>
+    $"pull\t{pull.Number}\t{label}\t{SanitizeText(pull.Title)}\t{SanitizeText(pull.BodyText)}\t{SanitizeTextArray(pull.FileNames)}\t{SanitizeTextArray(pull.FolderNames)}";
 
 static class ModelProcessor
 {

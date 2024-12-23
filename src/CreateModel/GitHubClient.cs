@@ -2,7 +2,7 @@ using System.Text.Json;
 using GraphQL;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.SystemTextJson;
-using GitHubQueries;
+using GitHubModel;
 
 public partial class GitHubClient
 {
@@ -18,28 +18,30 @@ public partial class GitHubClient
                 scheme: "bearer",
                 parameter: githubToken);
 
+        client.HttpClient.Timeout = TimeSpan.FromMinutes(2);
+
         return client;
     }
 
-    public static async Task<bool> DownloadIssues(string githubToken, string org, string repo, StreamWriter writer, int pageLimit = 1000)
+    public static async IAsyncEnumerable<(Issue Issue, string Label)> DownloadIssues(string githubToken, string org, string repo, int pageLimit = 1000)
     {
-        await DownloadItems<Issue>(githubToken, org, repo, writer, pageLimit, "issues");
-        return true;
+        await foreach (var item in DownloadItems<Issue>(githubToken, org, repo, pageLimit, "issues"))
+        {
+            yield return (item.Item, item.Label);
+        }
     }
 
-    public static async Task<bool> DownloadPullRequests(string githubToken, string org, string repo, StreamWriter writer, int pageLimit = 1000)
+    public static async IAsyncEnumerable<(PullRequest PullRequest, string Label)> DownloadPullRequests(string githubToken, string org, string repo, int pageLimit = 1000)
     {
-        await DownloadItems<PullRequest>(githubToken, org, repo, writer, pageLimit, "pullRequests", """
-            files (first: 100) {
-                nodes { path }
-                totalCount
-            }
-            """);
+        var items = DownloadItems<PullRequest>(githubToken, org, repo, pageLimit, "pullRequests");
 
-        return true;
+        await foreach (var item in items)
+        {
+            yield return (item.Item, item.Label);
+        }
     }
 
-    private static async Task<bool> DownloadItems<T>(string githubToken, string org, string repo, StreamWriter writer, int pageLimit, string itemQueryName, string? itemQuery = null) where T : Issue
+    private static async IAsyncEnumerable<(T Item, string Label)> DownloadItems<T>(string githubToken, string org, string repo, int pageLimit, string itemQueryName) where T : Issue
     {
         int pageNumber = 1;
         string? after = null;
@@ -57,7 +59,7 @@ public partial class GitHubClient
 
             try
             {
-                page = await GetItemsPage<T>(githubToken, org, repo, after, itemQueryName, itemQuery);
+                page = await GetItemsPage<T>(githubToken, org, repo, after, itemQueryName);
             }
             catch (Exception ex) when (ex is HttpIOException || ex is GraphQLHttpRequestException)
             {
@@ -87,20 +89,19 @@ public partial class GitHubClient
                 if (labels.Length != 1) continue;
 
                 // Exactly one applicable label was found on the item. Include it in the model.
-                writer.WriteLine(FormatRecord(item, labels[0]));
-                Console.WriteLine($"{itemQueryName} {org}/{repo}#{item.Number}: {labels[0]}");
-            }
+                Console.WriteLine($"{itemQueryName} {org}/{repo}#{item.Number} {labels[0]}");
 
-            writer.Flush();
+                yield return (item, labels[0]);
+            }
         }
         while (after is not null && pageNumber <= pageLimit && retries <= retryLimit);
-
-        return true;
     }
 
-    private static async Task<Page<T>> GetItemsPage<T>(string githubToken, string org, string repo, string? after, string itemQueryName, string? itemQuery) where T : Issue
+    private static async Task<Page<T>> GetItemsPage<T>(string githubToken, string org, string repo, string? after, string itemQueryName) where T : Issue
     {
         using GraphQLHttpClient client = CreateGraphQLClient(githubToken);
+
+        string files = typeof(T) == typeof(PullRequest) ? "files (first: 100) { nodes { path } }" : "";
 
         GraphQLRequest query = new GraphQLRequest
         {
@@ -110,15 +111,13 @@ public partial class GitHubClient
                         items:{{itemQueryName}} (after: $after, first: 100, orderBy: {field: CREATED_AT, direction: DESC}) {
                             nodes {
                                 number
-                                author { login }
                                 title
                                 bodyText
-                                createdAt
                                 labels(first: 25) {
                                     nodes { name },
                                     pageInfo { hasNextPage }
                                 }
-                                {{itemQuery}}
+                                {{files}}
                             }
                             pageInfo {
                                 hasNextPage
@@ -138,27 +137,5 @@ public partial class GitHubClient
         };
 
         return (await client.SendQueryAsync<RepositoryQuery<T>>(query)).Data.Repository.Items;
-    }
-
-    private static string FormatRecord(Issue issue, string label)
-    {
-        string sanitize(string text) => text
-            .Replace('\r', ' ')
-            .Replace('\n', ' ')
-            .Replace('\t', ' ')
-            .Replace('"', '`');
-
-        string author = sanitize(issue.AuthorLogin);
-        string title = sanitize(issue.Title);
-        string body = sanitize(issue.BodyText);
-        string createdAt = issue.CreatedAt.ToString("O");
-
-        string common = $"{issue.Number}\t{createdAt}\t{label}\t{author}\t{title}\t{body}";
-
-        return issue switch
-        {
-            PullRequest pull => $"pullRequests\t{common}\t{sanitize(string.Join(";", pull.FilePaths))}",
-            _ => $"issues\t{common}\t",
-        };
     }
 }
