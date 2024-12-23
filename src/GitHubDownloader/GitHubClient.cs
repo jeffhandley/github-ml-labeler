@@ -89,7 +89,7 @@ public partial class GitHubClient
             totalCount ??= page.TotalCount;
             retries = 0;
 
-            Console.WriteLine($"Total {itemQueryName} downloaded: {loadedCount} of {totalCount}. Cursor: '{after}'.");
+            Console.WriteLine($"Total {itemQueryName} downloaded: {loadedCount} of {totalCount}. Cursor: '{after}'. {(hasNextPage ? "Has next page" : "No more pages")}.");
 
             foreach (T item in page.Nodes)
             {

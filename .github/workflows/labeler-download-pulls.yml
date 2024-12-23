@@ -19,8 +19,8 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - run: |
-          mkdir labeler-cache
+      - name: Run GitHubDownloader
+        run: |
           cd src/GitHubDownloader
           dotnet run -- "${GITHUB_REPOSITORY}" "${{secrets.GITHUB_TOKEN}}" -p ../../labeler-cache/pulls.tsv --page-limit 3
 
