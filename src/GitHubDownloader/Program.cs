@@ -1,4 +1,4 @@
-﻿using GitHubModel;
+using GitHubModel;
 
 void ShowUsage()
 {
@@ -63,7 +63,7 @@ if (!string.IsNullOrEmpty(pullsPath))
     tasks.Add(Task.Run(() => DownloadPullRequests(pullsPath)));
 }
 
-Task.WaitAll(tasks);
+await Task.WhenAll(tasks);
 
 void EnsureOutputDirectory(string outputFile)
 {
@@ -75,7 +75,7 @@ void EnsureOutputDirectory(string outputFile)
     }
 }
 
-async Task<bool> DownloadIssues(string outputPath)
+async Task DownloadIssues(string outputPath)
 {
     Console.WriteLine($"Issues Data Path: {outputPath}");
 
@@ -94,10 +94,9 @@ async Task<bool> DownloadIssues(string outputPath)
     }
 
     writer.Close();
-    return true;
 }
 
-async Task<bool> DownloadPullRequests(string outputPath)
+async Task DownloadPullRequests(string outputPath)
 {
     Console.WriteLine($"Pulls Data Path: {outputPath}");
 
@@ -116,7 +115,6 @@ async Task<bool> DownloadPullRequests(string outputPath)
     }
 
     writer.Close();
-    return true;
 }
 
 static string SanitizeText(string text) => text
