@@ -15,24 +15,16 @@ jobs:
         id: restore-cache
         uses: actions/cache@v4
         with:
-          path: labeler-cache
-          key: github-ml-labeler
+          path: labeler-cache/pulls.tsv
+          key: github-ml-labeler/download-pulls
 
-      - name: Read repository state
+      - name: Read downloaded pull data
         if: steps.restore-cache.outputs.cache-hit == 'true'
-        id: read-json
         run: |
-          if [ -f labeler-cache/repo-state.json ] && jq empty labeler-cache/repo-state.json; then
-            newest_issue=$(jq '.newest_issue // 0' labeler-cache/repo-state.json)
-          else
-            echo 'Invalid or missing JSON file: labeler-cache/repo-state.json'
-            exit 1
-          fi
-
-          echo "Newest issue: $newest_issue"
+          cat labeler-cache/pulls.tsv
 
       - name: Handle cache miss
         id: handle-cache-miss
         if: steps.restore-cache.outputs.cache-hit != 'true'
         run: |
-          echo "Cache miss: labeler-cache/repo-state.json not found in cache"
+          echo "Cache miss: 'labeler-cache/pulls.tsv' not found in 'github-ml-labeler/download-pulls' cache"
