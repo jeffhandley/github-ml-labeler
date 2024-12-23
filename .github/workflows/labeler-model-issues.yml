@@ -1,4 +1,4 @@
-name: "Labeler: Label Pulls"
+name: "Labeler: Model Issues"
 
 on:
   schedule:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  label-pulls:
+  model-issues:
     runs-on: ubuntu-latest
 
     steps:
@@ -15,16 +15,16 @@ jobs:
         id: restore-cache
         uses: actions/cache@v4
         with:
-          path: labeler-cache/pulls.tsv
-          key: github-ml-labeler/download-pulls
+          path: labeler-cache/issues.tsv
+          key: github-ml-labeler/download-issues
 
-      - name: Read downloaded pull data
+      - name: Read downloaded issue data
         if: steps.restore-cache.outputs.cache-hit == 'true'
         run: |
-          cat labeler-cache/pulls.tsv
+          cat labeler-cache/issues.tsv
 
       - name: Handle cache miss
         id: handle-cache-miss
         if: steps.restore-cache.outputs.cache-hit != 'true'
         run: |
-          echo "Cache miss: 'labeler-cache/pulls.tsv' not found in 'github-ml-labeler/download-pulls' cache"
+          echo "Cache miss: 'labeler-cache/issues.tsv' not found in 'github-ml-labeler/download-issues' cache"

@@ -1,0 +1,30 @@
+name: "Labeler: Model Pulls"
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+
+  workflow_dispatch:
+
+jobs:
+  model-pulls:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Restore cache
+        id: restore-cache
+        uses: actions/cache@v4
+        with:
+          path: labeler-cache/pulls.tsv
+          key: github-ml-labeler/download-pulls
+
+      - name: Read downloaded pull data
+        if: steps.restore-cache.outputs.cache-hit == 'true'
+        run: |
+          cat labeler-cache/pulls.tsv
+
+      - name: Handle cache miss
+        id: handle-cache-miss
+        if: steps.restore-cache.outputs.cache-hit != 'true'
+        run: |
+          echo "Cache miss: 'labeler-cache/pulls.tsv' not found in 'github-ml-labeler/download-pulls' cache"
