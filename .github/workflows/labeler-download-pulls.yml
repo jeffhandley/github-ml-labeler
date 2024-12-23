@@ -1,0 +1,30 @@
+name: "Labeler: Download Pulls"
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+
+  workflow_dispatch:
+
+permissions:
+  pull-requests: read
+
+jobs:
+  labeler-download-pulls:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - run: |
+          mkdir labeler-cache
+          cd src/GitHubDownloader
+          dotnet run -- "${GITHUB_REPOSITORY}" "${{secrets.GITHUB_TOKEN}}" -p ../../labeler-cache/pulls.tsv --page-limit 3
+
+      - uses: actions/cache@v4
+        with:
+          path: labeler-cache
+          key: github-ml-labeler/download-pulls
