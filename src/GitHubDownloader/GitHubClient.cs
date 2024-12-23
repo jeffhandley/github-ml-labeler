@@ -46,13 +46,13 @@ public partial class GitHubClient
         string? after = null;
         int loadedCount = 0;
         int? totalCount = null;
-        byte? retries = 0;
+        byte retries = 0;
 
         const byte retryLimit = 5;
 
         do
         {
-            Console.WriteLine($"Downloading {itemQueryName} page {pageNumber} of {pageLimit}...{(retries > 0 ? $"Retry {retries} of {retryLimit}" : "")}");
+            Console.WriteLine($"Downloading {itemQueryName} page {pageNumber} of {pageLimit}...{(retries > 0 ? $" (Retry {retries} of {retryLimit})" : "")}");
 
             Page<T> page;
 
@@ -60,14 +60,26 @@ public partial class GitHubClient
             {
                 page = await GetItemsPage<T>(githubToken, org, repo, after, itemQueryName);
             }
-            catch (Exception ex) when (ex is HttpIOException || ex is GraphQLHttpRequestException)
+            catch (Exception ex) when (ex is HttpIOException || ex is GraphQLHttpRequestException || ex is TaskCanceledException)
             {
-                retries++;
-                continue;
+                Console.WriteLine($"Exception caught during query.\n  {ex.Message}");
+
+                if (++retries > retryLimit)
+                {
+                    Console.WriteLine($"Retry limit of {retryLimit} reached. Aborting.");
+                    break;
+                }
+                else
+                {
+                    continue;
+                }
             }
 
-            // Abort if paging did not progress
-            if (after == page.EndCursor) break;
+            if (after == page.EndCursor)
+            {
+                Console.WriteLine($"Paging did not progress. Cursor: '{after}'. Aborting.");
+                break;
+            }
 
             pageNumber++;
             after = page.EndCursor;
@@ -93,7 +105,7 @@ public partial class GitHubClient
                 yield return (item, labels[0]);
             }
         }
-        while (after is not null && pageNumber <= pageLimit && retries <= retryLimit);
+        while (pageNumber <= pageLimit);
     }
 
     private static async Task<Page<T>> GetItemsPage<T>(string githubToken, string org, string repo, string? after, string itemQueryName) where T : Issue

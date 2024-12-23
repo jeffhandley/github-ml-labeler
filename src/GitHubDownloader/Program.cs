@@ -1,11 +1,15 @@
 ﻿using GitHubModel;
 
-void ShowUsage() => Console.WriteLine("Expected: {org/repo} {github_token} [-i {path/to/issues.tsv}] [-p {path/to/pulls.tsv}] [--page-limit {pages}]");
+void ShowUsage()
+{
+    Console.WriteLine("Expected: {org/repo} {github_token} [-i {path/to/issues.tsv}] [-p {path/to/pulls.tsv}] [--page-limit {pages}]");
+    Environment.Exit(-1);
+}
 
-if (args is null || args.Length < 4 || !args[0].Contains('/'))
+if (args.Length < 4 || !args[0].Contains('/'))
 {
     ShowUsage();
-    return -1;
+    return;
 }
 
 Queue<string> arguments = new(args);
@@ -42,7 +46,7 @@ while (arguments.Count > 1)
 if (arguments.Count == 1)
 {
     ShowUsage();
-    return -1;
+    return;
 }
 
 List<Task> tasks = new();
@@ -61,11 +65,9 @@ if (!string.IsNullOrEmpty(pullsPath))
 
 Task.WaitAll(tasks);
 
-return 0;
-
 void EnsureOutputDirectory(string outputFile)
 {
-    string? outputDir = Path.GetDirectoryName(pullsPath);
+    string? outputDir = Path.GetDirectoryName(outputFile);
 
     if (!string.IsNullOrEmpty(outputDir))
     {
