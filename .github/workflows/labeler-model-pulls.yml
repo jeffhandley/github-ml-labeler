@@ -11,20 +11,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
       - name: Restore cache
         id: restore-cache
         uses: actions/cache@v4
         with:
-          path: labeler-cache/pulls.tsv
+          path: labeler-cache/pull-data.tsv
           key: github-ml-labeler/download-pulls
 
-      - name: Read downloaded pull data
+      - name: Run ModelCreator
         if: steps.restore-cache.outputs.cache-hit == 'true'
         run: |
-          cat labeler-cache/pulls.tsv
+          cd src/ModelCreator
+          dotnet run -- --pull-data ../../labeler-cache/pull-data.tsv --pull-model ../labeler-cache/pull-model.zip
 
       - name: Handle cache miss
         id: handle-cache-miss
         if: steps.restore-cache.outputs.cache-hit != 'true'
         run: |
-          echo "Cache miss: 'labeler-cache/pulls.tsv' not found in 'github-ml-labeler/download-pulls' cache"
+          echo "Cache miss: 'labeler-cache/pull-data.tsv' not found in 'github-ml-labeler/download-pulls' cache"

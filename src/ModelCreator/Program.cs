@@ -6,7 +6,7 @@ using Microsoft.ML.Transforms.Text;
 
 void ShowUsage()
 {
-    Console.WriteLine("Expected: [-i {path/to/issues.tsv}] [-p {path/to/pulls.tsv}]");
+    Console.WriteLine("Expected: [--issue-data {path/to/issue-data.tsv} --issue-model {path/to/issue-model.zip}] [--pull-data {path/to/pull-data.tsv} --pull-model {path/to/pull-model.zip}]");
     Environment.Exit(-1);
 }
 
@@ -18,8 +18,10 @@ if (args.Length < 2)
 
 Queue<string> arguments = new(args);
 
-string? issuesPath = null;
-string? pullsPath = null;
+string? issueData = null;
+string? issueModel = null;
+string? pullData = null;
+string? pullModel = null;
 
 while (arguments.Count > 1)
 {
@@ -27,11 +29,17 @@ while (arguments.Count > 1)
 
     switch (option)
     {
-        case "-i":
-            issuesPath = arguments.Dequeue();
+        case "--issue-data":
+            issueData = arguments.Dequeue();
             break;
-        case "-p":
-            pullsPath = arguments.Dequeue();
+        case "--issue-model":
+            issueModel = arguments.Dequeue();
+            break;
+        case "--pull-data":
+            pullData = arguments.Dequeue();
+            break;
+        case "--pull-model":
+            pullModel = arguments.Dequeue();
             break;
         default:
             ShowUsage();
@@ -45,10 +53,16 @@ if (arguments.Count == 1)
     return;
 }
 
-if (issuesPath is not null)
+if ((issueData is not null && issueModel is null) || (issueData is null && issueModel is not null))
+{
+    ShowUsage();
+    return;
+}
+
+if (issueData is not null && issueModel is not null)
 {
     var mlContext = new MLContext();
-    var data = mlContext.Data.LoadFromTextFile<Issue>(issuesPath, separatorChar: '\t', hasHeader: false);
+    var data = mlContext.Data.LoadFromTextFile<Issue>(issueData, separatorChar: '\t', hasHeader: false);
 
     // Split data into train and test sets
     var splitData = mlContext.Data.TrainTestSplit(data, testFraction: 0.2);

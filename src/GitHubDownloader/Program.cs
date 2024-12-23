@@ -2,7 +2,7 @@ using GitHubModel;
 
 void ShowUsage()
 {
-    Console.WriteLine("Expected: {org/repo} {github_token} [-i {path/to/issues.tsv}] [-p {path/to/pulls.tsv}] [--page-limit {pages}]");
+    Console.WriteLine("Expected: {org/repo} {github_token} [--issue-data {path/to/issues.tsv}] [--pull-data {path/to/pulls.tsv}] [--page-limit {pages=1000}]");
     Environment.Exit(-1);
 }
 
@@ -31,10 +31,10 @@ while (arguments.Count > 1)
 
     switch (option)
     {
-        case "-i":
+        case "--issue-data":
             issuesPath = arguments.Dequeue();
             break;
-        case "-p":
+        case "--pull-data":
             pullsPath = arguments.Dequeue();
             break;
         case "--page-limit":

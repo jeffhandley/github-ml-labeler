@@ -22,9 +22,9 @@ jobs:
       - name: Run GitHubDownloader
         run: |
           cd src/GitHubDownloader
-          dotnet run -- "${GITHUB_REPOSITORY}" "${{secrets.GITHUB_TOKEN}}" -i ../../labeler-cache/issues.tsv
+          dotnet run -- "${GITHUB_REPOSITORY}" "${{secrets.GITHUB_TOKEN}}" --issue-data ../../labeler-cache/issue-data.tsv
 
       - uses: actions/cache@v4
         with:
-          path: labeler-cache/issues.tsv
+          path: labeler-cache/issue-data.tsv
           key: github-ml-labeler/download-issues
