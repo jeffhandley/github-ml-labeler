@@ -40,6 +40,9 @@ while (arguments.Count > 1)
         case "--page-limit":
             pageLimit = int.Parse(arguments.Dequeue());
             break;
+        default:
+            ShowUsage();
+            return;
     }
 }
 
@@ -126,7 +129,7 @@ static string SanitizeText(string text) => text
 static string SanitizeTextArray(string[] texts) => string.Join(" ", texts.Select(SanitizeText));
 
 static string FormatIssueRecord(Issue issue, string label) =>
-    $"issue\t{issue.Number}\t{label}\t{SanitizeText(issue.Title)}\t{SanitizeText(issue.BodyText)}";
+    $"{issue.Number}\t{label}\t{SanitizeText(issue.Title)}\t{SanitizeText(issue.BodyText)}";
 
 static string FormatPullRequestRecord(PullRequest pull, string label) =>
-    $"pull\t{pull.Number}\t{label}\t{SanitizeText(pull.Title)}\t{SanitizeText(pull.BodyText)}\t{SanitizeTextArray(pull.FileNames)}\t{SanitizeTextArray(pull.FolderNames)}";
+    $"{pull.Number}\t{label}\t{SanitizeText(pull.Title)}\t{SanitizeText(pull.BodyText)}\t{SanitizeTextArray(pull.FileNames)}\t{SanitizeTextArray(pull.FolderNames)}";
