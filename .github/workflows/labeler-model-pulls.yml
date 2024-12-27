@@ -2,7 +2,7 @@ name: "Labeler: Model Pulls"
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "34 4 * * 4"
 
   workflow_dispatch:
 
@@ -28,6 +28,13 @@ jobs:
         run: |
           cd src/ModelCreator
           dotnet run -- --pull-data ../../labeler-cache/pull-data.tsv --pull-model ../labeler-cache/pull-model.zip
+
+      - name: Save model to cache
+        if: steps.restore-cache.outputs.cache-hit == 'true'
+        uses: actions/cache@v4
+        with:
+          path: labeler-cache/pull-model.zip
+          key: github-ml-labeler/model-pulls
 
       - name: Handle cache miss
         id: handle-cache-miss

@@ -2,7 +2,7 @@ name: "Labeler: Download Pulls"
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "12 2 * * 2"
 
   workflow_dispatch:
 
