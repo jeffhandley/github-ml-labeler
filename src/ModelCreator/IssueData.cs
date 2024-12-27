@@ -24,5 +24,5 @@ public class PullRequest : Issue
 
 public class LabelPrediction
 {
-    public string? Label { get; set; }
+    public string? PredictedLabel { get; set; }
 }

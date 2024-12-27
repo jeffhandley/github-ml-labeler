@@ -85,6 +85,8 @@ async Task DownloadIssues(string outputPath)
     byte perFlushCount = 0;
 
     using StreamWriter writer = new StreamWriter(outputPath);
+    writer.WriteLine(string.Join('\t', ["Number", "Label", "Title", "Body"]));
+
     await foreach (var issue in GitHubClient.DownloadIssues(githubToken, org, repo, pageLimit))
     {
         writer.WriteLine(FormatIssueRecord(issue.Issue, issue.Label));
@@ -106,6 +108,8 @@ async Task DownloadPullRequests(string outputPath)
     byte perFlushCount = 0;
 
     using StreamWriter writer = new StreamWriter(outputPath);
+    writer.WriteLine(string.Join('\t', ["Number", "Label", "Title", "Body", "FileNames", "FolderNames"]));
+
     await foreach (var pullRequest in GitHubClient.DownloadPullRequests(githubToken, org, repo, pageLimit))
     {
         writer.WriteLine(FormatPullRequestRecord(pullRequest.PullRequest, pullRequest.Label));

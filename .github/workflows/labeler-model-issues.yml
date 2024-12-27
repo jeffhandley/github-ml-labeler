@@ -29,6 +29,13 @@ jobs:
           cd src/ModelCreator
           dotnet run -- --issue-data ../../labeler-cache/issue-data.tsv --issue-model ../labeler-cache/issue-model.zip
 
+      - name: Save model to cache
+        if: steps.restore-cache.outputs.cache-hit == 'true'
+        uses: actions/cache@v4
+        with:
+          path: labeler-cache/issue-model.zip
+          key: github-ml-labeler/model-issues
+
       - name: Handle cache miss
         id: handle-cache-miss
         if: steps.restore-cache.outputs.cache-hit != 'true'

@@ -1,6 +1,7 @@
 ﻿global using Microsoft.ML.Data;
 
 using Microsoft.ML;
+using Microsoft.ML.AutoML;
 using Microsoft.ML.Transforms;
 using Microsoft.ML.Transforms.Text;
 
@@ -62,10 +63,40 @@ if ((issueData is not null && issueModel is null) || (issueData is null && issue
 if (issueData is not null && issueModel is not null)
 {
     var mlContext = new MLContext();
-    var data = mlContext.Data.LoadFromTextFile<Issue>(issueData, separatorChar: '\t', hasHeader: false);
+    var columnInference = mlContext.Auto().InferColumns(
+        issueData,
+        separatorChar: '\t',
+        labelColumnIndex: 1,
+        hasHeader: true);
+    var loader = mlContext.Data.CreateTextLoader(columnInference.TextLoaderOptions);
+    var data = loader.Load(issueData);
+    var trainTestData = mlContext.Data.TrainTestSplit(data, testFraction: 0.2);
+    var trainer = mlContext.MulticlassClassification.Trainers.SdcaMaximumEntropy("LabelKey", "Features");
+    var pipeline = mlContext
+        .Transforms.Conversion.MapValueToKey(outputColumnName: "LabelKey", inputColumnName: "Label")
+        .Append(mlContext.Transforms.Text.FeaturizeText(outputColumnName: "TitleFeature", inputColumnName: "Title"))
+        .Append(mlContext.Transforms.Text.FeaturizeText(outputColumnName: "BodyFeature", inputColumnName: "Body"))
+        .Append(mlContext.Transforms.Concatenate(outputColumnName: "Features", "TitleFeature", "BodyFeature"))
+        .Append(trainer)
+        .Append(mlContext.Transforms.Conversion.MapKeyToValue("PredictedLabel"));
 
-    // Split data into train and test sets
-    var splitData = mlContext.Data.TrainTestSplit(data, testFraction: 0.2);
-    var trainData = splitData.TrainSet;
-    var testData = splitData.TestSet;
+    var crossValidation = mlContext.MulticlassClassification.CrossValidate(
+        data: trainTestData.TrainSet,
+        estimator: pipeline,
+        numberOfFolds: 6,
+        labelColumnName: "LabelKey");
+
+    var trainedModel = pipeline.Fit(trainTestData.TrainSet);
+    mlContext.Model.Save(trainedModel, trainTestData.TrainSet.Schema, issueModel);
+
+    var testIssue = new Issue
+    {
+        Number = 42,
+        Title = "Bug with List<T>",
+        Body = "I have encountered a bug when using List<T>. The collection does not work like I expected."
+    };
+
+    var engine = mlContext.Model.CreatePredictionEngine<Issue, LabelPrediction>(trainedModel);
+    var prediction = engine.Predict(testIssue);
+    Console.WriteLine($"Test Issue:\n  Number: {testIssue.Number}\n  Title: {testIssue.Title}\n  Body: {testIssue.Body}\n  LABEL: {prediction.PredictedLabel}");
 }
