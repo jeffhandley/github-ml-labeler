@@ -22,7 +22,7 @@ jobs:
       - name: Run GitHubDownloader
         run: |
           cd src/GitHubDownloader
-          dotnet run -- "${GITHUB_REPOSITORY}" "${{secrets.GITHUB_TOKEN}}" --issue-data ../../labeler-cache/issue-data.tsv
+          dotnet run -- "dotnet/runtime" "${{secrets.DOTNET_RUNTIME}}" --issue-data ../../labeler-cache/issue-data.tsv
 
       - uses: actions/cache@v4
         with:
