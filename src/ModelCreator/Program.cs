@@ -142,5 +142,5 @@ if (pullDataPath is not null && pullModelPath is not null)
 
     var engine = pullContext.Model.CreatePredictionEngine<PullRequest, LabelPrediction>(pullModel);
     var prediction = engine.Predict(testPull);
-    Console.WriteLine($"Test Issue:\n  Number: {testPull.Number}\n  Title: {testPull.Title}\n  Body: {testPull.Body}\n  FileNames: {testPull.FileNames}\n  {testPull.FolderNames}\n  PREDICTED LABEL: {prediction.PredictedLabel}");
+    Console.WriteLine($"Test Pull:\n  Number: {testPull.Number}\n  Title: {testPull.Title}\n  Body: {testPull.Body}\n  FileNames: {testPull.FileNames}\n  {testPull.FolderNames}\n  PREDICTED LABEL: {prediction.PredictedLabel}");
 }

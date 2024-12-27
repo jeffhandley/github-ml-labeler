@@ -26,6 +26,7 @@ jobs:
       - name: Run ModelCreator
         if: steps.restore-cache.outputs.cache-hit == 'true'
         run: |
+          cat labeler-cache/issue-data.tsv
           cd src/ModelCreator
           dotnet run -- --issue-data ../../labeler-cache/issue-data.tsv --issue-model ../labeler-cache/issue-model.zip
 
