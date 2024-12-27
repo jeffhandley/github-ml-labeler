@@ -1,16 +1,16 @@
-name: "Labeler: Download Pulls"
+name: "Labeler: Download Issues"
 
 on:
   schedule:
-    - cron: "12 2 * * 2"
+    - cron: "12 1 * * 1"
 
   workflow_dispatch:
 
 permissions:
-  pull-requests: read
+  issues: read
 
 jobs:
-  labeler-download-pulls:
+  labeler-download-issues:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,9 +22,9 @@ jobs:
       - name: Run GitHubDownloader
         run: |
           cd src/GitHubDownloader
-          dotnet run -- "${GITHUB_REPOSITORY}" "${{secrets.GITHUB_TOKEN}}" --pull-data ../../labeler-cache/pull-data.tsv
+          dotnet run -- "${GITHUB_REPOSITORY}" "${{secrets.GITHUB_TOKEN}}" --issue-data ../../labeler-cache/issue-data.tsv
 
       - uses: actions/cache@v4
         with:
-          path: labeler-cache/pull-data.tsv
-          key: github-ml-labeler/download-pulls
+          path: labeler-cache/issue-data.tsv
+          key: github-ml-labeler/download-issues

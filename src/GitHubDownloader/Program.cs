@@ -2,7 +2,7 @@ using GitHubModel;
 
 void ShowUsage()
 {
-    Console.WriteLine("Expected: {org/repo} {github_token} [-i {path/to/issues.tsv}] [-p {path/to/pulls.tsv}] [--page-limit {pages}]");
+    Console.WriteLine("Expected: {org/repo} {github_token} [--issue-data {path/to/issues.tsv}] [--pull-data {path/to/pulls.tsv}] [--page-limit {pages=1000}]");
     Environment.Exit(-1);
 }
 
@@ -31,15 +31,18 @@ while (arguments.Count > 1)
 
     switch (option)
     {
-        case "-i":
+        case "--issue-data":
             issuesPath = arguments.Dequeue();
             break;
-        case "-p":
+        case "--pull-data":
             pullsPath = arguments.Dequeue();
             break;
         case "--page-limit":
             pageLimit = int.Parse(arguments.Dequeue());
             break;
+        default:
+            ShowUsage();
+            return;
     }
 }
 
@@ -82,6 +85,8 @@ async Task DownloadIssues(string outputPath)
     byte perFlushCount = 0;
 
     using StreamWriter writer = new StreamWriter(outputPath);
+    writer.WriteLine(string.Join('\t', "Number", "Label", "Title", "Body"));
+
     await foreach (var issue in GitHubClient.DownloadIssues(githubToken, org, repo, pageLimit))
     {
         writer.WriteLine(FormatIssueRecord(issue.Issue, issue.Label));
@@ -103,6 +108,8 @@ async Task DownloadPullRequests(string outputPath)
     byte perFlushCount = 0;
 
     using StreamWriter writer = new StreamWriter(outputPath);
+    writer.WriteLine(string.Join('\t', "Number", "Label", "Title", "Body", "FileNames", "FolderNames"));
+
     await foreach (var pullRequest in GitHubClient.DownloadPullRequests(githubToken, org, repo, pageLimit))
     {
         writer.WriteLine(FormatPullRequestRecord(pullRequest.PullRequest, pullRequest.Label));
@@ -126,7 +133,7 @@ static string SanitizeText(string text) => text
 static string SanitizeTextArray(string[] texts) => string.Join(" ", texts.Select(SanitizeText));
 
 static string FormatIssueRecord(Issue issue, string label) =>
-    $"issue\t{issue.Number}\t{label}\t{SanitizeText(issue.Title)}\t{SanitizeText(issue.BodyText)}";
+    $"{issue.Number}\t{label}\t{SanitizeText(issue.Title)}\t{SanitizeText(issue.BodyText)}";
 
 static string FormatPullRequestRecord(PullRequest pull, string label) =>
-    $"pull\t{pull.Number}\t{label}\t{SanitizeText(pull.Title)}\t{SanitizeText(pull.BodyText)}\t{SanitizeTextArray(pull.FileNames)}\t{SanitizeTextArray(pull.FolderNames)}";
+    $"{pull.Number}\t{label}\t{SanitizeText(pull.Title)}\t{SanitizeText(pull.BodyText)}\t{SanitizeTextArray(pull.FileNames)}\t{SanitizeTextArray(pull.FolderNames)}";
