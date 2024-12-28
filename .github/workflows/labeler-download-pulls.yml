@@ -5,6 +5,15 @@ on:
     - cron: "12 2 * * 2"
 
   workflow_dispatch:
+    inputs:
+      label_prefix:
+        description: "Label Prefix"
+        default: "area-"
+        required: true
+      page_limit:
+        description: "Max Pages of Data to Load (100 per page)"
+        default: 1000
+        required: true
 
 permissions:
   pull-requests: read
@@ -27,7 +36,8 @@ jobs:
             "${{secrets.DOTNET_RUNTIME}}" \
             --pull-data labeler-cache/pull-data.tsv \
             --retries "30,30,30,300,300,3600" \
-            --label-prefix "area-"
+            --label-prefix ${{ fromJson(inputs.label_prefix || 'area-') }} \
+            --page-limit ${{ fromJson(inputs.page_limit || 1000) }}
 
       - uses: actions/cache@v4
         with:
