@@ -2,7 +2,7 @@ using GitHubModel;
 
 void ShowUsage()
 {
-    Console.WriteLine("Expected: {org/repo} {github_token} [--issue-data {path/to/issues.tsv}] [--pull-data {path/to/pulls.tsv}] [--page-limit {pages=1000}]");
+    Console.WriteLine("Expected: {org/repo} {github_token} [--issue-data {path/to/issues.tsv}] [--pull-data {path/to/pulls.tsv}] [--page-limit {pages=1000}] [--retries {comma-separated-retries-in-seconds}] [--label-prefix {label-prefix}]");
     Environment.Exit(-1);
 }
 
@@ -24,6 +24,8 @@ string githubToken = arguments.Dequeue();
 string? issuesPath = null;
 string? pullsPath = null;
 int pageLimit = 1000;
+int[] retries = [10, 20, 30, 60, 120];
+Predicate<string> labelPredictate = _ => true;
 
 while (arguments.Count > 1)
 {
@@ -39,6 +41,13 @@ while (arguments.Count > 1)
             break;
         case "--page-limit":
             pageLimit = int.Parse(arguments.Dequeue());
+            break;
+        case "--retries":
+            retries = arguments.Dequeue().Split(',').Select(r => int.Parse(r)).ToArray();
+            break;
+        case "--label-prefix":
+            string labelPrefix = arguments.Dequeue();
+            labelPredictate = (label) => label.StartsWith(labelPrefix, StringComparison.OrdinalIgnoreCase);
             break;
         default:
             ShowUsage();
@@ -87,7 +96,7 @@ async Task DownloadIssues(string outputPath)
     using StreamWriter writer = new StreamWriter(outputPath);
     writer.WriteLine(string.Join('\t', "Number", "Label", "Title", "Body"));
 
-    await foreach (var issue in GitHubClient.DownloadIssues(githubToken, org, repo, pageLimit))
+    await foreach (var issue in GitHubClient.DownloadIssues(githubToken, org, repo, labelPredictate, pageLimit, retries))
     {
         writer.WriteLine(FormatIssueRecord(issue.Issue, issue.Label));
 
@@ -110,7 +119,7 @@ async Task DownloadPullRequests(string outputPath)
     using StreamWriter writer = new StreamWriter(outputPath);
     writer.WriteLine(string.Join('\t', "Number", "Label", "Title", "Body", "FileNames", "FolderNames"));
 
-    await foreach (var pullRequest in GitHubClient.DownloadPullRequests(githubToken, org, repo, pageLimit))
+    await foreach (var pullRequest in GitHubClient.DownloadPullRequests(githubToken, org, repo, labelPredictate, pageLimit, retries))
     {
         writer.WriteLine(FormatPullRequestRecord(pullRequest.PullRequest, pullRequest.Label));
 
