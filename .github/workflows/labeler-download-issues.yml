@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       org_repo:
-        description: "The org/repo to use (defaults to ${{ github.repository }})"
+        description: "The org/repo to use (defaults to current repository)"
         type: string
       github_token:
         description: "The GitHub token (defaults to action token)"
