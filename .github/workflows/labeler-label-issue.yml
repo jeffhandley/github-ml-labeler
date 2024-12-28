@@ -55,7 +55,8 @@ jobs:
     steps:
       - name: "Check out the '${{ github.action_repository }}' repo"
         uses: actions/checkout@v4
-        repository: ${{ github.action_repository }}
+        with:
+          repository: ${{ github.action_repository }}
 
       # Restore cache after checkout to ensure files aren't cleaned or removed
       - name: "Restore issue-model.zip from 'github-ml-labeler/${{ inputs.model_repo || github.repository }}/model-issues'"

@@ -53,7 +53,8 @@ jobs:
     steps:
       - name: "Check out the '${{ github.action_repository }}' repo"
         uses: actions/checkout@v4
-        repository: ${{ github.action_repository }}
+        with:
+          repository: ${{ github.action_repository }}
 
       - uses: actions/setup-dotnet@v4
         with:
