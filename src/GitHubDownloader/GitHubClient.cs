@@ -20,17 +20,17 @@ public partial class GitHubClient
         return client;
     }
 
-    public static async IAsyncEnumerable<(Issue Issue, string Label)> DownloadIssues(string githubToken, string org, string repo, Predicate<string> labelPredicate, int pageLimit, int[] retries)
+    public static async IAsyncEnumerable<(Issue Issue, string Label)> DownloadIssues(string githubToken, string org, string repo, Predicate<string> labelPredicate, int pageLimit, int[] retries, bool verbose)
     {
-        await foreach (var item in DownloadItems<Issue>(githubToken, org, repo, labelPredicate, pageLimit, retries, "issues"))
+        await foreach (var item in DownloadItems<Issue>("issues", githubToken, org, repo, labelPredicate, pageLimit, retries, verbose))
         {
             yield return (item.Item, item.Label);
         }
     }
 
-    public static async IAsyncEnumerable<(PullRequest PullRequest, string Label)> DownloadPullRequests(string githubToken, string org, string repo, Predicate<string> labelPredicate, int pageLimit, int[] retries)
+    public static async IAsyncEnumerable<(PullRequest PullRequest, string Label)> DownloadPullRequests(string githubToken, string org, string repo, Predicate<string> labelPredicate, int pageLimit, int[] retries, bool verbose)
     {
-        var items = DownloadItems<PullRequest>(githubToken, org, repo, labelPredicate, pageLimit, retries, "pullRequests");
+        var items = DownloadItems<PullRequest>("pullRequests", githubToken, org, repo, labelPredicate, pageLimit, retries, verbose);
 
         await foreach (var item in items)
         {
@@ -38,7 +38,7 @@ public partial class GitHubClient
         }
     }
 
-    private static async IAsyncEnumerable<(T Item, string Label)> DownloadItems<T>(string githubToken, string org, string repo, Predicate<string> labelPredicate, int pageLimit, int[] retries, string itemQueryName) where T : Issue
+    private static async IAsyncEnumerable<(T Item, string Label)> DownloadItems<T>(string itemQueryName, string githubToken, string org, string repo, Predicate<string> labelPredicate, int pageLimit, int[] retries, bool verbose) where T : Issue
     {
         int pageNumber = 1;
         string? after = null;
@@ -98,7 +98,7 @@ public partial class GitHubClient
                 // labels that were not loaded and the model is incomplete.
                 if (item.Labels.HasNextPage)
                 {
-                    Console.WriteLine($"{itemQueryName} {org}/{repo}#{item.Number} - Excluded from output. Not all labels were loaded.");
+                    if (verbose) Console.WriteLine($"{itemQueryName} {org}/{repo}#{item.Number} - Excluded from output. Not all labels were loaded.");
                     continue;
                 }
 
@@ -106,12 +106,12 @@ public partial class GitHubClient
                 string[] labels = Array.FindAll(item.LabelNames, labelPredicate);
                 if (labels.Length != 1)
                 {
-                    Console.WriteLine($"{itemQueryName} {org}/{repo}#{item.Number} - Excluded from output. {labels.Length} applicable labels found.");
+                    if (verbose) Console.WriteLine($"{itemQueryName} {org}/{repo}#{item.Number} - Excluded from output. {labels.Length} applicable labels found.");
                     continue;
                 }
 
                 // Exactly one applicable label was found on the item. Include it in the model.
-                Console.WriteLine($"{itemQueryName} {org}/{repo}#{item.Number} - Included in output. Applicable label: '{labels[0]}'.");
+                if (verbose) Console.WriteLine($"{itemQueryName} {org}/{repo}#{item.Number} - Included in output. Applicable label: '{labels[0]}'.");
 
                 yield return (item, labels[0]);
             }
