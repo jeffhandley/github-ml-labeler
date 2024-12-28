@@ -41,7 +41,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: labeler-cache/pull-model.zip
-          key: github-ml-labeler/model-pulls
+          key: github-ml-labeler/${{ inputs.org_repo || github.repository }}/model-pulls
           fail-on-cache-miss: true
 
       - uses: actions/setup-dotnet@v4
