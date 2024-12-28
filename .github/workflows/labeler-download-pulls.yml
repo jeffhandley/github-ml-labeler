@@ -2,7 +2,7 @@ name: "Labeler: Download Pull Requests"
 
 on:
   schedule:
-    - cron: "12 2 * * 2"
+    - cron: '0 2 4 * *' # 02:00 UTC on the 4th day of the month
 
   workflow_dispatch:
     inputs:
