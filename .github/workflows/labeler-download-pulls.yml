@@ -4,6 +4,22 @@ on:
   schedule:
     - cron: '0 2 4 * *' # 02:00 UTC on the 4th day of the month
 
+  workflow_call:
+    inputs:
+      label_prefix:
+        description: "Label prefix"
+        type: string
+        default: "area-"
+      page_limit:
+        description: "Max pages of issues to download (100 issues per page)"
+        type: number
+        default: 500
+        required: true
+      retries:
+        description: "Comma-separated list of retry delays in seconds"
+        type: string
+        default: "30,30,30,300,300,3600"
+
   workflow_dispatch:
     inputs:
       org_repo:

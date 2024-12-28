@@ -4,6 +4,8 @@ on:
   schedule:
     - cron: '0 2 5 * *' # 02:00 UTC on the 5th day of the month
 
+  workflow_call:
+
   workflow_dispatch:
     inputs:
       org_repo:
