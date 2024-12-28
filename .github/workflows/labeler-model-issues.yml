@@ -11,11 +11,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
-
       - name: Restore cache
         id: restore-cache
         uses: actions/cache@v4
@@ -23,6 +18,11 @@ jobs:
           path: labeler-cache/issue-data.tsv
           key: github-ml-labeler/download-issues
           fail-on-cache-miss: true
+
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
 
       - name: Run ModelCreator
         run: |
