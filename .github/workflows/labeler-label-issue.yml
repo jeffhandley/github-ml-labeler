@@ -23,6 +23,9 @@ on:
         description: "Default Label"
         default: "needs-area-label"
         required: true
+      model_repo:
+        description: "The org/repo to use for the cached model (defaults to current repository)"
+        type: string
 
 permissions:
   issues: write
@@ -41,7 +44,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: labeler-cache/issue-model.zip
-          key: github-ml-labeler/${{ inputs.org_repo || github.repository }}/model-issues
+          key: github-ml-labeler/${{ inputs.model_repo || github.repository }}/model-issues
           fail-on-cache-miss: true
 
       - uses: actions/setup-dotnet@v4

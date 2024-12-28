@@ -22,6 +22,10 @@ on:
         type: number
         default: 500
         required: true
+      retries:
+        description: "Comma-separated list of retry delays in seconds"
+        type: string
+        default: "30,30,30,300,300,3600"
 
 permissions:
   issues: read
@@ -43,7 +47,7 @@ jobs:
             "${{ inputs.org_repo || github.repository }}" \
             "${{ inputs.github_token || secrets.GITHUB_TOKEN }}" \
             --issue-data labeler-cache/issue-data.tsv \
-            --retries "30,30,30,300,300,3600" \
+            --retries "${{ inputs.retries || '30,30,30,300,300,3600' }}" \
             --label-prefix "${{ inputs.label_prefix || 'area-' }}" \
             --page-limit ${{ fromJSON( inputs.page_limit || 500 ) }}
 
