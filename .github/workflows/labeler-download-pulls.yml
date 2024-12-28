@@ -41,7 +41,7 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           dotnet run --project src/GitHubDownloader -- \
-            "${{ inputs.org_repo || GITHUB_REPOSITORY }}" \
+            "${{ inputs.org_repo || $GITHUB_REPOSITORY }}" \
             "${{ inputs.github_token || secrets.GITHUB_TOKEN }}" \
             --pull-data labeler-cache/pull-data.tsv \
             --retries "30,30,30,300,300,3600" \
@@ -52,4 +52,4 @@ jobs:
         uses: actions/cache@v4
         with:
           path: labeler-cache/pull-data.tsv
-          key: github-ml-labeler/${{ inputs.org_repo || GITHUB_REPOSITORY }}/download-pulls
+          key: github-ml-labeler/${{ inputs.org_repo || $GITHUB_REPOSITORY }}/download-pulls
