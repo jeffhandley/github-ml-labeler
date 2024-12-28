@@ -25,10 +25,12 @@ jobs:
     timeout-minutes: 600
 
     steps:
-      - uses: actions/checkout@v4
+      - name: "Check out the '${{ github.action_repository }}' repo"
+        uses: actions/checkout@v4
+        repository: ${{ github.action_repository }}
 
       # Restore cache after checkout to ensure files aren't cleaned or removed
-      - name: "Restore pull-data.tsv from cache"
+      - name: "Restore pull-data.tsv from 'github-ml-labeler/${{ inputs.data_repo || github.repository }}/download-pulls'"
         id: restore-cache
         uses: actions/cache@v4
         with:
@@ -46,7 +48,7 @@ jobs:
             --pull-data labeler-cache/pull-data.tsv \
             --pull-model labeler-cache/pull-model.zip
 
-      - name: "Cache pull-model.zip"
+      - name: "Cache pull-model.zip into 'github-ml-labeler/${{ inputs.model_repo || github.repository }}/model-pulls'"
         uses: actions/cache@v4
         with:
           path: labeler-cache/pull-model.zip

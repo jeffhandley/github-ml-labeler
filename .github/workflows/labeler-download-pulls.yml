@@ -52,7 +52,10 @@ jobs:
     timeout-minutes: 360
 
     steps:
-      - uses: actions/checkout@v4
+      - name: "Check out the '${{ github.action_repository }}' repo"
+        uses: actions/checkout@v4
+        repository: ${{ github.action_repository }}
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
@@ -68,7 +71,7 @@ jobs:
             --label-prefix "${{ inputs.label_prefix || 'area-' }}" \
             --page-limit ${{ fromJSON( inputs.page_limit || 500 ) }}
 
-      - name: "Cache pull-data.tsv"
+      - name: "Cache pull-data.tsv into 'github-ml-labeler/${{ inputs.org_repo || github.repository }}/download-pulls'"
         uses: actions/cache@v4
         with:
           path: labeler-cache/pull-data.tsv
