@@ -36,8 +36,8 @@ jobs:
             "${{secrets.DOTNET_RUNTIME}}" \
             --issue-data labeler-cache/issue-data.tsv \
             --retries "30,30,30,300,300,3600" \
-            --label-prefix "area-" \
-            --page-limit 20
+            --label-prefix ${{ fromJSON(inputs.label_prefix || 'area-') }} \
+            --page-limit ${{ fromJSON(inputs.page_limit || 1000) }}
 
       - uses: actions/cache@v4
         with:

@@ -48,6 +48,6 @@ jobs:
             dotnet/runtime \
             "${{secrets.DOTNET_RUNTIME}}" \
             --issue-model labeler-cache/issue-model.zip \
-            --issue ${{ fromJson(inputs.number || github.event.number) }} \
-            --label-prefix ${{ fromJson(inputs.label_prefix || 'area-') }} \
-            --default-label ${{ fromJson(inputs.default_label || 'needs-area-label') }}
+            --issue ${{ fromJSON(inputs.number || github.event.number) }} \
+            --label-prefix ${{ fromJSON(inputs.label_prefix || 'area-') }} \
+            --default-label ${{ fromJSON(inputs.default_label || 'needs-area-label') }}
