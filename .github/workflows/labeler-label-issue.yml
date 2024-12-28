@@ -6,6 +6,12 @@ on:
 
   workflow_dispatch:
     inputs:
+      org_repo:
+        description: "The org/repo to use (defaults to current repo)"
+        type: string
+      github_token:
+        description: "The GitHub token (defaults to current repo's token)"
+        type: string
       number:
         description: "Issue Number"
         required: true
@@ -35,7 +41,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: labeler-cache/issue-model.zip
-          key: github-ml-labeler/model-issues
+          key: github-ml-labeler/${{ inputs.org_repo || GITHUB_REPOSITORY }}/model-issues
           fail-on-cache-miss: true
 
       - uses: actions/setup-dotnet@v4
@@ -45,10 +51,10 @@ jobs:
       - name: "Run LabelPredictor"
         run: |
           dotnet run --project src/LabelPredictor -- \
-            dotnet/runtime \
-            "${{secrets.DOTNET_RUNTIME}}" \
+            "${{ inputs.org_repo || GITHUB_REPOSITORY }}" \
+            "${{ inputs.github_token || secrets.GITHUB_TOKEN }}" \
             --issue-model labeler-cache/issue-model.zip \
             --issue ${{ fromJSON(inputs.number || github.event.number) }} \
-            --threshold 0.75 \
             --label-prefix "${{ inputs.label_prefix || 'area-' }}" \
-            --default-label "${{ inputs.default_label || 'needs-area-label' }}"
+            --default-label "${{ inputs.default_label || 'needs-area-label' }}" \
+            --threshold 0.75

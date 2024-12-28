@@ -6,6 +6,12 @@ on:
 
   workflow_dispatch:
     inputs:
+      org_repo:
+        description: "The org/repo to use (defaults to current repo)"
+        type: string
+      github_token:
+        description: "The GitHub token (defaults to current repo's token)"
+        type: string
       label_prefix:
         description: "Label prefix"
         type: string
@@ -35,8 +41,8 @@ jobs:
         if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           dotnet run --project src/GitHubDownloader -- \
-            dotnet/runtime \
-            "${{secrets.DOTNET_RUNTIME}}" \
+            "${{ inputs.org_repo || GITHUB_REPOSITORY }}" \
+            "${{ inputs.github_token || secrets.GITHUB_TOKEN }}" \
             --pull-data labeler-cache/pull-data.tsv \
             --retries "30,30,30,300,300,3600" \
             --label-prefix "${{ inputs.label_prefix || 'area-' }}" \
@@ -46,4 +52,4 @@ jobs:
         uses: actions/cache@v4
         with:
           path: labeler-cache/pull-data.tsv
-          key: github-ml-labeler/download-pulls
+          key: github-ml-labeler/${{ inputs.org_repo || GITHUB_REPOSITORY }}/download-pulls

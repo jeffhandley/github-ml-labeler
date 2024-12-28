@@ -5,6 +5,10 @@ on:
     - cron: "34 3 * * 3"
 
   workflow_dispatch:
+    inputs:
+      org_repo:
+        description: "The org/repo to use (defaults to current repo)"
+        type: string
 
 jobs:
   model-issues:
@@ -20,7 +24,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: labeler-cache/issue-data.tsv
-          key: github-ml-labeler/download-issues
+          key: github-ml-labeler/${{ inputs.org_repo || GITHUB_REPOSITORY }}/download-issues
           fail-on-cache-miss: true
 
       - uses: actions/setup-dotnet@v4
@@ -37,4 +41,4 @@ jobs:
         uses: actions/cache@v4
         with:
           path: labeler-cache/issue-model.zip
-          key: github-ml-labeler/model-issues
+          key: github-ml-labeler/${{ inputs.org_repo || GITHUB_REPOSITORY }}/model-issues

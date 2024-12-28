@@ -6,6 +6,12 @@ on:
 
   workflow_dispatch:
     inputs:
+      org_repo:
+        description: "The org/repo to use (defaults to current repo)"
+        type: string
+      github_token:
+        description: "The GitHub token (defaults to current repo's token)"
+        type: string
       number:
         description: "Pull Request Number"
         required: true
@@ -45,10 +51,10 @@ jobs:
       - name: "Run LabelPredictor"
         run: |
           dotnet run --project src/LabelPredictor -- \
-            dotnet/runtime \
-            "${{secrets.DOTNET_RUNTIME}}" \
+            "${{ inputs.org_repo || GITHUB_REPOSITORY }}" \
+            "${{ inputs.github_token || secrets.GITHUB_TOKEN }}" \
             --pull-model labeler-cache/pull-model.zip \
             --pull ${{ fromJSON(inputs.number || github.event.number) }} \
-            --threshold 0.75 \
             --label-prefix "${{ inputs.label_prefix || 'area-' }}" \
-            --default-label "${{ inputs.default_label || 'needs-area-label' }}"
+            --default-label "${{ inputs.default_label || 'needs-area-label' }}" \
+            --threshold 0.75
