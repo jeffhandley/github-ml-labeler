@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       label_prefix:
-        description: "Label Prefix"
+        description: "Label prefix"
         type: string
         default: "area-"
         required: true

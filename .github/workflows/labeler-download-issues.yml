@@ -7,12 +7,12 @@ on:
   workflow_dispatch:
     inputs:
       label_prefix:
-        description: "Label Prefix"
+        description: "Label prefix"
         type: string
         default: "area-"
         required: true
       page_limit:
-        description: "Max Pages of Data to Load (100 per page)"
+        description: "Max pages of issues to download (100 issues per page)"
         type: number
         default: 1000
         required: true
