@@ -31,7 +31,13 @@ jobs:
 
       - name: Run GitHubDownloader
         run: |
-          dotnet run src/GitHubDownloader -- dotnet/runtime "${{secrets.DOTNET_RUNTIME}}" --pull-data labeler-cache/pull-data.tsv --retries "30,30,30,300,300,3600" --label-prefix "${{ fromJson(inputs.label_prefix || 'area-') }}" --page-limit "${{ fromJson(inputs.page_limit || 1000) }}"
+          dotnet run --project src/GitHubDownloader -- \
+            dotnet/runtime \
+            "${{secrets.DOTNET_RUNTIME}}" \
+            --pull-data labeler-cache/pull-data.tsv \
+            --retries "30,30,30,300,300,3600" \
+            --label-prefix ${{ fromJson(inputs.label_prefix || 'area-') }} \
+            --page-limit ${{ fromJson(inputs.page_limit || 1000) }}
 
       - uses: actions/cache@v4
         with:

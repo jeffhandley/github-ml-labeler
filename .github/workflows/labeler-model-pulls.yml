@@ -29,7 +29,9 @@ jobs:
 
       - name: Run ModelCreator
         run: |
-          dotnet run src/ModelCreator -- --pull-data labeler-cache/pull-data.tsv --pull-model labeler-cache/pull-model.zip
+          dotnet run --project src/ModelCreator -- \
+            --pull-data labeler-cache/pull-data.tsv \
+            --pull-model labeler-cache/pull-model.zip
 
       - name: Save model to cache
         uses: actions/cache@v4

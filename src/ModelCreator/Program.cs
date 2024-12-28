@@ -40,7 +40,7 @@ while (arguments.Count > 1)
     }
 }
 
-if (arguments.Count == 1 || ((issueDataPath is null) != (issueModelPath is null)) || ((pullDataPath is null) != (pullModelPath is null)))
+if (arguments.Count == 1 || ((issueDataPath is null) != (issueModelPath is null)) || ((pullDataPath is null) != (pullModelPath is null)) || (issueModelPath is null && pullModelPath is null))
 {
     ShowUsage();
     return;

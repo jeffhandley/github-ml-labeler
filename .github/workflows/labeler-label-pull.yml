@@ -44,4 +44,10 @@ jobs:
 
       - name: Run LabelPredictor
         run: |
-          dotnet run src/LabelPredictor -- dotnet/runtime "${{secrets.DOTNET_RUNTIME}}" --pull-model labeler-cache/pull-model.zip --pull "${{ fromJson(inputs.number || github.event.number) }}" --label-prefix "${{ fromJson(inputs.label_prefix || 'area-') }}" --default-label "${{ fromJson(inputs.default_label || 'needs-area-label') }}"
+          dotnet run --project src/LabelPredictor -- \
+            dotnet/runtime \
+            "${{secrets.DOTNET_RUNTIME}}" \
+            --pull-model labeler-cache/pull-model.zip \
+            --pull ${{ fromJson(inputs.number || github.event.number) }} \
+            --label-prefix ${{ fromJson(inputs.label_prefix || 'area-') }} \
+            --default-label ${{ fromJson(inputs.default_label || 'needs-area-label') }}
