@@ -19,18 +19,16 @@ jobs:
           key: github-ml-labeler/download-issues
           fail-on-cache-miss: true
 
-      - name: Show restored cache files
-        run: ls -laR
-
       - uses: actions/checkout@v4
+        with:
+          clean: false # Keep restored cache files
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
       - name: Run ModelCreator
         run: |
-          ls -laR
-          cat labeler-cache/issue-data.tsv
           cd src/ModelCreator
           dotnet run -- --issue-data ../../labeler-cache/issue-data.tsv --issue-model ../labeler-cache/issue-model.zip
 

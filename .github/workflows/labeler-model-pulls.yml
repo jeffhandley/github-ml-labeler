@@ -20,13 +20,15 @@ jobs:
           fail-on-cache-miss: true
 
       - uses: actions/checkout@v4
+        with:
+          clean: false # Keep restored cache files
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
       - name: Run ModelCreator
         run: |
-          cat labeler-cache/pull-data.tsv
           cd src/ModelCreator
           dotnet run -- --pull-data ../../labeler-cache/pull-data.tsv --pull-model ../labeler-cache/pull-model.zip
 
