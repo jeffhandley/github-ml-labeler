@@ -217,7 +217,7 @@ public class GitHubApi
         client.DefaultRequestHeaders.Add("User-Agent", "GitHub-ML-Labeler");
 
         var response = await client.PostAsJsonAsync(
-            $"https://api.github.com/repos/jeffhandley/github-ml-labeler/issues/3/labels",
+            $"https://api.github.com/repos/{org}/{repo}/issues/{number}/labels",
             new string[] { label },
             CancellationToken.None);
 
