@@ -2,38 +2,54 @@
 using Microsoft.ML.Data;
 using GitHubClient;
 
-void ShowUsage()
+void ShowUsage(string? message = null)
 {
-    Console.WriteLine("Expected: {org}/{repo} {github_token} [--issue-model {path/to/issue-model.zip} --issue {issue-number}] [--pull-model {path/to/pull-model.zip} --pull {pull-number}] --threshold {threshold} --label-prefix {label-prefix} [--default-label {needs-area-label}]");
+    Console.WriteLine($"Invalid or missing arguments.{(message is null ? "" : " " + message)}");
+    Console.WriteLine("  --repo {org}/{repo}");
+    Console.WriteLine("  --token {github_token}");
+    Console.WriteLine("  --threshold {threshold}");
+    Console.WriteLine("  --label-prefix {label-prefix}");
+    Console.WriteLine("  [--issue-model {path/to/issue-model.zip} --issue {issue-number}]");
+    Console.WriteLine("  [--pull-model {path/to/pull-model.zip} --pull {pull-number}]");
+    Console.WriteLine("  [--default-label {needs-area-label}]");
+
     Environment.Exit(-1);
 }
 
-if (args.Length < 7 || !args[0].Contains('/'))
-{
-    ShowUsage();
-    return;
-}
-
 Queue<string> arguments = new(args);
-string orgRepo = arguments.Dequeue();
-string org = orgRepo.Split('/')[0];
-string repo = orgRepo.Split('/')[1];
-string githubToken = arguments.Dequeue();
-
+string? org = null;
+string? repo = null;
+string? githubToken = null;
 string? issueModelPath = null;
 int? issueNumber = null;
-
 string? pullModelPath = null;
 int? pullNumber = null;
-
 float? threshold = null;
-Func<string, bool> labelPredicate = _ => true;
+Func<string, bool>? labelPredicate = null;
 string? defaultLabel = null;
 
-while (arguments.Count > 1)
+while (arguments.Count > 0)
 {
-    switch (arguments.Dequeue())
+    string argument = arguments.Dequeue();
+
+    switch (argument)
     {
+        case "--repo":
+            string orgRepo = arguments.Dequeue();
+
+            if (!orgRepo.Contains('/'))
+            {
+                ShowUsage($$"""Argument 'repo' is not in the format of '{org}/{repo}': {{orgRepo}}""");
+                return;
+            }
+
+            string[] parts = orgRepo.Split('/');
+            org = parts[0];
+            repo = parts[1];
+            break;
+        case "--token":
+            githubToken = arguments.Dequeue();
+            break;
         case "--issue-model":
             issueModelPath = arguments.Dequeue();
             break;
@@ -57,14 +73,15 @@ while (arguments.Count > 1)
             defaultLabel = arguments.Dequeue();
             break;
         default:
-            ShowUsage();
+            ShowUsage($"Unrecognized argument: {argument}");
             return;
     }
 }
 
-if (arguments.Count == 1 || threshold is null ||
-    ((issueModelPath is null) != (issueNumber is null)) ||
-    ((pullModelPath is null) != (pullNumber is null)))
+if (org is null || repo is null || githubToken is null || threshold is null || labelPredicate is null ||
+    (issueModelPath is null != issueNumber is null) ||
+    (pullModelPath is null != pullNumber is null) ||
+    (issueModelPath is null && pullModelPath is null))
 {
     ShowUsage();
     return;

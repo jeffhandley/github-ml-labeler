@@ -4,6 +4,23 @@ on:
   pull_request:
     types: [opened, edited, synchronize, unlabeled]
 
+  workflow_call:
+    inputs:
+      number:
+        description: "Issue Number"
+        type: number
+        required: true
+      label_prefix:
+        description: "Label Prefix"
+        type: string
+        required: true
+      default_label:
+        description: "Default Label (leave blank for no default label)"
+        type: string
+      model_repo:
+        description: "The org/repo to use for the cached model (defaults to current repository)"
+        type: string
+
   workflow_dispatch:
     inputs:
       org_repo:
@@ -22,7 +39,6 @@ on:
       default_label:
         description: "Default Label"
         default: "needs-area-label"
-        required: true
       model_repo:
         description: "The org/repo to use for the cached model (defaults to current repository)"
         type: string
@@ -36,10 +52,12 @@ jobs:
     timeout-minutes: 2
 
     steps:
-      - uses: actions/checkout@v4
+      - name: "Check out the '${{ github.action_repository }}' repo"
+        uses: actions/checkout@v4
+        repository: ${{ github.action_repository }}
 
       # Restore cache after checkout to ensure files aren't cleaned or removed
-      - name: "Restore pull-model.zip from cache"
+      - name: "Restore pull-model.zip from 'github-ml-labeler/${{ inputs.model_repo || github.repository }}/model-pulls'"
         id: restore-cache
         uses: actions/cache@v4
         with:
