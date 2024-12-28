@@ -29,6 +29,7 @@ jobs:
 
       - name: Run ModelCreator
         run: |
+          ls -laR
           cat labeler-cache/issue-data.tsv
           cd src/ModelCreator
           dotnet run -- --issue-data ../../labeler-cache/issue-data.tsv --issue-model ../labeler-cache/issue-model.zip
