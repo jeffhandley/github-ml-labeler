@@ -39,7 +39,7 @@ jobs:
             "${{secrets.DOTNET_RUNTIME}}" \
             --pull-data labeler-cache/pull-data.tsv \
             --retries "30,30,30,300,300,3600" \
-            --label-prefix ${{ inputs.label_prefix || 'area-' }} \
+            --label-prefix "${{ inputs.label_prefix || 'area-' }}" \
             --page-limit ${{ fromJSON( inputs.page_limit || 1000 ) }}
 
       - name: "Cache pull-data.tsv"
