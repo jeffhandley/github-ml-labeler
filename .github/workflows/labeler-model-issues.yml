@@ -29,9 +29,7 @@ jobs:
 
       - name: Run ModelCreator
         run: |
-          dotnet run src/ModelCreator -- \
-            --issue-data labeler-cache/issue-data.tsv \
-            --issue-model labeler-cache/issue-model.zip
+          dotnet run src/ModelCreator -- --issue-data labeler-cache/issue-data.tsv --issue-model labeler-cache/issue-model.zip
 
       - name: Save model to cache
         uses: actions/cache@v4
