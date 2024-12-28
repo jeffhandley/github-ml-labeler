@@ -51,7 +51,7 @@ jobs:
       - name: "Run LabelPredictor"
         run: |
           dotnet run --project src/LabelPredictor -- \
-            "${{ inputs.org_repo || $GITHUB_REPOSITORY }}" \
+            "${{ inputs.org_repo || env.GITHUB_REPOSITORY }}" \
             "${{ inputs.github_token || secrets.GITHUB_TOKEN }}" \
             --pull-model labeler-cache/pull-model.zip \
             --pull ${{ fromJSON(inputs.number || github.event.number) }} \
