@@ -1,9 +1,12 @@
+using System.Net.Http.Json;
+using System.Text;
 using GraphQL;
 using GraphQL.Client.Http;
 using GraphQL.Client.Serializer.SystemTextJson;
-using GitHubModel;
 
-public partial class GitHubClient
+namespace GitHubClient;
+
+public class GitHubApi
 {
     public static GraphQLHttpClient CreateGraphQLClient(string githubToken)
     {
@@ -47,7 +50,7 @@ public partial class GitHubClient
         int? totalCount = null;
         byte retry = 0;
 
-        while (hasNextPage && pageNumber < pageLimit)
+        while (hasNextPage && pageNumber <= pageLimit)
         {
             Console.WriteLine($"Downloading {itemQueryName} page {pageNumber}... (limit: {pageLimit}){(retry > 0 ? $" (retry: {retry} of {retries.Length})" : "")}");
 
@@ -116,7 +119,7 @@ public partial class GitHubClient
                 yield return (item, labels[0]);
             }
 
-            Console.WriteLine($"Total {itemQueryName} downloaded: {loadedCount} of {totalCount}. Cursor: '{after}'. {(hasNextPage ? "Continuing to next page..." : "No more pages.")}");
+            Console.WriteLine($"Total {itemQueryName} downloaded: {loadedCount} of {totalCount}. Cursor: '{after}'. {(hasNextPage ? (pageNumber <= pageLimit ? "Continuing to next page..." : "Page limit reached. Finished.") : "No more pages.")}");
         }
     }
 
@@ -129,14 +132,14 @@ public partial class GitHubClient
         GraphQLRequest query = new GraphQLRequest
         {
             Query = $$"""
-                query Issues ($owner: String!, $repo: String!, $after: String) {
-                    repository(owner: $owner, name: $repo) {
-                        items:{{itemQueryName}} (after: $after, first: 100, orderBy: {field: CREATED_AT, direction: DESC}) {
+                query ($owner: String!, $repo: String!, $after: String) {
+                    repository (owner: $owner, name: $repo) {
+                        result:{{itemQueryName}} (after: $after, first: 100, orderBy: {field: CREATED_AT, direction: DESC}) {
                             nodes {
                                 number
                                 title
-                                bodyText
-                                labels(first: 25) {
+                                body: bodyText
+                                labels (first: 25) {
                                     nodes { name },
                                     pageInfo { hasNextPage }
                                 }
@@ -159,6 +162,79 @@ public partial class GitHubClient
             }
         };
 
-        return (await client.SendQueryAsync<RepositoryQuery<T>>(query)).Data.Repository.Items;
+        return (await client.SendQueryAsync<RepositoryQuery<Page<T>>>(query)).Data.Repository.Result;
+    }
+
+    public static async Task<Issue> GetIssue(string githubToken, string org, string repo, int number) =>
+        await GetItem<Issue>(githubToken, org, repo, number, "issue");
+
+    public static async Task<PullRequest> GetPullRequest(string githubToken, string org, string repo, int number) =>
+        await GetItem<PullRequest>(githubToken, org, repo, number, "pullRequest");
+
+    private static async Task<T> GetItem<T>(string githubToken, string org, string repo, int number, string itemQueryName) where T : Issue
+    {
+        using GraphQLHttpClient client = CreateGraphQLClient(githubToken);
+
+        string files = typeof(T) == typeof(PullRequest) ? "files (first: 100) { nodes { path } }" : "";
+
+        GraphQLRequest query = new GraphQLRequest
+        {
+            Query = $$"""
+                query ($owner: String!, $repo: String!, $number: Int!) {
+                    repository (owner: $owner, name: $repo) {
+                        result:{{itemQueryName}} (number: $number) {
+                            number
+                            title
+                            body: bodyText
+                            labels (first: 25) {
+                                nodes { name },
+                                pageInfo { hasNextPage }
+                            }
+                            {{files}}
+                        }
+                    }
+                }
+                """,
+            Variables = new
+            {
+                Owner = org,
+                Repo = repo,
+                Number = number
+            }
+        };
+
+        return (await client.SendQueryAsync<RepositoryQuery<T>>(query)).Data.Repository.Result;
+    }
+
+    public static async Task AddLabel(string githubToken, string org, string repo, int number, string label)
+    {
+        using var client = new HttpClient();
+        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(
+            scheme: "bearer",
+            parameter: githubToken);
+        client.DefaultRequestHeaders.Accept.Add(new("application/vnd.github+json"));
+        client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
+        client.DefaultRequestHeaders.Add("User-Agent", "GitHub-ML-Labeler");
+
+        var response = await client.PostAsJsonAsync(
+            $"https://api.github.com/repos/jeffhandley/github-ml-labeler/issues/3/labels",
+            new string[] { label },
+            CancellationToken.None);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            Console.WriteLine($"GitHub Request to add label failed with status code {response.StatusCode} ({response.ReasonPhrase}).");
+
+            foreach (var h in response.Headers)
+            {
+                Console.WriteLine($"Response Header: {h.Key} = {string.Join(',', (string[])h.Value)}");
+            }
+
+            Console.WriteLine(await response.Content.ReadAsStringAsync());
+        }
+        else
+        {
+            Console.WriteLine($"Label '{label}' added to {org}/{repo}#{number}");
+        }
     }
 }

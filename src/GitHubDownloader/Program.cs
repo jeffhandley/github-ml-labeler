@@ -1,4 +1,4 @@
-using GitHubModel;
+using GitHubClient;
 
 void ShowUsage()
 {
@@ -13,12 +13,9 @@ if (args.Length < 4 || !args[0].Contains('/'))
 }
 
 Queue<string> arguments = new(args);
-
 string orgRepo = arguments.Dequeue();
 string org = orgRepo.Split('/')[0];
 string repo = orgRepo.Split('/')[1];
-Console.WriteLine($"org/repo: {org}/{repo}");
-
 string githubToken = arguments.Dequeue();
 
 string? issuesPath = null;
@@ -104,7 +101,7 @@ async Task DownloadIssues(string outputPath)
     using StreamWriter writer = new StreamWriter(outputPath);
     writer.WriteLine(string.Join('\t', "Number", "Label", "Title", "Body"));
 
-    await foreach (var issue in GitHubClient.DownloadIssues(githubToken, org, repo, labelPredictate, pageLimit, retries, verbose))
+    await foreach (var issue in GitHubApi.DownloadIssues(githubToken, org, repo, labelPredictate, pageLimit, retries, verbose))
     {
         writer.WriteLine(FormatIssueRecord(issue.Issue, issue.Label));
 
@@ -127,7 +124,7 @@ async Task DownloadPullRequests(string outputPath)
     using StreamWriter writer = new StreamWriter(outputPath);
     writer.WriteLine(string.Join('\t', "Number", "Label", "Title", "Body", "FileNames", "FolderNames"));
 
-    await foreach (var pullRequest in GitHubClient.DownloadPullRequests(githubToken, org, repo, labelPredictate, pageLimit, retries, verbose))
+    await foreach (var pullRequest in GitHubApi.DownloadPullRequests(githubToken, org, repo, labelPredictate, pageLimit, retries, verbose))
     {
         writer.WriteLine(FormatPullRequestRecord(pullRequest.PullRequest, pullRequest.Label));
 
@@ -150,7 +147,7 @@ static string SanitizeText(string text) => text
 static string SanitizeTextArray(string[] texts) => string.Join(" ", texts.Select(SanitizeText));
 
 static string FormatIssueRecord(Issue issue, string label) =>
-    $"{issue.Number}\t{label}\t{SanitizeText(issue.Title)}\t{SanitizeText(issue.BodyText)}";
+    $"{issue.Number}\t{label}\t{SanitizeText(issue.Title)}\t{SanitizeText(issue.Body)}";
 
 static string FormatPullRequestRecord(PullRequest pull, string label) =>
-    $"{pull.Number}\t{label}\t{SanitizeText(pull.Title)}\t{SanitizeText(pull.BodyText)}\t{SanitizeTextArray(pull.FileNames)}\t{SanitizeTextArray(pull.FolderNames)}";
+    $"{pull.Number}\t{label}\t{SanitizeText(pull.Title)}\t{SanitizeText(pull.Body)}\t{SanitizeTextArray(pull.FileNames)}\t{SanitizeTextArray(pull.FolderNames)}";

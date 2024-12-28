@@ -9,6 +9,7 @@ on:
 jobs:
   model-pulls:
     runs-on: ubuntu-latest
+    timeout-minutes: 600
 
     steps:
       - uses: actions/checkout@v4
