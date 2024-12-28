@@ -14,7 +14,7 @@ on:
       page_limit:
         description: "Max pages of pull requests to download (100 pulls per page)"
         type: number
-        default: 1000
+        default: 500
         required: true
 
 permissions:
@@ -40,7 +40,7 @@ jobs:
             --pull-data labeler-cache/pull-data.tsv \
             --retries "30,30,30,300,300,3600" \
             --label-prefix "${{ inputs.label_prefix || 'area-' }}" \
-            --page-limit ${{ fromJSON( inputs.page_limit || 1000 ) }}
+            --page-limit ${{ fromJSON( inputs.page_limit || 500 ) }}
 
       - name: "Cache pull-data.tsv"
         uses: actions/cache@v4

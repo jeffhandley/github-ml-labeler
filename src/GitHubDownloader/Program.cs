@@ -2,7 +2,7 @@ using GitHubClient;
 
 void ShowUsage()
 {
-    Console.WriteLine("Expected: {org/repo} {github_token} [--issue-data {path/to/issues.tsv}] [--pull-data {path/to/pulls.tsv}] [--page-limit {pages=1000}] [--retries {comma-separated-retries-in-seconds}] [--label-prefix {label-prefix}] [--verbose]");
+    Console.WriteLine("Expected: {org/repo} {github_token} [--issue-data {path/to/issues.tsv}] [--pull-data {path/to/pulls.tsv}] [--page-limit {pages=500}] [--retries {comma-separated-retries-in-seconds}] [--label-prefix {label-prefix}] [--verbose]");
     Environment.Exit(-1);
 }
 
@@ -20,7 +20,7 @@ string githubToken = arguments.Dequeue();
 
 string? issuesPath = null;
 string? pullsPath = null;
-int pageLimit = 1000;
+int pageLimit = 500;
 int[] retries = [10, 20, 30, 60, 120];
 Predicate<string> labelPredictate = _ => true;
 bool verbose = false;
