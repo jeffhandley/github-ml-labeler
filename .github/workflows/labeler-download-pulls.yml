@@ -8,10 +8,12 @@ on:
     inputs:
       label_prefix:
         description: "Label Prefix"
+        type: string
         default: "area-"
         required: true
       page_limit:
         description: "Max Pages of Data to Load (100 per page)"
+        type: number
         default: 1000
         required: true
 
@@ -29,15 +31,27 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: Run GitHubDownloader
+      - name: Run GitHubDownloader (workflow_dispatch)
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           dotnet run --project src/GitHubDownloader -- \
             dotnet/runtime \
             "${{secrets.DOTNET_RUNTIME}}" \
             --pull-data labeler-cache/pull-data.tsv \
             --retries "30,30,30,300,300,3600" \
-            --label-prefix ${{ fromJSON(inputs.label_prefix || 'area-') }} \
-            --page-limit ${{ fromJSON(inputs.page_limit || 1000) }}
+            --label-prefix ${{ inputs.label_prefix }} \
+            --page-limit ${{ inputs.page_limit }}
+
+      - name: Run GitHubDownloader (scheduled)
+        if: ${{ github.event_name == 'schedule' }}
+        run: |
+          dotnet run --project src/GitHubDownloader -- \
+            dotnet/runtime \
+            "${{secrets.DOTNET_RUNTIME}}" \
+            --pull-data labeler-cache/pull-data.tsv \
+            --retries "30,30,30,300,300,3600" \
+            --label-prefix "area-" \
+            --page-limit 500
 
       - uses: actions/cache@v4
         with:
