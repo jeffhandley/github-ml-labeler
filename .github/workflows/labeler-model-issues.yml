@@ -5,11 +5,18 @@ on:
     - cron: '0 2 5 * *' # 02:00 UTC on the 5th day of the month
 
   workflow_call:
+    inputs:
+      data_repo:
+        description: "The org/repo to load issue data from (defaults to current repository)"
+        type: string
 
   workflow_dispatch:
     inputs:
-      org_repo:
-        description: "The org/repo to use (defaults to current repository)"
+      data_repo:
+        description: "The org/repo to load issue data from (defaults to current repository)"
+        type: string
+      model_repo:
+        description: "The org/repo to cache the issue model for (defaults to current repository)"
         type: string
 
 jobs:
@@ -26,7 +33,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: labeler-cache/issue-data.tsv
-          key: github-ml-labeler/${{ inputs.org_repo || github.repository }}/download-issues
+          key: github-ml-labeler/${{ inputs.data_repo || github.repository }}/download-issues
           fail-on-cache-miss: true
 
       - uses: actions/setup-dotnet@v4
@@ -43,4 +50,4 @@ jobs:
         uses: actions/cache@v4
         with:
           path: labeler-cache/issue-model.zip
-          key: github-ml-labeler/${{ inputs.org_repo || github.repository }}/model-issues
+          key: github-ml-labeler/${{ inputs.model_repo || github.repository }}/model-issues
