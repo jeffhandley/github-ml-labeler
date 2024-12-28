@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       org_repo:
-        description: "The org/repo to use (defaults to current repo)"
+        description: "The org/repo to use (defaults to ${{ github.repository }})"
         type: string
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: labeler-cache/issue-data.tsv
-          key: github-ml-labeler/${{ inputs.org_repo || env.GITHUB_REPOSITORY }}/download-issues
+          key: github-ml-labeler/${{ inputs.org_repo || github.repository }}/download-issues
           fail-on-cache-miss: true
 
       - uses: actions/setup-dotnet@v4
@@ -41,4 +41,4 @@ jobs:
         uses: actions/cache@v4
         with:
           path: labeler-cache/issue-model.zip
-          key: github-ml-labeler/${{ inputs.org_repo || env.GITHUB_REPOSITORY }}/model-issues
+          key: github-ml-labeler/${{ inputs.org_repo || github.repository }}/model-issues

@@ -7,10 +7,10 @@ on:
   workflow_dispatch:
     inputs:
       org_repo:
-        description: "The org/repo to use (defaults to current repo)"
+        description: "The org/repo to use (defaults to ${{ github.repository }})"
         type: string
       github_token:
-        description: "The GitHub token (defaults to current repo's token)"
+        description: "The GitHub token (defaults to action token)"
         type: string
       number:
         description: "Pull Request Number"
@@ -51,7 +51,7 @@ jobs:
       - name: "Run LabelPredictor"
         run: |
           dotnet run --project src/LabelPredictor -- \
-            "${{ inputs.org_repo || env.GITHUB_REPOSITORY }}" \
+            "${{ inputs.org_repo || github.repository }}" \
             "${{ inputs.github_token || secrets.GITHUB_TOKEN }}" \
             --pull-model labeler-cache/pull-model.zip \
             --pull ${{ fromJSON(inputs.number || github.event.number) }} \
