@@ -116,7 +116,7 @@ public partial class GitHubClient
                 yield return (item, labels[0]);
             }
 
-            Console.WriteLine($"Total {itemQueryName} downloaded: {loadedCount} of {totalCount}. Cursor: '{after}'. {(hasNextPage ? "Continuing to next page.." : "No more pages.")}");
+            Console.WriteLine($"Total {itemQueryName} downloaded: {loadedCount} of {totalCount}. Cursor: '{after}'. {(hasNextPage ? "Continuing to next page..." : "No more pages.")}");
         }
     }
 

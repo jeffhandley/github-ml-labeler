@@ -19,6 +19,9 @@ jobs:
           key: github-ml-labeler/download-issues
           fail-on-cache-miss: true
 
+      - name: Show restored cache files
+        run: ls -laR
+
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
