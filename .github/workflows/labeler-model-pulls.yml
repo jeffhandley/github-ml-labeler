@@ -11,6 +11,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4
+
+      # Restore cache after checkout to ensure files aren't cleaned or removed
       - name: Restore cache
         id: restore-cache
         uses: actions/cache@v4
@@ -18,10 +21,6 @@ jobs:
           path: labeler-cache/pull-data.tsv
           key: github-ml-labeler/download-pulls
           fail-on-cache-miss: true
-
-      - uses: actions/checkout@v4
-        with:
-          clean: false # Keep restored cache files
 
       - uses: actions/setup-dotnet@v4
         with:
