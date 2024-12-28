@@ -1,4 +1,4 @@
-namespace GitHubModel;
+namespace GitHubClient;
 
 public class RepositoryQuery<T>
 {
@@ -6,7 +6,7 @@ public class RepositoryQuery<T>
 
     public class RepositoryItems
     {
-        public required Page<T> Items { get; init; }
+        public required T Result { get; init; }
     }
 }
 
@@ -14,7 +14,7 @@ public class Issue
 {
     public required long Number { get; init; }
     public required string Title { get; init; }
-    public required string BodyText { get; init; }
+    public required string Body { get; init; }
     public required Page<Label> Labels { get; init; }
 
     public string[] LabelNames => this.Labels.Nodes.Select(label => label.Name).ToArray();

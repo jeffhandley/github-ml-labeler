@@ -1,0 +1,53 @@
+name: "Labeler: Label Issue"
+
+on:
+  issues:
+    types: [opened, edited, transferred, unlabeled]
+
+  workflow_dispatch:
+    inputs:
+      number:
+        description: "Issue Number"
+        required: true
+      label_prefix:
+        description: "Label Prefix"
+        default: "area-"
+        required: true
+      default_label:
+        description: "Default Label"
+        default: "needs-area-label"
+        required: true
+
+permissions:
+  issues: write
+
+jobs:
+  label-issue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Restore cache after checkout to ensure files aren't cleaned or removed
+      - name: Restore cache
+        id: restore-cache
+        uses: actions/cache@v4
+        with:
+          path: labeler-cache/issue-model.zip
+          key: github-ml-labeler/model-issues
+          fail-on-cache-miss: true
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Run LabelPredictor
+        run: |
+          dotnet run src/LabelPredictor -- \
+            "dotnet/runtime" \
+            "${{secrets.DOTNET_RUNTIME}}" \
+            --issue-model labeler-cache/issue-model.zip \
+            --issue ${{ fromJson(inputs.number || github.event.number) }} \
+            --label-prefix ${{ fromJson(inputs.label_prefix || 'area-') }}\
+            --default-label ${{ fromJson(inputs.default_label || 'needs-area-label') }}

@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GitHubDownloader", "src\Git
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelCreator", "src\ModelCreator\ModelCreator.csproj", "{F1FE4054-C44E-487F-90F9-2F111AB7BD9C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LabelPredictor", "src\LabelPredictor\LabelPredictor.csproj", "{2E39B0A5-2F4A-4D6E-8A0D-0366238CB21E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{F1FE4054-C44E-487F-90F9-2F111AB7BD9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F1FE4054-C44E-487F-90F9-2F111AB7BD9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F1FE4054-C44E-487F-90F9-2F111AB7BD9C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E39B0A5-2F4A-4D6E-8A0D-0366238CB21E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E39B0A5-2F4A-4D6E-8A0D-0366238CB21E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E39B0A5-2F4A-4D6E-8A0D-0366238CB21E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E39B0A5-2F4A-4D6E-8A0D-0366238CB21E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

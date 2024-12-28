@@ -10,14 +10,7 @@ void ShowUsage()
     Environment.Exit(-1);
 }
 
-if (args.Length < 2)
-{
-    ShowUsage();
-    return;
-}
-
 Queue<string> arguments = new(args);
-
 string? issueDataPath = null;
 string? issueModelPath = null;
 string? pullDataPath = null;
@@ -47,13 +40,7 @@ while (arguments.Count > 1)
     }
 }
 
-if (arguments.Count == 1)
-{
-    ShowUsage();
-    return;
-}
-
-if (((issueDataPath is null) != (issueModelPath is null)) || ((pullDataPath is null) != (pullModelPath is null)))
+if (arguments.Count == 1 || ((issueDataPath is null) != (issueModelPath is null)) || ((pullDataPath is null) != (pullModelPath is null)))
 {
     ShowUsage();
     return;

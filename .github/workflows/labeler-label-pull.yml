@@ -1,0 +1,53 @@
+name: "Labeler: Label Pull Request"
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, unlabeled]
+
+  workflow_dispatch:
+    inputs:
+      number:
+        description: "Pull Request Number"
+        required: true
+      label_prefix:
+        description: "Label Prefix"
+        default: "area-"
+        required: true
+      default_label:
+        description: "Default Label"
+        default: "needs-area-label"
+        required: true
+
+permissions:
+  pull-requests: write
+
+jobs:
+  label-pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Restore cache after checkout to ensure files aren't cleaned or removed
+      - name: Restore cache
+        id: restore-cache
+        uses: actions/cache@v4
+        with:
+          path: labeler-cache/pull-model.zip
+          key: github-ml-labeler/model-pulls
+          fail-on-cache-miss: true
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Run LabelPredictor
+        run: |
+          dotnet run src/LabelPredictor -- \
+            "dotnet/runtime" \
+            "${{secrets.DOTNET_RUNTIME}}" \
+            --pull-model labeler-cache/pull-model.zip \
+            --pull ${{ fromJson(inputs.number || github.event.number) }} \
+            --label-prefix ${{ fromJson(inputs.label_prefix || 'area-') }}\
+            --default-label ${{ fromJson(inputs.default_label || 'needs-area-label') }}

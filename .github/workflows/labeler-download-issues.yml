@@ -5,6 +5,15 @@ on:
     - cron: "12 1 * * 1"
 
   workflow_dispatch:
+    inputs:
+      label_prefix:
+        description: "Label Prefix"
+        default: "area-"
+        required: true
+      page_limit:
+        description: "Max Pages of Data to Load (100 per page)"
+        default: 1000
+        required: true
 
 permissions:
   issues: read
@@ -12,6 +21,7 @@ permissions:
 jobs:
   labeler-download-issues:
     runs-on: ubuntu-latest
+    timeout-minutes: 360
 
     steps:
       - uses: actions/checkout@v4
@@ -21,8 +31,13 @@ jobs:
 
       - name: Run GitHubDownloader
         run: |
-          cd src/GitHubDownloader
-          dotnet run -- "dotnet/runtime" "${{secrets.DOTNET_RUNTIME}}" --issue-data ../../labeler-cache/issue-data.tsv --retries "30,30,30,300,300,3600" --label-prefix "area-"
+          dotnet run src/GitHubDownloader -- \
+            "dotnet/runtime" \
+            "${{secrets.DOTNET_RUNTIME}}" \
+            --issue-data labeler-cache/issue-data.tsv \
+            --retries "30,30,30,300,300,3600" \
+            --label-prefix ${{ fromJson(inputs.label_prefix || 'area-') }} \
+            --page-limit ${{ fromJson(inputs.page_limit || 1000) }}
 
       - uses: actions/cache@v4
         with:
