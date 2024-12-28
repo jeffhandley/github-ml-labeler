@@ -23,7 +23,7 @@ string? issuesPath = null;
 string? pullsPath = null;
 int pageLimit = 500;
 int[] retries = [10, 20, 30, 60, 120];
-Predicate<string>? labelPredictate = null;
+Predicate<string>? labelPredicate = null;
 bool verbose = false;
 
 while (arguments.Count > 0)
@@ -62,7 +62,7 @@ while (arguments.Count > 0)
             break;
         case "--label-prefix":
             string labelPrefix = arguments.Dequeue();
-            labelPredictate = (label) => label.StartsWith(labelPrefix, StringComparison.OrdinalIgnoreCase);
+            labelPredicate = (label) => label.StartsWith(labelPrefix, StringComparison.OrdinalIgnoreCase);
             break;
         case "--verbose":
             verbose = true;
@@ -73,7 +73,7 @@ while (arguments.Count > 0)
     }
 }
 
-if (org is null || repo is null || githubToken is null || labelPredictate is null ||
+if (org is null || repo is null || githubToken is null || labelPredicate is null ||
     (issuesPath is null && pullsPath is null))
 {
     ShowUsage();
@@ -115,7 +115,7 @@ async Task DownloadIssues(string outputPath)
     using StreamWriter writer = new StreamWriter(outputPath);
     writer.WriteLine(string.Join('\t', "Number", "Label", "Title", "Body"));
 
-    await foreach (var issue in GitHubApi.DownloadIssues(githubToken, org, repo, labelPredictate, pageLimit, retries, verbose))
+    await foreach (var issue in GitHubApi.DownloadIssues(githubToken, org, repo, labelPredicate, pageLimit, retries, verbose))
     {
         writer.WriteLine(FormatIssueRecord(issue.Issue, issue.Label));
 
@@ -138,7 +138,7 @@ async Task DownloadPullRequests(string outputPath)
     using StreamWriter writer = new StreamWriter(outputPath);
     writer.WriteLine(string.Join('\t', "Number", "Label", "Title", "Body", "FileNames", "FolderNames"));
 
-    await foreach (var pullRequest in GitHubApi.DownloadPullRequests(githubToken, org, repo, labelPredictate, pageLimit, retries, verbose))
+    await foreach (var pullRequest in GitHubApi.DownloadPullRequests(githubToken, org, repo, labelPredicate, pageLimit, retries, verbose))
     {
         writer.WriteLine(FormatPullRequestRecord(pullRequest.PullRequest, pullRequest.Label));
 
