@@ -4,6 +4,23 @@ on:
   issues:
     types: [opened, edited, transferred, unlabeled]
 
+  workflow_call:
+    inputs:
+      number:
+        description: "Issue Number"
+        type: number
+        required: true
+      label_prefix:
+        description: "Label Prefix"
+        type: string
+        required: true
+      default_label:
+        description: "Default Label (leave blank for no default label)"
+        type: string
+      model_repo:
+        description: "The org/repo to use for the cached model (defaults to current repository)"
+        type: string
+
   workflow_dispatch:
     inputs:
       org_repo:
@@ -14,15 +31,15 @@ on:
         type: string
       number:
         description: "Issue Number"
+        type: number
         required: true
       label_prefix:
         description: "Label Prefix"
         default: "area-"
         required: true
       default_label:
-        description: "Default Label"
+        description: "Default Label (leave blank for no default label)"
         default: "needs-area-label"
-        required: true
       model_repo:
         description: "The org/repo to use for the cached model (defaults to current repository)"
         type: string

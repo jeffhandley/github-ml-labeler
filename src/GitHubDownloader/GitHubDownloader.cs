@@ -1,49 +1,53 @@
 using GitHubClient;
 
-void ShowUsage()
+void ShowUsage(string? message = null)
 {
-    Console.WriteLine("Expected: {org/repo} {github_token} [--issue-data {path/to/issues.tsv}] [--pull-data {path/to/pulls.tsv}] [--page-limit {pages=500}] [--retries {comma-separated-retries-in-seconds}] [--label-prefix {label-prefix}] [--verbose]");
+    Console.WriteLine($"Invalid or missing arguments.{(message is null ? "" : " " + message)}");
+    Console.WriteLine("  --repo {org/repo}");
+    Console.WriteLine("  --token {github_token}");
+    Console.WriteLine("  --label-prefix {label-prefix}");
+    Console.WriteLine("  [--issue-data {path/to/issues.tsv}]");
+    Console.WriteLine("  [--pull-data {path/to/pulls.tsv}]");
+    Console.WriteLine("  [--page-limit {pages=500}]");
+    Console.WriteLine("  [--retries {comma-separated-retries-in-seconds}]");
+    Console.WriteLine("  [--verbose]");
+
     Environment.Exit(-1);
 }
 
-if (args.Length < 4 || !args[0].Contains('/'))
-{
-    ShowUsage();
-    return;
-}
-
 Queue<string> arguments = new(args);
-string orgRepo = arguments.Dequeue();
-string org = orgRepo.Split('/')[0];
-string repo = orgRepo.Split('/')[1];
-string githubToken = arguments.Dequeue();
-
+string? org = null;
+string? repo = null;
+string? githubToken = null;
 string? issuesPath = null;
 string? pullsPath = null;
 int pageLimit = 500;
 int[] retries = [10, 20, 30, 60, 120];
-Predicate<string> labelPredictate = _ => true;
+Predicate<string>? labelPredictate = null;
 bool verbose = false;
 
 while (arguments.Count > 0)
 {
-    string option = arguments.Dequeue();
+    string argument = arguments.Dequeue();
 
-    switch (option)
+    switch (argument)
     {
-        case "--verbose":
-            verbose = true;
-            continue;
-    }
+        case "--repo":
+            string orgRepo = arguments.Dequeue();
 
-    if (arguments.Count == 0)
-    {
-        ShowUsage();
-        return;
-    }
+            if (!orgRepo.Contains('/'))
+            {
+                ShowUsage($$"""Argument 'repo' is not in the format of '{org}/{repo}': {{orgRepo}}""");
+                return;
+            }
 
-    switch (option)
-    {
+            string[] parts = orgRepo.Split('/');
+            org = parts[0];
+            repo = parts[1];
+            break;
+        case "--token":
+            githubToken = arguments.Dequeue();
+            break;
         case "--issue-data":
             issuesPath = arguments.Dequeue();
             break;
@@ -60,10 +64,20 @@ while (arguments.Count > 0)
             string labelPrefix = arguments.Dequeue();
             labelPredictate = (label) => label.StartsWith(labelPrefix, StringComparison.OrdinalIgnoreCase);
             break;
+        case "--verbose":
+            verbose = true;
+            break;
         default:
-            ShowUsage();
+            ShowUsage($"Unrecognized argument: {argument}");
             return;
     }
+}
+
+if (org is null || repo is null || githubToken is null || labelPredictate is null ||
+    (issuesPath is null && pullsPath is null))
+{
+    ShowUsage();
+    return;
 }
 
 List<Task> tasks = new();

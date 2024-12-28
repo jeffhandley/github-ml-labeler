@@ -4,9 +4,12 @@ using Microsoft.ML.Data;
 using Microsoft.ML.Transforms;
 using Microsoft.ML.Transforms.Text;
 
-void ShowUsage()
+void ShowUsage(string? message = null)
 {
-    Console.WriteLine("Expected: [--issue-data {path/to/issue-data.tsv} --issue-model {path/to/issue-model.zip}] [--pull-data {path/to/pull-data.tsv} --pull-model {path/to/pull-model.zip}]");
+    Console.WriteLine($"Invalid or missing arguments.{(message is null ? "" : " " + message)}");
+    Console.WriteLine("  [--issue-data {path/to/issue-data.tsv} --issue-model {path/to/issue-model.zip}]");
+    Console.WriteLine("  [--pull-data {path/to/pull-data.tsv} --pull-model {path/to/pull-model.zip}]");
+
     Environment.Exit(-1);
 }
 
@@ -16,11 +19,11 @@ string? issueModelPath = null;
 string? pullDataPath = null;
 string? pullModelPath = null;
 
-while (arguments.Count > 1)
+while (arguments.Count > 0)
 {
-    string option = arguments.Dequeue();
+    string argument = arguments.Dequeue();
 
-    switch (option)
+    switch (argument)
     {
         case "--issue-data":
             issueDataPath = arguments.Dequeue();
@@ -35,12 +38,14 @@ while (arguments.Count > 1)
             pullModelPath = arguments.Dequeue();
             break;
         default:
-            ShowUsage();
+            ShowUsage($"Unrecognized argument: {argument}");
             return;
     }
 }
 
-if (arguments.Count == 1 || ((issueDataPath is null) != (issueModelPath is null)) || ((pullDataPath is null) != (pullModelPath is null)) || (issueModelPath is null && pullModelPath is null))
+if ((issueDataPath is null != issueModelPath is null) ||
+    (pullDataPath is null != pullModelPath is null) ||
+    (issueModelPath is null && pullModelPath is null))
 {
     ShowUsage();
     return;
