@@ -1,4 +1,4 @@
-name: "Labeler: Model Pulls"
+name: "Labeler: Model Pull Requests"
 
 on:
   schedule:
