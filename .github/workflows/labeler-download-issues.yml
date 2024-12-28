@@ -31,7 +31,7 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: Run GitHubDownloader
+      - name: "Run GitHubDownloader"
         run: |
           dotnet run --project src/GitHubDownloader -- \
             dotnet/runtime \
@@ -41,7 +41,8 @@ jobs:
             --label-prefix ${{ inputs.label_prefix || 'area-' }} \
             --page-limit ${{ fromJSON( inputs.page_limit || 1000 ) }}
 
-      - uses: actions/cache@v4
+      - name: "Cache issue-data.tsv"
+        uses: actions/cache@v4
         with:
           path: labeler-cache/issue-data.tsv
           key: github-ml-labeler/download-issues

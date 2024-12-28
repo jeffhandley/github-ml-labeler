@@ -1,4 +1,4 @@
-name: "Labeler: Download Pulls"
+name: "Labeler: Download Pull Requests"
 
 on:
   schedule:
@@ -12,7 +12,7 @@ on:
         default: "area-"
         required: true
       page_limit:
-        description: "Max Pages of Data to Load (100 per page)"
+        description: "Max pages of pull requests to download (100 pulls per page)"
         type: number
         default: 1000
         required: true
@@ -31,7 +31,7 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: Run GitHubDownloader
+      - name: "Run GitHubDownloader"
         if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           dotnet run --project src/GitHubDownloader -- \
@@ -42,7 +42,8 @@ jobs:
             --label-prefix ${{ inputs.label_prefix || 'area-' }} \
             --page-limit ${{ fromJSON( inputs.page_limit || 1000 ) }}
 
-      - uses: actions/cache@v4
+      - name: "Cache pull-data.tsv"
+        uses: actions/cache@v4
         with:
           path: labeler-cache/pull-data.tsv
           key: github-ml-labeler/download-pulls
