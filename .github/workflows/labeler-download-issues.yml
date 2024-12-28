@@ -31,27 +31,15 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: Run GitHubDownloader (workflow_dispatch)
-        if: ${{ github.event_name == 'workflow_dispatch' }}
+      - name: Run GitHubDownloader
         run: |
           dotnet run --project src/GitHubDownloader -- \
             dotnet/runtime \
             "${{secrets.DOTNET_RUNTIME}}" \
             --issue-data labeler-cache/issue-data.tsv \
             --retries "30,30,30,300,300,3600" \
-            --label-prefix ${{ inputs.label_prefix }} \
-            --page-limit ${{ inputs.page_limit }}
-
-      - name: Run GitHubDownloader (workflow_dispatch)
-        if: ${{ github.event_name == 'workflow_dispatch' }}
-        run: |
-          dotnet run --project src/GitHubDownloader -- \
-            dotnet/runtime \
-            "${{secrets.DOTNET_RUNTIME}}" \
-            --issue-data labeler-cache/issue-data.tsv \
-            --retries "30,30,30,300,300,3600" \
-            --label-prefix ${{ inputs.label_prefix }} \
-            --page-limit ${{ inputs.page_limit }}
+            --label-prefix ${{ inputs.label_prefix || 'area-' }} \
+            --page-limit ${{ fromJSON( inputs.page_limit || 1000 ) }}
 
       - uses: actions/cache@v4
         with:

@@ -49,5 +49,5 @@ jobs:
             "${{secrets.DOTNET_RUNTIME}}" \
             --issue-model labeler-cache/issue-model.zip \
             --issue ${{ fromJSON(inputs.number || github.event.number) }} \
-            --label-prefix ${{ fromJSON(inputs.label_prefix || 'area-') }} \
-            --default-label ${{ fromJSON(inputs.default_label || 'needs-area-label') }}
+            --label-prefix ${{ inputs.label_prefix || 'area-' }} \
+            --default-label ${{ inputs.default_label || 'needs-area-label' }}
