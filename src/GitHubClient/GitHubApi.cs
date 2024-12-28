@@ -20,6 +20,8 @@ public class GitHubApi
                 scheme: "bearer",
                 parameter: githubToken);
 
+        client.HttpClient.Timeout = TimeSpan.FromMinutes(2);
+
         return client;
     }
 
