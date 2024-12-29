@@ -1,17 +1,20 @@
 name: "Labeler: Download Issues"
 
 on:
-  schedule:
-    - cron: '0 2 3 * *' # 02:00 UTC on the 3rd day of the month
-
   workflow_call:
     inputs:
+      github_token:
+        description: "The GitHub token (defaults to action token)"
+        type: string
+      org_repo:
+        description: "The org/repo to download data from (defaults to current repository)"
+        type: string
       label_prefix:
         description: "Label prefix"
         type: string
         default: "area-"
       page_limit:
-        description: "Max pages of issues to download (100 issues per page)"
+        description: "Max pages of items to download (100 items per page)"
         type: number
         default: 500
         required: true
@@ -22,18 +25,18 @@ on:
 
   workflow_dispatch:
     inputs:
-      org_repo:
-        description: "The org/repo to use (defaults to current repository)"
-        type: string
       github_token:
         description: "The GitHub token (defaults to action token)"
+        type: string
+      org_repo:
+        description: "The org/repo to download data from (defaults to current repository)"
         type: string
       label_prefix:
         description: "Label prefix"
         type: string
         default: "area-"
       page_limit:
-        description: "Max pages of issues to download (100 issues per page)"
+        description: "Max pages of items to download (100 items per page)"
         type: number
         default: 500
         required: true
@@ -63,8 +66,8 @@ jobs:
       - name: "Run GitHubDownloader"
         run: |
           dotnet run --project src/GitHubDownloader -- \
-            "${{ inputs.org_repo || github.repository }}" \
-            "${{ inputs.github_token || secrets.GITHUB_TOKEN }}" \
+            --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}" \
+            --repo "${{ inputs.org_repo || github.repository }}" \
             --issue-data labeler-cache/issue-data.tsv \
             --retries "${{ inputs.retries || '30,30,30,300,300,3600' }}" \
             --label-prefix "${{ inputs.label_prefix || 'area-' }}" \

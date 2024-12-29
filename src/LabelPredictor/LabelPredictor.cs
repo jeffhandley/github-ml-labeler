@@ -5,10 +5,10 @@ using GitHubClient;
 void ShowUsage(string? message = null)
 {
     Console.WriteLine($"Invalid or missing arguments.{(message is null ? "" : " " + message)}");
-    Console.WriteLine("  --repo {org}/{repo}");
     Console.WriteLine("  --token {github_token}");
-    Console.WriteLine("  --threshold {threshold}");
+    Console.WriteLine("  --repo {org}/{repo}");
     Console.WriteLine("  --label-prefix {label-prefix}");
+    Console.WriteLine("  --threshold {threshold}");
     Console.WriteLine("  [--issue-model {path/to/issue-model.zip} --issue {issue-number}]");
     Console.WriteLine("  [--pull-model {path/to/pull-model.zip} --pull {pull-number}]");
     Console.WriteLine("  [--default-label {needs-area-label}]");
@@ -34,6 +34,9 @@ while (arguments.Count > 0)
 
     switch (argument)
     {
+        case "--token":
+            githubToken = arguments.Dequeue();
+            break;
         case "--repo":
             string orgRepo = arguments.Dequeue();
 
@@ -47,9 +50,6 @@ while (arguments.Count > 0)
             org = parts[0];
             repo = parts[1];
             break;
-        case "--token":
-            githubToken = arguments.Dequeue();
-            break;
         case "--issue-model":
             issueModelPath = arguments.Dequeue();
             break;
@@ -62,12 +62,12 @@ while (arguments.Count > 0)
         case "--pull":
             pullNumber = int.Parse(arguments.Dequeue());
             break;
-        case "--threshold":
-            threshold = float.Parse(arguments.Dequeue());
-            break;
         case "--label-prefix":
             string labelPrefix = arguments.Dequeue();
             labelPredicate = label => label.StartsWith(labelPrefix, StringComparison.OrdinalIgnoreCase);
+            break;
+        case "--threshold":
+            threshold = float.Parse(arguments.Dequeue());
             break;
         case "--default-label":
             defaultLabel = arguments.Dequeue();

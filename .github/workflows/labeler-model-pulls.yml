@@ -1,22 +1,22 @@
 name: "Labeler: Model Pull Requests"
 
 on:
-  schedule:
-    - cron: '0 2 6 * *' # 02:00 UTC on the 6th day of the month
-
   workflow_call:
     inputs:
       data_repo:
-        description: "The org/repo to load issue data from (defaults to current repository)"
+        description: "The org/repo to load pull request data from (defaults to current repository)"
+        type: string
+      model_repo:
+        description: "The org/repo to cache the pull request model for (defaults to current repository)"
         type: string
 
   workflow_dispatch:
     inputs:
       data_repo:
-        description: "The org/repo to load issue data from (defaults to current repository)"
+        description: "The org/repo to load pull request data from (defaults to current repository)"
         type: string
       model_repo:
-        description: "The org/repo to cache the issue model for (defaults to current repository)"
+        description: "The org/repo to cache the pull request model for (defaults to current repository)"
         type: string
 
 jobs:

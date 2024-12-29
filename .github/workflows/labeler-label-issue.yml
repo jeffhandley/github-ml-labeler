@@ -14,6 +14,11 @@ on:
         description: "Label Prefix"
         type: string
         required: true
+      threshold:
+        description: "The minimum confidence score for a label prediction"
+        type: number
+        default: 0.75
+        required: true
       default_label:
         description: "Default Label (leave blank for no default label)"
         type: string
@@ -23,11 +28,11 @@ on:
 
   workflow_dispatch:
     inputs:
-      org_repo:
-        description: "The org/repo to use (defaults to current repository)"
-        type: string
       github_token:
         description: "The GitHub token (defaults to action token)"
+        type: string
+      org_repo:
+        description: "The org/repo to use (defaults to current repository)"
         type: string
       number:
         description: "Issue Number"
@@ -36,6 +41,11 @@ on:
       label_prefix:
         description: "Label Prefix"
         default: "area-"
+        required: true
+      threshold:
+        description: "The minimum confidence score for a label prediction"
+        type: number
+        default: 0.75
         required: true
       default_label:
         description: "Default Label (leave blank for no default label)"
@@ -74,10 +84,10 @@ jobs:
       - name: "Run LabelPredictor"
         run: |
           dotnet run --project src/LabelPredictor -- \
-            "${{ inputs.org_repo || github.repository }}" \
-            "${{ inputs.github_token || secrets.GITHUB_TOKEN }}" \
+            --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}" \
+            --repo "${{ inputs.org_repo || github.repository }}" \
             --issue-model labeler-cache/issue-model.zip \
             --issue ${{ fromJSON(inputs.number || github.event.number) }} \
             --label-prefix "${{ inputs.label_prefix || 'area-' }}" \
-            --default-label "${{ inputs.default_label || 'needs-area-label' }}" \
-            --threshold 0.75
+            --threshold ${{ fromJSON( inputs.threshold || 0.75 ) }} \
+            --default-label "${{ inputs.default_label || 'needs-area-label' }}"

@@ -3,8 +3,8 @@ using GitHubClient;
 void ShowUsage(string? message = null)
 {
     Console.WriteLine($"Invalid or missing arguments.{(message is null ? "" : " " + message)}");
-    Console.WriteLine("  --repo {org/repo}");
     Console.WriteLine("  --token {github_token}");
+    Console.WriteLine("  --repo {org/repo}");
     Console.WriteLine("  --label-prefix {label-prefix}");
     Console.WriteLine("  [--issue-data {path/to/issues.tsv}]");
     Console.WriteLine("  [--pull-data {path/to/pulls.tsv}]");
@@ -32,6 +32,9 @@ while (arguments.Count > 0)
 
     switch (argument)
     {
+        case "--token":
+            githubToken = arguments.Dequeue();
+            break;
         case "--repo":
             string orgRepo = arguments.Dequeue();
 
@@ -44,9 +47,6 @@ while (arguments.Count > 0)
             string[] parts = orgRepo.Split('/');
             org = parts[0];
             repo = parts[1];
-            break;
-        case "--token":
-            githubToken = arguments.Dequeue();
             break;
         case "--issue-data":
             issuesPath = arguments.Dequeue();
