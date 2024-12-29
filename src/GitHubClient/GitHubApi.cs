@@ -136,7 +136,7 @@ public class GitHubApi
             Query = $$"""
                 query ($owner: String!, $repo: String!, $after: String) {
                     repository (owner: $owner, name: $repo) {
-                        result:{{itemQueryName}} (after: $after, first: 100, orderBy: {field: CREATED_AT, direction: DESC}) {
+                        result:{{itemQueryName}} (after: $after, first: 25, orderBy: {field: CREATED_AT, direction: DESC}) {
                             nodes {
                                 number
                                 title
