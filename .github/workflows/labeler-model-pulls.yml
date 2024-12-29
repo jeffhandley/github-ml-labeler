@@ -25,10 +25,10 @@ jobs:
     timeout-minutes: 600
 
     steps:
-      - name: "Check out the '${{ github.action_repository }}' repo"
+      - name: "Check out the 'jeffhandley/github-ml-labeler' repo"
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.action_repository }}
+          repository: jeffhandley/github-ml-labeler
 
       # Restore cache after checkout to ensure files aren't cleaned or removed
       - name: "Restore pull-data.tsv from 'github-ml-labeler/${{ inputs.data_repo || github.repository }}/download-pulls'"
