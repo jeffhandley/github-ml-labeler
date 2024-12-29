@@ -21,7 +21,7 @@ on:
       page_limit:
         description: "Max pages of items to download"
         type: number
-        default: 500
+        default: 1000
         required: true
       retries:
         description: "Comma-separated list of retry delays in seconds"
@@ -49,7 +49,7 @@ on:
       page_limit:
         description: "Max pages of items to download"
         type: number
-        default: 500
+        default: 1000
         required: true
       retries:
         description: "Comma-separated list of retry delays in seconds"
@@ -84,7 +84,7 @@ jobs:
             --retries "${{ inputs.retries || '30,30,30,300,300,3600' }}" \
             --label-prefix "${{ inputs.label_prefix || 'area-' }}" \
             --page-size ${{ fromJSON( inputs.page_size || 25 ) }}
-            --page-limit ${{ fromJSON( inputs.page_limit || 500 ) }}
+            --page-limit ${{ fromJSON( inputs.page_limit || 1000 ) }}
 
       - name: "Cache pull-data.tsv into 'github-ml-labeler/${{ inputs.org_repo || github.repository }}/download-pulls'"
         uses: actions/cache@v4

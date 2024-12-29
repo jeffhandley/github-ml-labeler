@@ -8,8 +8,8 @@ void ShowUsage(string? message = null)
     Console.WriteLine("  --label-prefix {label-prefix}");
     Console.WriteLine("  [--issue-data {path/to/issues.tsv}]");
     Console.WriteLine("  [--pull-data {path/to/pulls.tsv}]");
-    Console.WriteLine("  [--page-size {size} (defaults to 100 for issues and 25 for pull requests)");
-    Console.WriteLine("  [--page-limit {pages=500}]");
+    Console.WriteLine("  [--page-size {size}]");
+    Console.WriteLine("  [--page-limit {pages}]");
     Console.WriteLine("  [--retries {comma-separated-retries-in-seconds}]");
     Console.WriteLine("  [--verbose]");
 
@@ -120,7 +120,7 @@ async Task DownloadIssues(string outputPath)
     using StreamWriter writer = new StreamWriter(outputPath);
     writer.WriteLine(string.Join('\t', "Number", "Label", "Title", "Body"));
 
-    await foreach (var issue in GitHubApi.DownloadIssues(githubToken, org, repo, labelPredicate, pageSize ?? 100, pageLimit, retries, verbose))
+    await foreach (var issue in GitHubApi.DownloadIssues(githubToken, org, repo, labelPredicate, pageSize ?? 100, pageLimit ?? 1000, retries, verbose))
     {
         writer.WriteLine(FormatIssueRecord(issue.Issue, issue.Label));
 
@@ -143,7 +143,7 @@ async Task DownloadPullRequests(string outputPath)
     using StreamWriter writer = new StreamWriter(outputPath);
     writer.WriteLine(string.Join('\t', "Number", "Label", "Title", "Body", "FileNames", "FolderNames"));
 
-    await foreach (var pullRequest in GitHubApi.DownloadPullRequests(githubToken, org, repo, labelPredicate, pageSize ?? 25, pageLimit, retries, verbose))
+    await foreach (var pullRequest in GitHubApi.DownloadPullRequests(githubToken, org, repo, labelPredicate, pageSize ?? 25, pageLimit ?? 4000, retries, verbose))
     {
         writer.WriteLine(FormatPullRequestRecord(pullRequest.PullRequest, pullRequest.Label));
 
