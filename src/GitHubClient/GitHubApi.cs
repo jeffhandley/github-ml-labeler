@@ -60,7 +60,7 @@ public class GitHubApi
 
             try
             {
-                page = await GetItemsPage<T>(githubToken, org, repo, after, pageSize, itemQueryName);
+                page = await GetItemsPage<T>(githubToken, org, repo, pageSize, after, itemQueryName);
             }
             catch (Exception ex) when (
                 ex is HttpIOException ||
