@@ -13,8 +13,13 @@ on:
         description: "Label prefix"
         type: string
         default: "area-"
+      page_size:
+        description: "The number of items to include on each request"
+        type: number
+        default: 25
+        required: true
       page_limit:
-        description: "Max pages of items to download (100 items per page)"
+        description: "Max pages of items to download"
         type: number
         default: 500
         required: true
@@ -36,8 +41,13 @@ on:
         type: string
         default: "area-"
         required: true
+      page_size:
+        description: "The number of items to include on each request"
+        type: number
+        default: 25
+        required: true
       page_limit:
-        description: "Max pages of items to download (100 items per page)"
+        description: "Max pages of items to download"
         type: number
         default: 500
         required: true
@@ -73,6 +83,7 @@ jobs:
             --pull-data labeler-cache/pull-data.tsv \
             --retries "${{ inputs.retries || '30,30,30,300,300,3600' }}" \
             --label-prefix "${{ inputs.label_prefix || 'area-' }}" \
+            --page-size ${{ fromJSON( inputs.page_size || 25 ) }}
             --page-limit ${{ fromJSON( inputs.page_limit || 500 ) }}
 
       - name: "Cache pull-data.tsv into 'github-ml-labeler/${{ inputs.org_repo || github.repository }}/download-pulls'"
