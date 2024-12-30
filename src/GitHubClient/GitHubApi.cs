@@ -25,17 +25,17 @@ public class GitHubApi
         return client;
     }
 
-    public static async IAsyncEnumerable<(Issue Issue, string Label)> DownloadIssues(string githubToken, string org, string repo, Predicate<string> labelPredicate, int pageLimit, int[] retries, bool verbose)
+    public static async IAsyncEnumerable<(Issue Issue, string Label)> DownloadIssues(string githubToken, string org, string repo, Predicate<string> labelPredicate, int pageSize, int pageLimit, int[] retries, bool verbose)
     {
-        await foreach (var item in DownloadItems<Issue>("issues", githubToken, org, repo, labelPredicate, pageLimit, retries, verbose))
+        await foreach (var item in DownloadItems<Issue>("issues", githubToken, org, repo, labelPredicate, pageSize, pageLimit, retries, verbose))
         {
             yield return (item.Item, item.Label);
         }
     }
 
-    public static async IAsyncEnumerable<(PullRequest PullRequest, string Label)> DownloadPullRequests(string githubToken, string org, string repo, Predicate<string> labelPredicate, int pageLimit, int[] retries, bool verbose)
+    public static async IAsyncEnumerable<(PullRequest PullRequest, string Label)> DownloadPullRequests(string githubToken, string org, string repo, Predicate<string> labelPredicate, int pageSize, int pageLimit, int[] retries, bool verbose)
     {
-        var items = DownloadItems<PullRequest>("pullRequests", githubToken, org, repo, labelPredicate, pageLimit, retries, verbose);
+        var items = DownloadItems<PullRequest>("pullRequests", githubToken, org, repo, labelPredicate, pageSize, pageLimit, retries, verbose);
 
         await foreach (var item in items)
         {
@@ -43,7 +43,7 @@ public class GitHubApi
         }
     }
 
-    private static async IAsyncEnumerable<(T Item, string Label)> DownloadItems<T>(string itemQueryName, string githubToken, string org, string repo, Predicate<string> labelPredicate, int pageLimit, int[] retries, bool verbose) where T : Issue
+    private static async IAsyncEnumerable<(T Item, string Label)> DownloadItems<T>(string itemQueryName, string githubToken, string org, string repo, Predicate<string> labelPredicate, int pageSize, int pageLimit, int[] retries, bool verbose) where T : Issue
     {
         int pageNumber = 1;
         string? after = null;
@@ -60,7 +60,7 @@ public class GitHubApi
 
             try
             {
-                page = await GetItemsPage<T>(githubToken, org, repo, after, itemQueryName);
+                page = await GetItemsPage<T>(githubToken, org, repo, pageSize, after, itemQueryName);
             }
             catch (Exception ex) when (
                 ex is HttpIOException ||
@@ -125,7 +125,7 @@ public class GitHubApi
         }
     }
 
-    private static async Task<Page<T>> GetItemsPage<T>(string githubToken, string org, string repo, string? after, string itemQueryName) where T : Issue
+    private static async Task<Page<T>> GetItemsPage<T>(string githubToken, string org, string repo, int pageSize, string? after, string itemQueryName) where T : Issue
     {
         using GraphQLHttpClient client = CreateGraphQLClient(githubToken);
 
@@ -136,7 +136,7 @@ public class GitHubApi
             Query = $$"""
                 query ($owner: String!, $repo: String!, $after: String) {
                     repository (owner: $owner, name: $repo) {
-                        result:{{itemQueryName}} (after: $after, first: 25, orderBy: {field: CREATED_AT, direction: DESC}) {
+                        result:{{itemQueryName}} (after: $after, first: {{pageSize}}, orderBy: {field: CREATED_AT, direction: DESC}) {
                             nodes {
                                 number
                                 title
