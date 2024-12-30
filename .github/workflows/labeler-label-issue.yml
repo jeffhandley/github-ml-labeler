@@ -87,7 +87,7 @@ jobs:
             --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}" \
             --repo "${{ inputs.org_repo || github.repository }}" \
             --issue-model labeler-cache/issue-model.zip \
-            --issue ${{ fromJSON(inputs.number || github.event.number) }} \
+            --issue ${{ fromJSON(inputs.number || github.event.issue.number) }} \
             --label-prefix "${{ inputs.label_prefix || 'area-' }}" \
             --threshold ${{ fromJSON( inputs.threshold || 0.75 ) }} \
             --default-label "${{ inputs.default_label || 'needs-area-label' }}"
