@@ -59,7 +59,7 @@ on:
         type: string
         default: "30,30,30,300,300,3600"
       data_cache_key:
-        description: "The optional key to use in the cache key suffix for saving the data"
+        description: "The optional cache key suffix to use for saving the data (defaults to repository name)"
         type: string
 
 permissions:
@@ -68,7 +68,7 @@ permissions:
 
 env:
   DATA_PATH: labeler-cache/pull-data.tsv
-  DATA_CACHE_KEY: ${{ inputs.data_cache_key || format('github-ml-labeler/{0}/pulls/data', (inputs.repository || github.repository)) }}
+  DATA_CACHE_KEY: github-ml-labeler/pulls/data/${{ inputs.data_cache_key || inputs.repository || github.repository) }}
   GH_TOKEN: ${{ github.token }}
 
 jobs:

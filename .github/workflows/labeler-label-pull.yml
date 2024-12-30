@@ -23,7 +23,7 @@ on:
         description: "Default Label (leave blank for no default label)"
         type: string
       model_cache_key:
-        description: "The optional cache key override to use for loading the model"
+        description: "The optional cache key suffix to use for loading the model (defaults to repository name)"
         type: string
 
   workflow_dispatch:
@@ -51,7 +51,7 @@ on:
         description: "Default Label (leave blank for no default label)"
         default: "needs-area-label"
       model_cache_key:
-        description: "The optional cache key override to use for loading the model"
+        description: "The optional cache key suffix to use for loading the model (defaults to repository name)"
         type: string
 
 permissions:
@@ -59,7 +59,7 @@ permissions:
 
 env:
   MODEL_PATH: labeler-cache/pull-model.zip
-  MODEL_CACHE_KEY: ${{ inputs.model_cache_key || format('github-ml-labeler/{0}/pulls/model', (inputs.repository || github.repository)) }}
+  MODEL_CACHE_KEY: github-ml-labeler/pulls/model/${{ inputs.model_cache_key || inputs.repository || github.repository) }}
 
 jobs:
   label-pull:
