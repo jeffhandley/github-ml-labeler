@@ -27,6 +27,9 @@ on:
         description: "Comma-separated list of retry delays in seconds"
         type: string
         default: "30,30,30,300,300,3600"
+      data_key:
+        description: "The optional key to use in the cache key suffix for saving the downloaded data"
+        type: string
 
   workflow_dispatch:
     inputs:
@@ -54,6 +57,9 @@ on:
         description: "Comma-separated list of retry delays in seconds"
         type: string
         default: "30,30,30,300,300,3600"
+      data_key:
+        description: "The optional key to use in the cache key suffix for saving the downloaded data"
+        type: string
 
 permissions:
   issues: read
@@ -84,8 +90,8 @@ jobs:
             --page-size ${{ fromJSON( inputs.page_size || 100 ) }}
             --page-limit ${{ fromJSON( inputs.page_limit || 1000 ) }}
 
-      - name: "Cache issue-data.tsv into 'github-ml-labeler/${{ inputs.org_repo || github.repository }}/download-issues'"
+      - name: "Cache issue-data.tsv into 'github-ml-labeler/${{ inputs.org_repo || github.repository }}/download-issues/${{ inputs.data_key }}'"
         uses: actions/cache@v4
         with:
           path: labeler-cache/issue-data.tsv
-          key: github-ml-labeler/${{ inputs.org_repo || github.repository }}/download-issues
+          key: github-ml-labeler/${{ inputs.org_repo || github.repository }}/download-issues/${{ inputs.data_key }}

@@ -4,19 +4,31 @@ on:
   workflow_call:
     inputs:
       data_repo:
-        description: "The org/repo to load issue data from (defaults to current repository)"
+        description: "The org/repo to load pull request data from (defaults to current repository)"
+        type: string
+      data_key:
+        description: "The optional key to use in the cache key suffix for loading the downloaded data"
         type: string
       model_repo:
-        description: "The org/repo to cache the issue model for (defaults to current repository)"
+        description: "The org/repo to cache the pull request model for (defaults to current repository)"
+        type: string
+      model_key:
+        description: "The optional key to use in the cache key suffix for saving the model"
         type: string
 
   workflow_dispatch:
     inputs:
       data_repo:
-        description: "The org/repo to load issue data from (defaults to current repository)"
+        description: "The org/repo to load pull request data from (defaults to current repository)"
+        type: string
+      data_key:
+        description: "The optional key to use in the cache key suffix for loading the downloaded data"
         type: string
       model_repo:
-        description: "The org/repo to cache the issue model for (defaults to current repository)"
+        description: "The org/repo to cache the pull request model for (defaults to current repository)"
+        type: string
+      model_key:
+        description: "The optional key to use in the cache key suffix for saving the model"
         type: string
 
 jobs:
@@ -31,12 +43,12 @@ jobs:
           repository: jeffhandley/github-ml-labeler
 
       # Restore cache after checkout to ensure files aren't cleaned or removed
-      - name: "Restore issue-data.tsv from 'github-ml-labeler/${{ inputs.data_repo || github.repository }}/download-issues'"
+      - name: "Restore issue-data.tsv from 'github-ml-labeler/${{ inputs.data_repo || github.repository }}/download-issues/${{ inputs.data_key }}'"
         id: restore-cache
         uses: actions/cache@v4
         with:
           path: labeler-cache/issue-data.tsv
-          key: github-ml-labeler/${{ inputs.data_repo || github.repository }}/download-issues
+          key: github-ml-labeler/${{ inputs.data_repo || github.repository }}/download-issues/${{ inputs.data_key }}
           fail-on-cache-miss: true
 
       - uses: actions/setup-dotnet@v4
@@ -49,8 +61,8 @@ jobs:
             --issue-data labeler-cache/issue-data.tsv \
             --issue-model labeler-cache/issue-model.zip
 
-      - name: "Cache issue-model.zip into 'github-ml-labeler/${{ inputs.model_repo || github.repository }}/model-issues'"
+      - name: "Cache issue-model.zip into 'github-ml-labeler/${{ inputs.model_repo || github.repository }}/model-issues/${{ inputs.model_key }}'"
         uses: actions/cache@v4
         with:
           path: labeler-cache/issue-model.zip
-          key: github-ml-labeler/${{ inputs.model_repo || github.repository }}/model-issues
+          key: github-ml-labeler/${{ inputs.model_repo || github.repository }}/model-issues/${{ inputs.model_key }}

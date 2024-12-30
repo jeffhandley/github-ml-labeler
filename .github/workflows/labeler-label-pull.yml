@@ -25,6 +25,9 @@ on:
       model_repo:
         description: "The org/repo to use for the cached model (defaults to current repository)"
         type: string
+      model_key:
+        description: "The optional key to use in the cache key suffix for loading the model"
+        type: string
 
   workflow_dispatch:
     inputs:
@@ -52,6 +55,9 @@ on:
       model_repo:
         description: "The org/repo to use for the cached model (defaults to current repository)"
         type: string
+      model_key:
+        description: "The optional key to use in the cache key suffix for loading the model"
+        type: string
 
 permissions:
   pull-requests: write
@@ -68,12 +74,12 @@ jobs:
           repository: jeffhandley/github-ml-labeler
 
       # Restore cache after checkout to ensure files aren't cleaned or removed
-      - name: "Restore pull-model.zip from 'github-ml-labeler/${{ inputs.model_repo || github.repository }}/model-pulls'"
+      - name: "Restore pull-model.zip from 'github-ml-labeler/${{ inputs.model_repo || github.repository }}/model-pulls/${{ inputs.model_key }}'"
         id: restore-cache
         uses: actions/cache@v4
         with:
           path: labeler-cache/pull-model.zip
-          key: github-ml-labeler/${{ inputs.model_repo || github.repository }}/model-pulls
+          key: github-ml-labeler/${{ inputs.model_repo || github.repository }}/model-pulls/${{ inputs.model_key }}
           fail-on-cache-miss: true
 
       - uses: actions/setup-dotnet@v4

@@ -6,8 +6,14 @@ on:
       data_repo:
         description: "The org/repo to load pull request data from (defaults to current repository)"
         type: string
+      data_key:
+        description: "The optional key to use in the cache key suffix for loading the downloaded data"
+        type: string
       model_repo:
         description: "The org/repo to cache the pull request model for (defaults to current repository)"
+        type: string
+      model_key:
+        description: "The optional key to use in the cache key suffix for saving the model"
         type: string
 
   workflow_dispatch:
@@ -15,8 +21,14 @@ on:
       data_repo:
         description: "The org/repo to load pull request data from (defaults to current repository)"
         type: string
+      data_key:
+        description: "The optional key to use in the cache key suffix for loading the downloaded data"
+        type: string
       model_repo:
         description: "The org/repo to cache the pull request model for (defaults to current repository)"
+        type: string
+      model_key:
+        description: "The optional key to use in the cache key suffix for saving the model"
         type: string
 
 jobs:
@@ -31,12 +43,12 @@ jobs:
           repository: jeffhandley/github-ml-labeler
 
       # Restore cache after checkout to ensure files aren't cleaned or removed
-      - name: "Restore pull-data.tsv from 'github-ml-labeler/${{ inputs.data_repo || github.repository }}/download-pulls'"
+      - name: "Restore pull-data.tsv from 'github-ml-labeler/${{ inputs.data_repo || github.repository }}/download-pulls/${{ inputs.data_key }}'"
         id: restore-cache
         uses: actions/cache@v4
         with:
           path: labeler-cache/pull-data.tsv
-          key: github-ml-labeler/${{ inputs.data_repo || github.repository }}/download-pulls
+          key: github-ml-labeler/${{ inputs.data_repo || github.repository }}/download-pulls/${{ inputs.data_key }}
           fail-on-cache-miss: true
 
       - uses: actions/setup-dotnet@v4
@@ -49,8 +61,8 @@ jobs:
             --pull-data labeler-cache/pull-data.tsv \
             --pull-model labeler-cache/pull-model.zip
 
-      - name: "Cache pull-model.zip into 'github-ml-labeler/${{ inputs.model_repo || github.repository }}/model-pulls'"
+      - name: "Cache pull-model.zip into 'github-ml-labeler/${{ inputs.model_repo || github.repository }}/model-pulls/${{ inputs.model_key }}'"
         uses: actions/cache@v4
         with:
           path: labeler-cache/pull-model.zip
-          key: github-ml-labeler/${{ inputs.model_repo || github.repository }}/model-pulls
+          key: github-ml-labeler/${{ inputs.model_repo || github.repository }}/model-pulls/${{ inputs.model_key }}
