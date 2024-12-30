@@ -16,12 +16,12 @@ on:
       page_size:
         description: "The number of items to include on each request"
         type: number
-        default: 100
+        default: "100"
         required: true
       page_limit:
         description: "Max pages of items to download"
         type: number
-        default: 1000
+        default: "1000"
         required: true
       retries:
         description: "Comma-separated list of retry delays in seconds"
@@ -43,12 +43,12 @@ on:
       page_size:
         description: "The number of items to include on each request"
         type: number
-        default: 100
+        default: "100"
         required: true
       page_limit:
         description: "Max pages of items to download"
         type: number
-        default: 1000
+        default: "1000"
         required: true
       retries:
         description: "Comma-separated list of retry delays in seconds"
