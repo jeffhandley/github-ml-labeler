@@ -24,9 +24,9 @@ permissions:
 
 env:
   DATA_PATH: labeler-cache/pull-data.tsv
-  DATA_CACHE_KEY: github-ml-labeler/${{ inputs.data_cache_key || github.repository }}/pulls/data
+  DATA_CACHE_KEY: ${{ inputs.data_cache_key || format('github-ml-labeler/{0}/pulls/data', (inputs.repository || github.repository)) }}
   MODEL_PATH: labeler-cache/pull-model.zip
-  MODEL_CACHE_KEY: github-ml-labeler/${{ inputs.model_cache_key || github.repository }}/pulls/model
+  MODEL_CACHE_KEY: ${{ inputs.model_cache_key || format('github-ml-labeler/{0}/pulls/model', (inputs.repository || github.repository)) }}
   GH_TOKEN: ${{ github.token }}
 
 jobs:

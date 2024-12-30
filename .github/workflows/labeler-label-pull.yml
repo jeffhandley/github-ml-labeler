@@ -59,7 +59,7 @@ permissions:
 
 env:
   MODEL_PATH: labeler-cache/pull-model.zip
-  MODEL_CACHE_KEY: github-ml-labeler/${{ inputs.model_cache_key || github.repository }}/pulls/model
+  MODEL_CACHE_KEY: ${{ inputs.model_cache_key || format('github-ml-labeler/{0}/pulls/model', (inputs.repository || github.repository)) }}
 
 jobs:
   label-pull:

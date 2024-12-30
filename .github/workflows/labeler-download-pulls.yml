@@ -6,7 +6,7 @@ on:
       github_token:
         description: "The GitHub token (defaults to action token)"
         type: string
-      org_repo:
+      repository:
         description: "The org/repo to download data from (defaults to current repository)"
         type: string
       label_prefix:
@@ -27,7 +27,7 @@ on:
         description: "Comma-separated list of retry delays in seconds"
         type: string
         default: "30,30,30,300,300,3600"
-      dad_cache_key:
+      data_cache_key:
         description: "The optional key to use in the cache key suffix for saving the data"
         type: string
 
@@ -36,7 +36,7 @@ on:
       github_token:
         description: "The GitHub token (defaults to action token)"
         type: string
-      org_repo:
+      repository:
         description: "The org/repo to download data from (defaults to current repository)"
         type: string
       label_prefix:
@@ -58,7 +58,7 @@ on:
         description: "Comma-separated list of retry delays in seconds"
         type: string
         default: "30,30,30,300,300,3600"
-      dad_cache_key:
+      data_cache_key:
         description: "The optional key to use in the cache key suffix for saving the data"
         type: string
 
@@ -68,7 +68,7 @@ permissions:
 
 env:
   DATA_PATH: labeler-cache/pull-data.tsv
-  DATA_CACHE_KEY: ${{ inputs.dad_cache_key || format('github-ml-labeler/{0}', (inputs.org_repo || github.repository)) }}/pulls/data
+  DATA_CACHE_KEY: ${{ inputs.data_cache_key || format('github-ml-labeler/{0}/pulls/data', (inputs.repository || github.repository)) }}
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -114,7 +114,7 @@ jobs:
         run: |
           dotnet run --project src/GitHubDownloader -- \
             --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}" \
-            --repo "${{ inputs.org_repo || github.repository }}" \
+            --repo "${{ inputs.repository || github.repository }}" \
             --pull-data ${{ env.DATA_PATH }} \
             --retries "${{ inputs.retries || '30,30,30,300,300,3600' }}" \
             --label-prefix "${{ inputs.label_prefix || 'area-' }}" \
