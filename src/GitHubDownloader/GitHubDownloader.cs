@@ -120,7 +120,7 @@ async Task DownloadIssues(string outputPath)
     using StreamWriter writer = new StreamWriter(outputPath);
     writer.WriteLine(string.Join('\t', "Number", "Label", "Title", "Body"));
 
-    await foreach (var issue in GitHubApi.DownloadIssues(githubToken, org, repo, labelPredicate, pageSize ?? 100, pageLimit ?? 1000, retries, verbose))
+    await foreach (var issue in GitHubApi.DownloadIssues(githubToken, org, repo, labelPredicate, pageSize ?? 100, pageLimit ?? 500, retries, verbose))
     {
         writer.WriteLine(FormatIssueRecord(issue.Issue, issue.Label));
 
@@ -143,7 +143,7 @@ async Task DownloadPullRequests(string outputPath)
     using StreamWriter writer = new StreamWriter(outputPath);
     writer.WriteLine(string.Join('\t', "Number", "Label", "Title", "Body", "FileNames", "FolderNames"));
 
-    await foreach (var pullRequest in GitHubApi.DownloadPullRequests(githubToken, org, repo, labelPredicate, pageSize ?? 25, pageLimit ?? 4000, retries, verbose))
+    await foreach (var pullRequest in GitHubApi.DownloadPullRequests(githubToken, org, repo, labelPredicate, pageSize ?? 25, pageLimit ?? 2000, retries, verbose))
     {
         writer.WriteLine(FormatPullRequestRecord(pullRequest.PullRequest, pullRequest.Label));
 
