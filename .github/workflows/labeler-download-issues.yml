@@ -66,7 +66,7 @@ permissions:
   actions: write
 
 env:
-  CACHE_KEY: ${{ inputs.data_key || format('github-ml-labeler/{0}/download-issues', (inputs.org_repo || github.repository)) }}
+  CACHE_KEY: ${{ inputs.data_key || format('github-ml-labeler/{0}', (inputs.org_repo || github.repository)) }}/download-issues
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -111,7 +111,7 @@ jobs:
             -H "X-GitHub-Api-Version: 2022-11-28" \
             /repos/${{ github.repository }}/actions/caches?key=${{ env.CACHE_KEY }}
 
-      - name: "Save issue-data.tsv to cache"
+      - name: "Save downloaded data to cache"
         uses: actions/cache/save@v4
         with:
           path: labeler-cache/issue-data.tsv
