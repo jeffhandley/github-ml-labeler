@@ -2,7 +2,7 @@ name: "Labeler: Label Issue"
 
 on:
   issues:
-    types: [opened, edited, transferred, unlabeled]
+    types: [opened, edited, transferred]
 
   workflow_call:
     inputs:
@@ -22,11 +22,8 @@ on:
       default_label:
         description: "Default Label (leave blank for no default label)"
         type: string
-      model_repo:
-        description: "The org/repo to use for the cached model (defaults to current repository)"
-        type: string
-      model_key:
-        description: "The optional key to use in the cache key suffix for loading the model"
+      model_cache_key:
+        description: "The optional cache key override to use for loading the model"
         type: string
 
   workflow_dispatch:
@@ -34,7 +31,7 @@ on:
       github_token:
         description: "The GitHub token (defaults to action token)"
         type: string
-      org_repo:
+      repository:
         description: "The org/repo to use (defaults to current repository)"
         type: string
       number:
@@ -53,15 +50,16 @@ on:
       default_label:
         description: "Default Label (leave blank for no default label)"
         default: "needs-area-label"
-      model_repo:
-        description: "The org/repo to use for the cached model (defaults to current repository)"
-        type: string
-      model_key:
-        description: "The optional key to use in the cache key suffix for loading the model"
+      model_cache_key:
+        description: "The optional cache key override to use for loading the model"
         type: string
 
 permissions:
   issues: write
+
+env:
+  MODEL_PATH: labeler-cache/issue-model.zip
+  MODEL_CACHE_KEY: github-ml-labeler/${{ inputs.model_cache_key || github.repository }}/issues/model
 
 jobs:
   label-issue:
@@ -75,12 +73,12 @@ jobs:
           repository: jeffhandley/github-ml-labeler
 
       # Restore cache after checkout to ensure files aren't cleaned or removed
-      - name: "Restore issue-model.zip from 'github-ml-labeler/${{ inputs.model_repo || github.repository }}/model-issues/${{ inputs.model_key }}'"
+      - name: "Restore model from cache"
         id: restore-cache
         uses: actions/cache@v4
         with:
-          path: labeler-cache/issue-model.zip
-          key: github-ml-labeler/${{ inputs.model_repo || github.repository }}/model-issues/${{ inputs.model_key }}
+          path: ${{ env.MODEL_PATH }}
+          key: ${{ env.MODEL_CACHE_KEY }}
           fail-on-cache-miss: true
 
       - uses: actions/setup-dotnet@v4
@@ -91,8 +89,8 @@ jobs:
         run: |
           dotnet run --project src/LabelPredictor -- \
             --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}" \
-            --repo "${{ inputs.org_repo || github.repository }}" \
-            --issue-model labeler-cache/issue-model.zip \
+            --repo "${{ inputs.repository || github.repository }}" \
+            --issue-model ${{ env.MODEL_PATH }} \
             --issue ${{ fromJSON(inputs.number || github.event.issue.number) }} \
             --label-prefix "${{ inputs.label_prefix || 'area-' }}" \
             --threshold ${{ fromJSON( inputs.threshold || 0.75 ) }} \

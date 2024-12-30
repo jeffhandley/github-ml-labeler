@@ -1,4 +1,4 @@
-name: "Labeler: Download Pull Requests"
+name: "Labeler: Download Pulls"
 
 on:
   workflow_call:
@@ -16,19 +16,19 @@ on:
       page_size:
         description: "The number of items to include on each request"
         type: number
-        default: "25"
+        default: 25
         required: true
       page_limit:
         description: "Max pages of items to download"
         type: number
-        default: "4000"
+        default: 2000
         required: true
       retries:
         description: "Comma-separated list of retry delays in seconds"
         type: string
         default: "30,30,30,300,300,3600"
-      data_key:
-        description: "The optional key to use in the cache key suffix for saving the downloaded data"
+      dad_cache_key:
+        description: "The optional key to use in the cache key suffix for saving the data"
         type: string
 
   workflow_dispatch:
@@ -47,19 +47,19 @@ on:
       page_size:
         description: "The number of items to include on each request"
         type: number
-        default: "25"
+        default: 25
         required: true
       page_limit:
         description: "Max pages of items to download"
         type: number
-        default: "4000"
+        default: 2000
         required: true
       retries:
         description: "Comma-separated list of retry delays in seconds"
         type: string
         default: "30,30,30,300,300,3600"
-      data_key:
-        description: "The optional key to use in the cache key suffix for saving the downloaded data"
+      dad_cache_key:
+        description: "The optional key to use in the cache key suffix for saving the data"
         type: string
 
 permissions:
@@ -67,7 +67,8 @@ permissions:
   actions: write
 
 env:
-  CACHE_KEY: ${{ inputs.data_key || format('github-ml-labeler/{0}', (inputs.org_repo || github.repository)) }}/download-pulls
+  DATA_PATH: labeler-cache/pull-data.tsv
+  DATA_CACHE_KEY: ${{ inputs.dad_cache_key || format('github-ml-labeler/{0}', (inputs.org_repo || github.repository)) }}/pulls/data
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -76,6 +77,22 @@ jobs:
     timeout-minutes: 360
 
     steps:
+      - name: "Check cache for existing entry"
+        id: check-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DATA_PATH }}
+          key: ${{ env.DATA_CACHE_KEY }}
+          fail-on-cache-miss: false
+
+      - name: "Delete existing cache entry"
+        if: steps.check-cache.outputs.cache-hit == 'true'
+        run: |
+            gh api --method DELETE \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              /repos/${{ github.repository }}/actions/caches?key=${{ env.DATA_CACHE_KEY }}
+
       - name: "Check out the 'jeffhandley/github-ml-labeler' repo"
         uses: actions/checkout@v4
         with:
@@ -86,35 +103,18 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: "Run GitHubDownloader"
-        if: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           dotnet run --project src/GitHubDownloader -- \
             --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}" \
             --repo "${{ inputs.org_repo || github.repository }}" \
-            --pull-data labeler-cache/pull-data.tsv \
+            --pull-data ${{ env.DATA_PATH }} \
             --retries "${{ inputs.retries || '30,30,30,300,300,3600' }}" \
             --label-prefix "${{ inputs.label_prefix || 'area-' }}" \
             --page-size ${{ fromJSON( inputs.page_size || 25 ) }} \
-            --page-limit ${{ fromJSON( inputs.page_limit || 4000 ) }}
+            --page-limit ${{ fromJSON( inputs.page_limit || 2000 ) }}
 
-      - name: "Check cache for existing entry"
-        id: check-cache
-        uses: actions/cache/restore@v4
-        with:
-          path: labeler-cache/pull-data.tsv
-          key: ${{ env.CACHE_KEY }}
-          fail-on-cache-miss: false
-
-      - name: "Delete existing cache entry"
-        if: steps.check-cache.outputs.cache-hit == 'true'
-        run: |
-            gh api --method DELETE \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2022-11-28" \
-            /repos/${{ github.repository }}/actions/caches?key=${{ env.CACHE_KEY }}
-
-      - name: "Save downloaded data to cache"
+      - name: "Save data to cache"
         uses: actions/cache/save@v4
         with:
-          path: labeler-cache/pull-data.tsv
-          key: ${{ env.CACHE_KEY }}
+          path: ${{ env.DATA_PATH }}
+          key: ${{ env.DATA_CACHE_KEY }}

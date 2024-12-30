@@ -1,13 +1,13 @@
-name: "Labeler: Label Pull Request"
+name: "Labeler: Label Pull"
 
 on:
   pull_request:
-    types: [opened, edited, synchronize, unlabeled]
+    types: [opened, edited, synchronize]
 
   workflow_call:
     inputs:
       number:
-        description: "Issue Number"
+        description: "Pull Number"
         type: number
         required: true
       label_prefix:
@@ -22,23 +22,21 @@ on:
       default_label:
         description: "Default Label (leave blank for no default label)"
         type: string
-      model_repo:
-        description: "The org/repo to use for the cached model (defaults to current repository)"
-        type: string
-      model_key:
-        description: "The optional key to use in the cache key suffix for loading the model"
+      model_cache_key:
+        description: "The optional cache key override to use for loading the model"
         type: string
 
   workflow_dispatch:
     inputs:
-      org_repo:
-        description: "The org/repo to use (defaults to current repository)"
-        type: string
       github_token:
         description: "The GitHub token (defaults to action token)"
         type: string
+      repository:
+        description: "The org/repo to use (defaults to current repository)"
+        type: string
       number:
-        description: "Pull Request Number"
+        description: "Pull Number"
+        type: number
         required: true
       label_prefix:
         description: "Label Prefix"
@@ -50,17 +48,18 @@ on:
         default: 0.75
         required: true
       default_label:
-        description: "Default Label"
+        description: "Default Label (leave blank for no default label)"
         default: "needs-area-label"
-      model_repo:
-        description: "The org/repo to use for the cached model (defaults to current repository)"
-        type: string
-      model_key:
-        description: "The optional key to use in the cache key suffix for loading the model"
+      model_cache_key:
+        description: "The optional cache key override to use for loading the model"
         type: string
 
 permissions:
   pull-requests: write
+
+env:
+  MODEL_PATH: labeler-cache/pull-model.zip
+  MODEL_CACHE_KEY: github-ml-labeler/${{ inputs.model_cache_key || github.repository }}/pulls/model
 
 jobs:
   label-pull:
@@ -74,12 +73,12 @@ jobs:
           repository: jeffhandley/github-ml-labeler
 
       # Restore cache after checkout to ensure files aren't cleaned or removed
-      - name: "Restore pull-model.zip from 'github-ml-labeler/${{ inputs.model_repo || github.repository }}/model-pulls/${{ inputs.model_key }}'"
+      - name: "Restore model from cache"
         id: restore-cache
         uses: actions/cache@v4
         with:
-          path: labeler-cache/pull-model.zip
-          key: github-ml-labeler/${{ inputs.model_repo || github.repository }}/model-pulls/${{ inputs.model_key }}
+          path: ${{ env.MODEL_PATH }}
+          key: ${{ env.MODEL_CACHE_KEY }}
           fail-on-cache-miss: true
 
       - uses: actions/setup-dotnet@v4
@@ -90,8 +89,8 @@ jobs:
         run: |
           dotnet run --project src/LabelPredictor -- \
             --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}" \
-            --repo "${{ inputs.org_repo || github.repository }}" \
-            --pull-model labeler-cache/pull-model.zip \
+            --repo "${{ inputs.repository || github.repository }}" \
+            --pull-model ${{ env.MODEL_PATH }} \
             --pull ${{ fromJSON(inputs.number || github.event.number) }} \
             --label-prefix "${{ inputs.label_prefix || 'area-' }}" \
             --threshold ${{ fromJSON( inputs.threshold || 0.75 ) }} \
