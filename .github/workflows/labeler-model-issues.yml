@@ -57,7 +57,15 @@ jobs:
           key: ${{ env.MODEL_CACHE_KEY }}
           fail-on-cache-miss: false
 
-      - name: "Delete existing model cache entry"
+      - name: "Cache backup of existing model"
+        if: steps.check-cache.outputs.cache-hit == 'true'
+        id: backup-model
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.MODEL_PATH }}
+          key: ${{ env.MODEL_CACHE_KEY }}/backup
+
+      - name: "Delete existing cache entry"
         if: steps.check-cache.outputs.cache-hit == 'true'
         run: |
             gh api --method DELETE \

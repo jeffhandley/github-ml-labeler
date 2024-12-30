@@ -77,13 +77,21 @@ jobs:
     timeout-minutes: 360
 
     steps:
-      - name: "Check cache for existing entry"
+      - name: "Check cache for existing data"
         id: check-cache
         uses: actions/cache/restore@v4
         with:
           path: ${{ env.DATA_PATH }}
           key: ${{ env.DATA_CACHE_KEY }}
           fail-on-cache-miss: false
+
+      - name: "Cache backup of existing data"
+        if: steps.check-cache.outputs.cache-hit == 'true'
+        id: backup-data
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.DATA_PATH }}
+          key: ${{ env.DATA_CACHE_KEY }}/backup
 
       - name: "Delete existing cache entry"
         if: steps.check-cache.outputs.cache-hit == 'true'
