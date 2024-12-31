@@ -7,7 +7,9 @@ void ShowUsage(string? message = null)
     Console.WriteLine("  --repo {org/repo}");
     Console.WriteLine("  --label-prefix {label-prefix}");
     Console.WriteLine("  [--issue-data {path/to/issues.tsv}]");
+    Console.WriteLine("  [--issue-limit {rows}]");
     Console.WriteLine("  [--pull-data {path/to/pulls.tsv}]");
+    Console.WriteLine("  [--pull-limit {rows}]");
     Console.WriteLine("  [--page-size {size}]");
     Console.WriteLine("  [--page-limit {pages}]");
     Console.WriteLine("  [--retries {comma-separated-retries-in-seconds}]");
@@ -21,7 +23,9 @@ string? org = null;
 string? repo = null;
 string? githubToken = null;
 string? issuesPath = null;
+int? issueLimit = null;
 string? pullsPath = null;
+int? pullLimit = null;
 int? pageSize = null;
 int? pageLimit = null;
 int[] retries = [10, 20, 30, 60, 120];
@@ -53,8 +57,14 @@ while (arguments.Count > 0)
         case "--issue-data":
             issuesPath = arguments.Dequeue();
             break;
+        case "--issue-limit":
+            issueLimit = int.Parse(arguments.Dequeue());
+            break;
         case "--pull-data":
             pullsPath = arguments.Dequeue();
+            break;
+        case "--pull-limit":
+            pullLimit = int.Parse(arguments.Dequeue());
             break;
         case "--page-size":
             pageSize = int.Parse(arguments.Dequeue());
@@ -120,7 +130,7 @@ async Task DownloadIssues(string outputPath)
     using StreamWriter writer = new StreamWriter(outputPath);
     writer.WriteLine(string.Join('\t', "Number", "Label", "Title", "Body"));
 
-    await foreach (var issue in GitHubApi.DownloadIssues(githubToken, org, repo, labelPredicate, pageSize ?? 100, pageLimit ?? 500, retries, verbose))
+    await foreach (var issue in GitHubApi.DownloadIssues(githubToken, org, repo, labelPredicate, issueLimit, pageSize ?? 100, pageLimit ?? 1000, retries, verbose))
     {
         writer.WriteLine(FormatIssueRecord(issue.Issue, issue.Label));
 
@@ -143,7 +153,7 @@ async Task DownloadPullRequests(string outputPath)
     using StreamWriter writer = new StreamWriter(outputPath);
     writer.WriteLine(string.Join('\t', "Number", "Label", "Title", "Body", "FileNames", "FolderNames"));
 
-    await foreach (var pullRequest in GitHubApi.DownloadPullRequests(githubToken, org, repo, labelPredicate, pageSize ?? 25, pageLimit ?? 2000, retries, verbose))
+    await foreach (var pullRequest in GitHubApi.DownloadPullRequests(githubToken, org, repo, labelPredicate, pullLimit, pageSize ?? 25, pageLimit ?? 4000, retries, verbose))
     {
         writer.WriteLine(FormatPullRequestRecord(pullRequest.PullRequest, pullRequest.Label));
 
