@@ -1,13 +1,13 @@
-name: "Labeler: Label Issue"
+name: "Labeler: Predict Pull Label"
 
 on:
-  issues:
-    types: [opened, edited, transferred]
+  pull_request:
+    types: [opened, edited, synchronize]
 
   workflow_call:
     inputs:
       number:
-        description: "Issue Number"
+        description: "Pull Number"
         type: number
         required: true
       label_prefix:
@@ -35,7 +35,7 @@ on:
         description: "The org/repo to use (defaults to current repository)"
         type: string
       number:
-        description: "Issue Number"
+        description: "Pull Number"
         type: number
         required: true
       label_prefix:
@@ -55,14 +55,14 @@ on:
         type: string
 
 permissions:
-  issues: write
+  pull-requests: write
 
 env:
-  MODEL_PATH: labeler-cache/issue-model.zip
-  MODEL_CACHE_KEY: github-ml-labeler/issues/model/${{ inputs.model_cache_key || inputs.repository || github.repository }}
+  MODEL_PATH: labeler-cache/pull-model.zip
+  MODEL_CACHE_KEY: github-ml-labeler/pulls/model/${{ inputs.model_cache_key || inputs.repository || github.repository }}
 
 jobs:
-  label-issue:
+  predict-pull:
     runs-on: ubuntu-latest
     timeout-minutes: 2
 
@@ -90,8 +90,8 @@ jobs:
           dotnet run --project src/LabelPredictor --                            \
             --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}"        \
             --repo "${{ inputs.repository || github.repository }}"              \
-            --issue-model ${{ env.MODEL_PATH }}                                 \
-            --issue ${{ fromJSON(inputs.number || github.event.issue.number) }} \
+          --pull-model ${{ env.MODEL_PATH }}                                    \
+            --pull ${{ fromJSON(inputs.number || github.event.number) }}        \
             --label-prefix "${{ inputs.label_prefix || 'area-' }}"              \
             --threshold ${{ fromJSON( inputs.threshold || 0.75 ) }}             \
             --default-label "${{ inputs.default_label || 'needs-area-label' }}"
