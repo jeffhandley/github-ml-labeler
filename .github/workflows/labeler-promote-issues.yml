@@ -20,6 +20,7 @@ env:
   MODEL_CACHE_KEY: github-ml-labeler/issues/model/${{ inputs.model_cache_key }}
   PROMOTION_CACHE_KEY: github-ml-labeler/issues/model/${{ github.repository }}
   BACKUP_CACHE_KEY: github-ml-labeler/issues/model/${{ github.repository }}/backup
+  GH_TOKEN: ${{ github.token }}
 
 permissions:
   actions: write
