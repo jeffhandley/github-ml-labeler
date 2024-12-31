@@ -87,11 +87,11 @@ jobs:
 
       - name: "Run LabelPredictor"
         run: |
-          dotnet run --project src/LabelPredictor -- \
-            --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}" \
-            --repo "${{ inputs.repository || github.repository }}" \
-            --pull-model ${{ env.MODEL_PATH }} \
-            --pull ${{ fromJSON(inputs.number || github.event.number) }} \
-            --label-prefix "${{ inputs.label_prefix || 'area-' }}" \
-            --threshold ${{ fromJSON( inputs.threshold || 0.75 ) }} \
+          dotnet run --project src/LabelPredictor --                            \
+            --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}"        \
+            --repo "${{ inputs.repository || github.repository }}"              \
+          --pull-model ${{ env.MODEL_PATH }}                                    \
+            --pull ${{ fromJSON(inputs.number || github.event.number) }}        \
+            --label-prefix "${{ inputs.label_prefix || 'area-' }}"              \
+            --threshold ${{ fromJSON( inputs.threshold || 0.75 ) }}             \
             --default-label "${{ inputs.default_label || 'needs-area-label' }}"
