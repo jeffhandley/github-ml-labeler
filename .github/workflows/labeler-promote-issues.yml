@@ -26,6 +26,8 @@ permissions:
 
 jobs:
   promote-issue-model:
+    runs-on: ubuntu-latest
+
     steps:
       - name: "Check for existing backup cache entry"
         id: check-backup

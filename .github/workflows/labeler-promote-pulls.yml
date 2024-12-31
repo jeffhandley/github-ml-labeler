@@ -26,6 +26,8 @@ permissions:
 
 jobs:
   promote-pull-model:
+    runs-on: ubuntu-latest
+
     steps:
       - name: "Check for existing backup cache entry"
         id: check-backup
