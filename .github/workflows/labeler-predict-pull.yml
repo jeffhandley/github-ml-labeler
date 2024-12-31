@@ -4,94 +4,38 @@ on:
   pull_request:
     types: [opened, edited, synchronize]
 
-  workflow_call:
-    inputs:
-      number:
-        description: "Pull Number"
-        type: number
-        required: true
-      label_prefix:
-        description: "Label Prefix"
-        type: string
-        required: true
-      threshold:
-        description: "The minimum confidence score for a label prediction"
-        type: number
-        default: 0.75
-        required: true
-      default_label:
-        description: "Default Label (leave blank for no default label)"
-        type: string
-      model_cache_key:
-        description: "The optional cache key suffix to use for loading the model (defaults to repository name)"
-        type: string
-
   workflow_dispatch:
     inputs:
-      github_token:
-        description: "The GitHub token (defaults to action token)"
-        type: string
-      repository:
-        description: "The org/repo to use (defaults to current repository)"
-        type: string
       number:
-        description: "Pull Number"
+        description: "Pull Request Number"
         type: number
         required: true
       label_prefix:
         description: "Label Prefix"
+        type: string
         default: "area-"
         required: true
       threshold:
         description: "The minimum confidence score for a label prediction"
         type: number
-        default: 0.75
+        default: "0.75"
         required: true
       default_label:
         description: "Default Label (leave blank for no default label)"
+        type: string
         default: "needs-area-label"
       model_cache_key:
-        description: "The optional cache key suffix to use for loading the model (defaults to repository name)"
+        description: "The optional cache key suffix to use for saving the model (defaults to repository name)"
         type: string
 
-permissions:
-  pull-requests: write
-
-env:
-  MODEL_PATH: labeler-cache/pull-model.zip
-  MODEL_CACHE_KEY: github-ml-labeler/pulls/model/${{ inputs.model_cache_key || inputs.repository || github.repository }}
-
 jobs:
-  predict-pull:
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-
-    steps:
-      - name: "Check out the 'jeffhandley/github-ml-labeler' repo"
-        uses: actions/checkout@v4
-        with:
-          repository: jeffhandley/github-ml-labeler
-
-      # Restore cache after checkout to ensure files aren't cleaned or removed
-      - name: "Restore model from cache"
-        id: restore-cache
-        uses: actions/cache/restore@v4
-        with:
-          path: ${{ env.MODEL_PATH }}
-          key: ${{ env.MODEL_CACHE_KEY }}
-          fail-on-cache-miss: true
-
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
-
-      - name: "Run LabelPredictor"
-        run: |
-          dotnet run --project src/LabelPredictor --                            \
-            --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}"        \
-            --repo "${{ inputs.repository || github.repository }}"              \
-          --pull-model ${{ env.MODEL_PATH }}                                    \
-            --pull ${{ fromJSON(inputs.number || github.event.number) }}        \
-            --label-prefix "${{ inputs.label_prefix || 'area-' }}"              \
-            --threshold ${{ fromJSON( inputs.threshold || 0.75 ) }}             \
-            --default-label "${{ inputs.default_label || 'needs-area-label' }}"
+  label-pull:
+    permissions:
+      pull-requests: write
+    uses: jeffhandley/github-ml-labeler/actions/labeler-predict-pull.yml@main
+    with:
+      number: ${{ fromJSON( inputs.number || github.event.number ) }}
+      label_prefix: ${{ inputs.label_prefix || 'area-' }}
+      threshold: ${{ fromJSON( inputs.threshold || 0.75 ) }}
+      default_label: ${{ inputs.default_label || 'needs-area-label' }}
+      model_cache_key: ${{ inputs.model_cache_key || github.repository }}

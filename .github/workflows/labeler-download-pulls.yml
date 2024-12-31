@@ -1,7 +1,7 @@
 name: "Labeler: Download Pulls"
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       github_token:
         description: "The GitHub token (defaults to action token)"
@@ -36,105 +36,19 @@ on:
         description: "The optional cache key override to use for saving the data"
         type: string
 
-  workflow_dispatch:
-    inputs:
-      github_token:
-        description: "The GitHub token (defaults to action token)"
-        type: string
-      repository:
-        description: "The org/repo to download data from (defaults to current repository)"
-        type: string
-      label_prefix:
-        description: "Label prefix"
-        type: string
-        default: "area-"
-      pull_limit:
-        description: "Max number of items to include in the model"
-        type: number
-        default: 50000
-        required: true
-      page_size:
-        description: "The number of items to include on each request"
-        type: number
-        default: 25
-        required: true
-      page_limit:
-        description: "Max pages of items to download"
-        type: number
-        default: 4000
-        required: true
-      retries:
-        description: "Comma-separated list of retry delays in seconds"
-        type: string
-        default: "30,30,300,300,3000,3000"
-      data_cache_key:
-        description: "The optional cache key suffix to use for saving the data (defaults to repository name)"
-        type: string
-
-permissions:
-  pull-requests: read
-  actions: write
-
-env:
-  DATA_PATH: labeler-cache/pull-data.tsv
-  DATA_CACHE_KEY: github-ml-labeler/pulls/data/${{ inputs.data_cache_key || inputs.repository || github.repository }}
-  GH_TOKEN: ${{ github.token }}
-
 jobs:
   labeler-download-pulls:
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
+    permissions:
+      pull-requests: read
+      actions: write
 
-    steps:
-      - name: "Check cache for existing data"
-        id: check-cache
-        uses: actions/cache/restore@v4
-        with:
-          path: ${{ env.DATA_PATH }}
-          key: ${{ env.DATA_CACHE_KEY }}
-          fail-on-cache-miss: false
-
-      - name: "Cache backup of existing data"
-        if: steps.check-cache.outputs.cache-hit == 'true'
-        id: backup-data
-        uses: actions/cache/save@v4
-        with:
-          path: ${{ env.DATA_PATH }}
-          key: ${{ env.DATA_CACHE_KEY }}/backup
-
-      - name: "Delete existing cache entry"
-        if: steps.check-cache.outputs.cache-hit == 'true'
-        run: |
-            gh api --method DELETE \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              /repos/${{ github.repository }}/actions/caches?key=${{ env.DATA_CACHE_KEY }}
-
-            rm ${{ env.DATA_PATH }}
-
-      - name: "Check out the 'jeffhandley/github-ml-labeler' repo"
-        uses: actions/checkout@v4
-        with:
-          repository: jeffhandley/github-ml-labeler
-
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
-
-      - name: "Run GitHubDownloader"
-        run: |
-          dotnet run --project src/GitHubDownloader --                      \
-            --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}"    \
-            --repo "${{ inputs.repository || github.repository }}"          \
-            --pull-data ${{ env.DATA_PATH }}                                \
-            --pull-limit ${{ fromJSON( inputs.pull_limit || 50000 ) }}      \
-            --retries "${{ inputs.retries || '30,30,300,300,3000,3000' }}"  \
-            --label-prefix "${{ inputs.label_prefix || 'area-' }}"          \
-            --page-size ${{ fromJSON( inputs.page_size || 25 ) }}           \
-            --page-limit ${{ fromJSON( inputs.page_limit || 4000 ) }}
-
-      - name: "Save data to cache"
-        uses: actions/cache/save@v4
-        with:
-          path: ${{ env.DATA_PATH }}
-          key: ${{ env.DATA_CACHE_KEY }}
+    uses: jeffhandley/github-ml-labeler/actions/labeler-download-pulls.yml@main
+    with:
+      github_token: ${{ inputs.github_token || github.token }}
+      repository: ${{ inputs.repository || github.repository }}
+      label_prefix: ${{ inputs.label_prefix || 'area-' }}
+      pull_limit: ${{ fromJSON( inputs.pull_limit || 50000 ) }}
+      page_size: ${{ fromJSON( inputs.page_size || 25 ) }}
+      page_limit: ${{ fromJSON( inputs.page_limit || 4000 )}}
+      retries: ${{ inputs.retries || '30,30,300,300,3000,3000' }}
+      data_cache_key: ${{ inputs.data_cache_key }}

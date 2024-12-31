@@ -1,0 +1,69 @@
+name: "Labeler: Predict Issue Label"
+
+on:
+  issues:
+    types: [opened, edited, transferred]
+
+  workflow_call:
+    inputs:
+      number:
+        description: "Issue Number"
+        type: number
+        required: true
+      label_prefix:
+        description: "Label Prefix"
+        type: string
+        required: true
+      threshold:
+        description: "The minimum confidence score for a label prediction"
+        type: number
+        default: 0.75
+        required: true
+      default_label:
+        description: "Default Label (leave blank for no default label)"
+        type: string
+      model_cache_key:
+        description: "The optional cache key suffix to use for loading the model (defaults to repository name)"
+        type: string
+
+permissions:
+  issues: write
+
+env:
+  MODEL_PATH: labeler-cache/issue-model.zip
+  MODEL_CACHE_KEY: github-ml-labeler/issues/model/${{ inputs.model_cache_key || inputs.repository || github.repository }}
+
+jobs:
+  predict-issue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: "Check out the 'jeffhandley/github-ml-labeler' repo"
+        uses: actions/checkout@v4
+        with:
+          repository: jeffhandley/github-ml-labeler
+
+      # Restore cache after checkout to ensure files aren't cleaned or removed
+      - name: "Restore model from cache"
+        id: restore-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.MODEL_PATH }}
+          key: ${{ env.MODEL_CACHE_KEY }}
+          fail-on-cache-miss: true
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: "Run LabelPredictor"
+        run: |
+          dotnet run --project src/LabelPredictor --                            \
+            --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}"        \
+            --repo "${{ inputs.repository || github.repository }}"              \
+            --issue-model ${{ env.MODEL_PATH }}                                 \
+            --issue ${{ fromJSON(inputs.number || github.event.issue.number) }} \
+            --label-prefix "${{ inputs.label_prefix || 'area-' }}"              \
+            --threshold ${{ fromJSON( inputs.threshold || 0.75 ) }}             \
+            --default-label "${{ inputs.default_label || 'needs-area-label' }}"
