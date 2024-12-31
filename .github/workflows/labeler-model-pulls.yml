@@ -86,7 +86,7 @@ jobs:
             --pull-model ${{ env.MODEL_PATH }}
 
       - name: "Save model to cache"
-        uses: actions/cache@v4
+        uses: actions/cache/save@v4
         with:
           path: ${{ env.MODEL_PATH }}
           key: ${{ env.MODEL_CACHE_KEY }}

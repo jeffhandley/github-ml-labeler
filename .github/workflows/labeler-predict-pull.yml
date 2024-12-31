@@ -75,7 +75,7 @@ jobs:
       # Restore cache after checkout to ensure files aren't cleaned or removed
       - name: "Restore model from cache"
         id: restore-cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: ${{ env.MODEL_PATH }}
           key: ${{ env.MODEL_CACHE_KEY }}
