@@ -24,9 +24,9 @@ permissions:
 
 env:
   DATA_PATH: labeler-cache/issue-data.tsv
-  DATA_CACHE_KEY: github-ml-labeler/issues/data/${{ inputs.data_cache_key || inputs.repository || github.repository) }}
+  DATA_CACHE_KEY: github-ml-labeler/issues/data/${{ inputs.data_cache_key || inputs.repository || github.repository }}
   MODEL_PATH: labeler-cache/issue-model.zip
-  MODEL_CACHE_KEY: github-ml-labeler/issues/model/${{ inputs.model_cache_key || inputs.repository || github.repository) }}
+  MODEL_CACHE_KEY: github-ml-labeler/issues/model/${{ inputs.model_cache_key || inputs.repository || github.repository }}
   GH_TOKEN: ${{ github.token }}
 
 jobs:
