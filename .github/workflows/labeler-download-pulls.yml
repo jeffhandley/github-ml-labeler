@@ -77,7 +77,7 @@ permissions:
 
 env:
   DATA_PATH: labeler-cache/pull-data.tsv
-  DATA_CACHE_KEY: github-ml-labeler/pulls/data/${{ inputs.data_cache_key || inputs.repository || github.repository) }}
+  DATA_CACHE_KEY: github-ml-labeler/pulls/data/${{ inputs.data_cache_key || inputs.repository || github.repository }}
   GH_TOKEN: ${{ github.token }}
 
 jobs:
