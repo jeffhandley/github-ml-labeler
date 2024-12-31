@@ -25,17 +25,17 @@ public class GitHubApi
         return client;
     }
 
-    public static async IAsyncEnumerable<(Issue Issue, string Label)> DownloadIssues(string githubToken, string org, string repo, Predicate<string> labelPredicate, int pageSize, int pageLimit, int[] retries, bool verbose)
+    public static async IAsyncEnumerable<(Issue Issue, string Label)> DownloadIssues(string githubToken, string org, string repo, Predicate<string> labelPredicate, int? issueLimit, int pageSize, int pageLimit, int[] retries, bool verbose)
     {
-        await foreach (var item in DownloadItems<Issue>("issues", githubToken, org, repo, labelPredicate, pageSize, pageLimit, retries, verbose))
+        await foreach (var item in DownloadItems<Issue>("issues", githubToken, org, repo, labelPredicate, issueLimit, pageSize, pageLimit, retries, verbose))
         {
             yield return (item.Item, item.Label);
         }
     }
 
-    public static async IAsyncEnumerable<(PullRequest PullRequest, string Label)> DownloadPullRequests(string githubToken, string org, string repo, Predicate<string> labelPredicate, int pageSize, int pageLimit, int[] retries, bool verbose)
+    public static async IAsyncEnumerable<(PullRequest PullRequest, string Label)> DownloadPullRequests(string githubToken, string org, string repo, Predicate<string> labelPredicate, int? pullLimit, int pageSize, int pageLimit, int[] retries, bool verbose)
     {
-        var items = DownloadItems<PullRequest>("pullRequests", githubToken, org, repo, labelPredicate, pageSize, pageLimit, retries, verbose);
+        var items = DownloadItems<PullRequest>("pullRequests", githubToken, org, repo, labelPredicate, pullLimit, pageSize, pageLimit, retries, verbose);
 
         await foreach (var item in items)
         {
@@ -43,18 +43,20 @@ public class GitHubApi
         }
     }
 
-    private static async IAsyncEnumerable<(T Item, string Label)> DownloadItems<T>(string itemQueryName, string githubToken, string org, string repo, Predicate<string> labelPredicate, int pageSize, int pageLimit, int[] retries, bool verbose) where T : Issue
+    private static async IAsyncEnumerable<(T Item, string Label)> DownloadItems<T>(string itemQueryName, string githubToken, string org, string repo, Predicate<string> labelPredicate, int? itemLimit, int pageSize, int pageLimit, int[] retries, bool verbose) where T : Issue
     {
-        int pageNumber = 1;
+        int pageNumber = 0;
         string? after = null;
         bool hasNextPage = true;
         int loadedCount = 0;
+        int savedCount = 0;
         int? totalCount = null;
         byte retry = 0;
+        bool finished = false;
 
-        while (hasNextPage && pageNumber <= pageLimit)
+        do
         {
-            Console.WriteLine($"Downloading {itemQueryName} page {pageNumber}... (limit: {pageLimit}){(retry > 0 ? $" (retry: {retry} of {retries.Length})" : "")}");
+            Console.WriteLine($"Downloading {itemQueryName} page {pageNumber + 1}...{(retry > 0 ? $" (retry {retry} of {retries.Length}) " : "")}{(after is not null ? $" (cursor: '{after}')" : "")}");
 
             Page<T> page;
 
@@ -71,15 +73,17 @@ public class GitHubApi
             {
                 Console.WriteLine($"Exception caught during query.\n  {ex.Message}");
 
-                if (++retry >= retries.Length)
+                if (retry >= retries.Length - 1)
                 {
                     Console.WriteLine($"Retry limit of {retries.Length} reached. Aborting.");
                     break;
                 }
                 else
                 {
-                    Console.WriteLine($"Waiting {(retries[retry])} seconds before retrying...");
+                    Console.WriteLine($"Waiting {retries[retry]} seconds before retry {retry + 1} of {retries.Length}...");
                     await Task.Delay(retries[retry] * 1000);
+                    retry++;
+
                     continue;
                 }
             }
@@ -119,10 +123,23 @@ public class GitHubApi
                 if (verbose) Console.WriteLine($"{itemQueryName} {org}/{repo}#{item.Number} - Included in output. Applicable label: '{labels[0]}'.");
 
                 yield return (item, labels[0]);
+
+                savedCount++;
+
+                if (itemLimit.HasValue && savedCount >= itemLimit)
+                {
+                    break;
+                }
             }
 
-            Console.WriteLine($"Total {itemQueryName} downloaded: {loadedCount} of {totalCount}. Cursor: '{after}'. {(hasNextPage ? (pageNumber <= pageLimit ? "Continuing to next page..." : "Page limit reached. Finished.") : "No more pages.")}");
+            finished = (!hasNextPage || pageNumber >= pageLimit || (itemLimit.HasValue && savedCount >= itemLimit));
+
+            Console.WriteLine(
+                $"Saved: {savedCount} (limit: {(itemLimit.HasValue ? itemLimit : "none")}) | " +
+                $"Pages: {pageNumber} (limit: {pageLimit}) | " +
+                $"Downloaded: {loadedCount} (total: {totalCount})");
         }
+        while (!finished);
     }
 
     private static async Task<Page<T>> GetItemsPage<T>(string githubToken, string org, string repo, int pageSize, string? after, string itemQueryName) where T : Issue
