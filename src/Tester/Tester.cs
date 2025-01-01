@@ -80,7 +80,21 @@ if (org is null || repo is null || githubToken is null || threshold is null || l
     return;
 }
 
+List<Task> tasks = new();
+
 if (issueModelPath is not null)
+{
+    tasks.Add(Task.Run(() => TestIssues()));
+}
+
+if (pullModelPath is not null)
+{
+    tasks.Add(Task.Run(() => TestPullRequests()));
+}
+
+await Task.WhenAll(tasks);
+
+async Task TestIssues()
 {
     var context = new MLContext();
     var model = context.Model.Load(issueModelPath, out _);
@@ -134,7 +148,7 @@ if (issueModelPath is not null)
     Console.WriteLine("Test Complete");
 }
 
-if (pullModelPath is not null)
+async Task TestPullRequests()
 {
     var context = new MLContext();
     var model = context.Model.Load(pullModelPath, out _);
