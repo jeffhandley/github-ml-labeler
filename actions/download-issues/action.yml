@@ -1,0 +1,46 @@
+name: "Download Issues"
+description: "Download issue data from a GitHub repository for building the labeling model"
+
+inputs:
+  github_token:
+    description: "The GitHub token (defaults to action token)"
+    type: string
+  repository:
+    description: "The org/repo to download data from (defaults to current repository)"
+    type: string
+  label_prefix:
+    description: "Label prefix"
+    type: string
+    required: true
+  issue_limit:
+    description: "Max number of items to include in the model"
+    type: number
+    required: true
+  page_size:
+    description: "The number of items to include on each request"
+    type: number
+    required: true
+  page_limit:
+    description: "Max pages of items to download"
+    type: number
+    required: true
+  retries:
+    description: "Comma-separated list of retry delays in seconds"
+    type: string
+  data_cache_key:
+    description: "The optional cache key override to use for saving the data"
+    type: string
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Test action step
+      shell: bash
+      run: |
+        echo "repository:     ${{ inputs.repository || github.repository }}"
+        echo "label_prefix:   ${{ inputs.label_prefix }}"
+        echo "issue_limit:    ${{ inputs.issue_limit }}"
+        echo "page_size:      ${{ inputs.page_size }}"
+        echo "page_limit:     ${{ inputs.page_limit }}"
+        echo "retries:        ${{ inputs.retries }}"
+        echo "data_cache_key: ${{ inputs.data_cache_key }}"
