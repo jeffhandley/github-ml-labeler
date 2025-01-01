@@ -53,15 +53,29 @@ if ((issueDataPath is null != issueModelPath is null) ||
 
 if (issueDataPath is not null && issueModelPath is not null)
 {
+    Console.WriteLine("Inferring model schema from data...");
     var issueContext = new MLContext();
     var issueColumns = issueContext.Auto().InferColumns(
         issueDataPath,
         separatorChar: '\t',
         labelColumnIndex: 1,
         hasHeader: true);
+
+    var textColumns = issueColumns.ColumnInformation.TextColumnNames;
+
+    if (!textColumns.Contains("Title") || !textColumns.Contains("Body"))
+    {
+        throw new ApplicationException("Model loading failed; Title and Body columns were not inferred in the model. It's likely the data set is too small.");
+    }
+
+    Console.WriteLine("Loading data into model...");
     var issueLoader = issueContext.Data.CreateTextLoader(issueColumns.TextLoaderOptions);
     var issueData = issueLoader.Load(issueDataPath);
+
+    Console.WriteLine("Splitting data into train and test data sets...");
     var issueDataSets = issueContext.Data.TrainTestSplit(issueData, testFraction: 0.2);
+
+    Console.WriteLine("Constructing pipeline...");
     var issueTrainer = issueContext.MulticlassClassification.Trainers.SdcaMaximumEntropy("LabelKey", "Features");
     var issuePipeline = issueContext
         .Transforms.Conversion.MapValueToKey(outputColumnName: "LabelKey", inputColumnName: "Label")
@@ -71,38 +85,47 @@ if (issueDataPath is not null && issueModelPath is not null)
         .Append(issueTrainer)
         .Append(issueContext.Transforms.Conversion.MapKeyToValue("PredictedLabel"));
 
+    Console.WriteLine("Cross-validating model...");
     issueContext.MulticlassClassification.CrossValidate(
         data: issueDataSets.TrainSet,
         estimator: issuePipeline,
         numberOfFolds: 6,
         labelColumnName: "LabelKey");
 
+    Console.WriteLine("Fitting model...");
     var issueModel = issuePipeline.Fit(issueDataSets.TrainSet);
+
+    Console.WriteLine($"Saving model to {issueModelPath}...");
     issueContext.Model.Save(issueModel, issueDataSets.TrainSet.Schema, issueModelPath);
 
-    var testIssue = new Issue
-    {
-        Number = 34,
-        Title = "Bug with List<T>",
-        Body = "I have encountered a bug when using List<T>. The collection does not work like I expected."
-    };
-
-    var engine = issueContext.Model.CreatePredictionEngine<Issue, LabelPrediction>(issueModel);
-    var prediction = engine.Predict(testIssue);
-    Console.WriteLine($"Test Issue:\n  Number: {testIssue.Number}\n  Title: {testIssue.Title}\n  Body: {testIssue.Body}\n  PREDICTED LABEL: {prediction.PredictedLabel}");
+    Console.WriteLine("Model successfully saved.");
 }
 
 if (pullDataPath is not null && pullModelPath is not null)
 {
+    Console.WriteLine("Inferring model schema from data...");
     var pullContext = new MLContext();
     var pullColumns = pullContext.Auto().InferColumns(
         pullDataPath,
         separatorChar: '\t',
         labelColumnIndex: 1,
         hasHeader: true);
+
+    var textColumns = pullColumns.ColumnInformation.TextColumnNames;
+
+    if (!textColumns.Contains("Title") || !textColumns.Contains("Body"))
+    {
+        throw new ApplicationException("Model loading failed; Title and Body columns were not inferred in the model. It's likely the data set is too small.");
+    }
+
+    Console.WriteLine("Loading data into model...");
     var pullLoader = pullContext.Data.CreateTextLoader(pullColumns.TextLoaderOptions);
     var pullData = pullLoader.Load(pullDataPath);
+
+    Console.WriteLine("Splitting data into train and test data sets...");
     var pullDataSets = pullContext.Data.TrainTestSplit(pullData, testFraction: 0.2);
+
+    Console.WriteLine("Constructing pipeline...");
     var pullTrainer = pullContext.MulticlassClassification.Trainers.SdcaMaximumEntropy("LabelKey", "Features");
     var pullPipeline = pullContext
         .Transforms.Conversion.MapValueToKey(outputColumnName: "LabelKey", inputColumnName: "Label")
@@ -114,25 +137,18 @@ if (pullDataPath is not null && pullModelPath is not null)
         .Append(pullTrainer)
         .Append(pullContext.Transforms.Conversion.MapKeyToValue("PredictedLabel"));
 
+    Console.WriteLine("Cross-validating model...");
     pullContext.MulticlassClassification.CrossValidate(
         data: pullDataSets.TrainSet,
         estimator: pullPipeline,
         numberOfFolds: 6,
         labelColumnName: "LabelKey");
 
+    Console.WriteLine("Fitting model...");
     var pullModel = pullPipeline.Fit(pullDataSets.TrainSet);
+
+    Console.WriteLine($"Saving model to {issueModelPath}...");
     pullContext.Model.Save(pullModel, pullDataSets.TrainSet.Schema, pullModelPath);
 
-    var testPull = new PullRequest
-    {
-        Number = 42,
-        Title = "Fix bug with List<T>",
-        Body = "Fixes #34",
-        FileNames = "List.cs List List.Generic.Tests.cs List.Generic.Tests",
-        FolderNames = "src src/libraries src/libraries/System.Collections src/libraries/System.Collections/tests src/libraries/System.Collections/tests/Generic src/libraries/System.Collections/tests/Generic/List src src/libraries src/libraries/System.Private.CoreLib src/libraries/System.Private.CoreLib/src src/libraries/System.Private.CoreLib/src/System src/libraries/System.Private.CoreLib/src/System/Collections src/libraries/System.Private.CoreLib/src/System/Collections/Generic"
-    };
-
-    var engine = pullContext.Model.CreatePredictionEngine<PullRequest, LabelPrediction>(pullModel);
-    var prediction = engine.Predict(testPull);
-    Console.WriteLine($"Test Pull:\n  Number: {testPull.Number}\n  Title: {testPull.Title}\n  Body: {testPull.Body}\n  FileNames: {testPull.FileNames}\n  {testPull.FolderNames}\n  PREDICTED LABEL: {prediction.PredictedLabel}");
+    Console.WriteLine("Model successfully saved.");
 }
