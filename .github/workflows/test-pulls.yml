@@ -23,9 +23,6 @@ on:
         type: number
         default: 0.75
         required: true
-      default_label:
-        description: "Default Label (leave blank for no default label)"
-        type: string
       model_cache_key:
         description: "The optional cache key suffix to use for loading the model (defaults to repository name)"
         type: string
@@ -52,9 +49,6 @@ on:
         type: number
         default: 0.75
         required: true
-      default_label:
-        description: "Default Label (leave blank for no default label)"
-        default: "needs-area-label"
       model_cache_key:
         description: "The optional cache key suffix to use for loading the model (defaults to repository name)"
         type: string
@@ -96,4 +90,3 @@ jobs:
             --pull-limit ${{ fromJSON(inputs.pull_limit || 50000 ) }}         \
             --label-prefix "${{ inputs.label_prefix || 'area-' }}"              \
             --threshold ${{ fromJSON( inputs.threshold || 0.75 ) }}             \
-            --default-label "${{ inputs.default_label || 'needs-area-label' }}"

@@ -11,7 +11,6 @@ void ShowUsage(string? message = null)
     Console.WriteLine("  --threshold {threshold}");
     Console.WriteLine("  [--issue-model {path/to/issue-model.zip} --issue-limit {issues}]");
     Console.WriteLine("  [--pull-model {path/to/pull-model.zip} --pull-limit {pulls}]");
-    Console.WriteLine("  [--default-label {needs-area-label}]");
 
     Environment.Exit(-1);
 }
@@ -26,7 +25,6 @@ string? pullModelPath = null;
 int? pullLimit = null;
 float? threshold = null;
 Predicate<string>? labelPredicate = null;
-string? defaultLabel = null;
 
 while (arguments.Count > 0)
 {
@@ -69,9 +67,6 @@ while (arguments.Count > 0)
         case "--threshold":
             threshold = float.Parse(arguments.Dequeue());
             break;
-        case "--default-label":
-            defaultLabel = arguments.Dequeue();
-            break;
         default:
             ShowUsage($"Unrecognized argument: {argument}");
             return;
@@ -93,6 +88,8 @@ if (issueModelPath is not null)
 
     int matches = 0;
     int mismatches = 0;
+    int noPrediction = 0;
+    int noExisting = 0;
 
     await foreach (var result in GitHubApi.DownloadIssues(githubToken, org, repo, labelPredicate, issueLimit ?? 50000, 100, 1000, [30, 30, 30], false))
     {
@@ -101,11 +98,22 @@ if (issueModelPath is not null)
             result.Issue.Number,
             new Issue(result.Issue),
             labelPredicate,
-            "issue");
+            "Issue");
 
-        bool match = (prediction?.PredictedLabel?.ToLower() == prediction?.ExistingLabel?.ToLower());
+        if (prediction is null)
+        {
+            continue;
+        }
 
-        if (match)
+        if (prediction?.PredictedLabel is null && prediction?.ExistingLabel is not null)
+        {
+            noPrediction++;
+        }
+        else if (prediction?.PredictedLabel is not null && prediction?.ExistingLabel is null)
+        {
+            noExisting++;
+        }
+        else if (prediction?.PredictedLabel?.ToLower() == prediction?.ExistingLabel?.ToLower())
         {
             matches++;
         }
@@ -114,14 +122,16 @@ if (issueModelPath is not null)
             mismatches++;
         }
 
-        Console.WriteLine($"Issue #{result.Issue.Number} - Predicted: {(prediction?.PredictedLabel ?? "<NONE>")} - Existing: {(prediction?.ExistingLabel ?? "<NONE>")} - {(match ? "MATCH" : "MISMATCH")}");
-        Console.WriteLine($"  Matches   : {matches} ({(float)matches / (float)(matches + mismatches):P2})");
-        Console.WriteLine($"  Mismatches: {mismatches} ({(float)mismatches / (float)(matches + mismatches):P2})");
+        float total = matches + mismatches + noPrediction + noExisting;
+
+        Console.WriteLine($"Issue #{result.Issue.Number} - Predicted: {(prediction?.PredictedLabel ?? "<NONE>")} - Existing: {(prediction?.ExistingLabel ?? "<NONE>")}");
+        Console.WriteLine($"  Matches      : {matches} ({(float)matches / total:P2})");
+        Console.WriteLine($"  Mismatches   : {mismatches} ({(float)mismatches / total:P2})");
+        Console.WriteLine($"  No Prediction: {noPrediction} ({(float)noPrediction / total:P2})");
+        Console.WriteLine($"  No Existing  : {noExisting} ({(float)noExisting / total:P2})");
     }
 
     Console.WriteLine("Test Complete");
-    Console.WriteLine($"  Matches   : {matches} ({(float)matches / (float)(matches + mismatches):P2})");
-    Console.WriteLine($"  Mismatches: {mismatches} ({(float)mismatches / (float)(matches + mismatches):P2})");
 }
 
 if (pullModelPath is not null)
@@ -134,6 +144,8 @@ if (pullModelPath is not null)
 
     int matches = 0;
     int mismatches = 0;
+    int noPrediction = 0;
+    int noExisting = 0;
 
     await foreach (var result in GitHubApi.DownloadPullRequests(githubToken, org, repo, labelPredicate, pullLimit ?? 50000, 25, 4000, [30, 30, 30], true))
     {
@@ -142,11 +154,22 @@ if (pullModelPath is not null)
             result.PullRequest.Number,
             new PullRequest(result.PullRequest),
             labelPredicate,
-            "pull request");
+            "Pull Request");
 
-        bool match = (prediction?.PredictedLabel?.ToLower() == prediction?.ExistingLabel?.ToLower());
+        if (prediction is null)
+        {
+            continue;
+        }
 
-        if (match)
+        if (prediction?.PredictedLabel is null && prediction?.ExistingLabel is not null)
+        {
+            noPrediction++;
+        }
+        else if (prediction?.PredictedLabel is not null && prediction?.ExistingLabel is null)
+        {
+            noExisting++;
+        }
+        else if (prediction?.PredictedLabel?.ToLower() == prediction?.ExistingLabel?.ToLower())
         {
             matches++;
         }
@@ -155,19 +178,21 @@ if (pullModelPath is not null)
             mismatches++;
         }
 
-        Console.WriteLine($"Pull Request #{result.PullRequest.Number} - Predicted: {(prediction?.PredictedLabel ?? "<NONE>")} - Existing: {(prediction?.ExistingLabel ?? "<NONE>")} - {(match ? "MATCH" : "MISMATCH")}");
-        Console.WriteLine($"  Matches   : {matches} ({(float)matches / (float)(matches + mismatches):P2})");
-        Console.WriteLine($"  Mismatches: {mismatches} ({(float)mismatches / (float)(matches + mismatches):P2})");
+        float total = matches + mismatches + noPrediction + noExisting;
+
+        Console.WriteLine($"Pull Request #{result.PullRequest.Number} - Predicted: {(prediction?.PredictedLabel ?? "<NONE>")} - Existing: {(prediction?.ExistingLabel ?? "<NONE>")}");
+        Console.WriteLine($"  Matches      : {matches} ({(float)matches / total:P2})");
+        Console.WriteLine($"  Mismatches   : {mismatches} ({(float)mismatches / total:P2})");
+        Console.WriteLine($"  No Prediction: {noPrediction} ({(float)noPrediction / total:P2})");
+        Console.WriteLine($"  No Existing  : {noExisting} ({(float)noExisting / total:P2})");
     }
 
     Console.WriteLine("Test Complete");
-    Console.WriteLine($"  Matches   : {matches} ({(float)matches / (float)(matches + mismatches):P2})");
-    Console.WriteLine($"  Mismatches: {mismatches} ({(float)mismatches / (float)(matches + mismatches):P2})");
 }
 
 (string? PredictedLabel, string? ExistingLabel)? GetPrediction<T>(PredictionEngine<T, LabelPrediction> predictor, ulong number, T issueOrPull, Predicate<string> labelPredicate, string itemType) where T : Issue
 {
-    var existing = issueOrPull.Labels?.FirstOrDefault(l => labelPredicate(l) || l.Equals(defaultLabel, StringComparison.OrdinalIgnoreCase));
+    var existing = issueOrPull.Labels?.FirstOrDefault(l => labelPredicate(l));
 
     if (existing is null && issueOrPull.HasMoreLabels)
     {
@@ -196,7 +221,7 @@ if (pullModelPath is not null)
         .Take(3);
 
     var bestScore = predictions.FirstOrDefault(p => p.Score >= threshold);
-    string? predicted = bestScore?.Label ?? defaultLabel;
+    string? predicted = bestScore?.Label;
 
     return (predicted, existing);
 }
