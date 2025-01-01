@@ -132,7 +132,10 @@ if (pullModelPath is not null)
 
     List<(string PredictedLabel, string ExistingLabel, bool Match)>? testResults = new();
 
-    await foreach (var pullRequest in GitHubApi.DownloadPullRequests(githubToken, org, repo, labelPredicate, pullLimit ?? 50000, 25, 4000, [30, 30, 30], true))
+    int matches = 0;
+    int mismatches = 0;
+
+    await foreach (var result in GitHubApi.DownloadPullRequests(githubToken, org, repo, labelPredicate, pullLimit ?? 50000, 25, 4000, [30, 30, 30], true))
     {
         (string? PredictedLabel, string? ExistingLabel)? prediction = GetPrediction(
             predictor,
