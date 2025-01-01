@@ -123,7 +123,7 @@ jobs:
 
       - name: "Run Downloader"
         run: |
-          dotnet run --project src/Downloader --                      \
+          dotnet run --project src/Downloader --                            \
             --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}"    \
             --repo "${{ inputs.repository || github.repository }}"          \
             --issue-data ${{ env.DATA_PATH }}                               \

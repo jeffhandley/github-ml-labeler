@@ -21,9 +21,9 @@ string? org = null;
 string? repo = null;
 string? githubToken = null;
 string? issueModelPath = null;
-int? issueNumber = null;
+ulong? issueNumber = null;
 string? pullModelPath = null;
-int? pullNumber = null;
+ulong? pullNumber = null;
 float? threshold = null;
 Func<string, bool>? labelPredicate = null;
 string? defaultLabel = null;
@@ -54,13 +54,13 @@ while (arguments.Count > 0)
             issueModelPath = arguments.Dequeue();
             break;
         case "--issue":
-            issueNumber = int.Parse(arguments.Dequeue());
+            issueNumber = ulong.Parse(arguments.Dequeue());
             break;
         case "--pull-model":
             pullModelPath = arguments.Dequeue();
             break;
         case "--pull":
-            pullNumber = int.Parse(arguments.Dequeue());
+            pullNumber = ulong.Parse(arguments.Dequeue());
             break;
         case "--label-prefix":
             string labelPrefix = arguments.Dequeue();
@@ -107,7 +107,7 @@ if (pullModelPath is not null && pullNumber is not null)
         "pull request");
 }
 
-async Task ProcessPrediction<T>(string modelPath, int number, Func<Task<T>> getItem, Func<string, bool> labelPredicate, string itemType) where T : Issue
+async Task ProcessPrediction<T>(string modelPath, ulong number, Func<Task<T>> getItem, Func<string, bool> labelPredicate, string itemType) where T : Issue
 {
     var issueOrPull = await getItem();
 

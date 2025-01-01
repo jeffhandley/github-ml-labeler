@@ -49,7 +49,7 @@ public class GitHubApi
         string? after = null;
         bool hasNextPage = true;
         int loadedCount = 0;
-        int savedCount = 0;
+        int includedCount = 0;
         int? totalCount = null;
         byte retry = 0;
         bool finished = false;
@@ -124,18 +124,18 @@ public class GitHubApi
 
                 yield return (item, labels[0]);
 
-                savedCount++;
+                includedCount++;
 
-                if (itemLimit.HasValue && savedCount >= itemLimit)
+                if (itemLimit.HasValue && includedCount >= itemLimit)
                 {
                     break;
                 }
             }
 
-            finished = (!hasNextPage || pageNumber >= pageLimit || (itemLimit.HasValue && savedCount >= itemLimit));
+            finished = (!hasNextPage || pageNumber >= pageLimit || (itemLimit.HasValue && includedCount >= itemLimit));
 
             Console.WriteLine(
-                $"Saved: {savedCount} (limit: {(itemLimit.HasValue ? itemLimit : "none")}) | " +
+                $"Included: {includedCount} (limit: {(itemLimit.HasValue ? itemLimit : "none")}) | " +
                 $"Pages: {pageNumber} (limit: {pageLimit}) | " +
                 $"Downloaded: {loadedCount} (total: {totalCount})");
         }
@@ -196,13 +196,13 @@ public class GitHubApi
         return response.Data.Repository.Result;
     }
 
-    public static async Task<Issue> GetIssue(string githubToken, string org, string repo, int number) =>
+    public static async Task<Issue> GetIssue(string githubToken, string org, string repo, ulong number) =>
         await GetItem<Issue>(githubToken, org, repo, number, "issue");
 
-    public static async Task<PullRequest> GetPullRequest(string githubToken, string org, string repo, int number) =>
+    public static async Task<PullRequest> GetPullRequest(string githubToken, string org, string repo, ulong number) =>
         await GetItem<PullRequest>(githubToken, org, repo, number, "pullRequest");
 
-    private static async Task<T> GetItem<T>(string githubToken, string org, string repo, int number, string itemQueryName) where T : Issue
+    private static async Task<T> GetItem<T>(string githubToken, string org, string repo, ulong number, string itemQueryName) where T : Issue
     {
         using GraphQLHttpClient client = CreateGraphQLClient(githubToken);
 
@@ -237,7 +237,7 @@ public class GitHubApi
         return (await client.SendQueryAsync<RepositoryQuery<T>>(query)).Data.Repository.Result;
     }
 
-    public static async Task AddLabel(string githubToken, string org, string repo, int number, string label)
+    public static async Task AddLabel(string githubToken, string org, string repo, ulong number, string label)
     {
         using var client = new HttpClient();
         client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(

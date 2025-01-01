@@ -1,14 +1,12 @@
-name: "Labeler: Predict Pull Label"
+name: "Labeler: Test Pull Model"
 
 on:
-  pull_request:
-    types: [opened, edited, synchronize]
-
   workflow_call:
     inputs:
-      number:
-        description: "Pull Number"
+      pull_limit:
+        description: "Max number of items to include in the test"
         type: number
+        default: 50000
         required: true
       label_prefix:
         description: "Label Prefix"
@@ -34,9 +32,10 @@ on:
       repository:
         description: "The org/repo to use (defaults to current repository)"
         type: string
-      number:
-        description: "Pull Number"
+      pull_limit:
+        description: "Max number of items to include in the test"
         type: number
+        default: 50000
         required: true
       label_prefix:
         description: "Label Prefix"
@@ -54,15 +53,12 @@ on:
         description: "The optional cache key suffix to use for loading the model (defaults to repository name)"
         type: string
 
-permissions:
-  pull-requests: write
-
 env:
   MODEL_PATH: labeler-cache/pull-model.zip
   MODEL_CACHE_KEY: github-ml-labeler/pulls/model/${{ inputs.model_cache_key || inputs.repository || github.repository }}
 
 jobs:
-  predict-pull:
+  test-pulls:
     runs-on: ubuntu-latest
     timeout-minutes: 2
 
@@ -85,13 +81,13 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: "Run Predictor"
+      - name: "Run Tester"
         run: |
-          dotnet run --project src/Predictor --                                 \
+          dotnet run --project src/Tester --                                    \
             --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}"        \
             --repo "${{ inputs.repository || github.repository }}"              \
-          --pull-model ${{ env.MODEL_PATH }}                                    \
-            --pull ${{ fromJSON(inputs.number || github.event.number) }}        \
+            --pull-model ${{ env.MODEL_PATH }}                                 \
+            --pull-limit ${{ fromJSON(inputs.pull_limit || 50000 ) }}         \
             --label-prefix "${{ inputs.label_prefix || 'area-' }}"              \
             --threshold ${{ fromJSON( inputs.threshold || 0.75 ) }}             \
             --default-label "${{ inputs.default_label || 'needs-area-label' }}"

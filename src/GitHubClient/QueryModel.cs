@@ -12,7 +12,7 @@ public class RepositoryQuery<T>
 
 public class Issue
 {
-    public required long Number { get; init; }
+    public required ulong Number { get; init; }
     public required string Title { get; init; }
     public required string Body { get; init; }
     public required Page<Label> Labels { get; init; }
