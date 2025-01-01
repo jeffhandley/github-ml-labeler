@@ -3,6 +3,12 @@ name: "Labeler: Test Issue Model"
 on:
   workflow_call:
     inputs:
+      github_token:
+        description: "The GitHub token (defaults to action token)"
+        type: string
+      repository:
+        description: "The org/repo to download data from (defaults to current repository)"
+        type: string
       issue_limit:
         description: "Max number of items to include in the test"
         type: number
