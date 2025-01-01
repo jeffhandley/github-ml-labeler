@@ -79,9 +79,9 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: "Run ModelCreator"
+      - name: "Run Modeler"
         run: |
-          dotnet run --project src/ModelCreator --  \
+          dotnet run --project src/Modeler --  \
             --issue-data ${{ env.DATA_PATH }}       \
             --issue-model ${{ env.MODEL_PATH }}
 

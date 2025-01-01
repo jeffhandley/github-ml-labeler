@@ -121,9 +121,9 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: "Run GitHubDownloader"
+      - name: "Run Downloader"
         run: |
-          dotnet run --project src/GitHubDownloader --                      \
+          dotnet run --project src/Downloader --                      \
             --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}"    \
             --repo "${{ inputs.repository || github.repository }}"          \
             --pull-data ${{ env.DATA_PATH }}                                \

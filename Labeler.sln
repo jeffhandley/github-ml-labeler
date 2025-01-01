@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GitHubDownloader", "src\GitHubDownloader\GitHubDownloader.csproj", "{AB75FE13-DB1A-4B6F-8B27-1486F98EA75C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Downloader", "src\Downloader\Downloader.csproj", "{AB75FE13-DB1A-4B6F-8B27-1486F98EA75C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModelCreator", "src\ModelCreator\ModelCreator.csproj", "{F1FE4054-C44E-487F-90F9-2F111AB7BD9C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Modeler", "src\Modeler\Modeler.csproj", "{F1FE4054-C44E-487F-90F9-2F111AB7BD9C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LabelPredictor", "src\LabelPredictor\LabelPredictor.csproj", "{2E39B0A5-2F4A-4D6E-8A0D-0366238CB21E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Predictor", "src\Predictor\Predictor.csproj", "{2E39B0A5-2F4A-4D6E-8A0D-0366238CB21E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

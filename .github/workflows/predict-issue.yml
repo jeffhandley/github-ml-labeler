@@ -85,9 +85,9 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: "Run LabelPredictor"
+      - name: "Run Predictor"
         run: |
-          dotnet run --project src/LabelPredictor --                            \
+          dotnet run --project src/Predictor --                            \
             --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}"        \
             --repo "${{ inputs.repository || github.repository }}"              \
             --issue-model ${{ env.MODEL_PATH }}                                 \
