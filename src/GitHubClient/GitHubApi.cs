@@ -181,7 +181,19 @@ public class GitHubApi
             }
         };
 
-        return (await client.SendQueryAsync<RepositoryQuery<Page<T>>>(query)).Data.Repository.Result;
+        var response = await client.SendQueryAsync<RepositoryQuery<Page<T>>>(query);
+
+        if (response.Errors?.Any() ?? false)
+        {
+            string errors = string.Join("\n\n", response.Errors.Select((e, i) => $"{i + 1}. {e.Message}").ToArray());
+            throw new ApplicationException($"GraphQL request returned errors.\n\n{errors}");
+        }
+        else if (response.Data is null || response.Data.Repository is null || response.Data.Repository.Result is null)
+        {
+            throw new ApplicationException("GraphQL response did not include the repository result data");
+        }
+
+        return response.Data.Repository.Result;
     }
 
     public static async Task<Issue> GetIssue(string githubToken, string org, string repo, int number) =>
