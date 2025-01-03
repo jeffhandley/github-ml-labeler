@@ -63,7 +63,7 @@ if (issueDataPath is not null && issueModelPath is not null)
     var settings = new MulticlassExperimentSettings();
     settings.Trainers.Clear();
     settings.Trainers.Add(MulticlassClassificationTrainer.SdcaMaximumEntropy);
-    settings.MaxExperimentTimeInSeconds = 300;
+    settings.MaxExperimentTimeInSeconds = 60 * 90;
 
     var xf = mlContext.Transforms;
     var preFeaturizer =
