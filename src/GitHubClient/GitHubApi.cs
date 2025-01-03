@@ -136,8 +136,8 @@ public class GitHubApi
 
             Console.WriteLine(
                 $"Included: {includedCount} (limit: {(itemLimit.HasValue ? itemLimit : "none")}) | " +
-                $"Pages: {pageNumber} (limit: {pageLimit}) | " +
-                $"Downloaded: {loadedCount} (total: {totalCount})");
+                $"Downloaded: {loadedCount} (total: {totalCount}) | " +
+                $"Pages: {pageNumber} (limit: {pageLimit})");
         }
         while (!finished);
     }

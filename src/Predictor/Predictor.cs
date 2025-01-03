@@ -12,6 +12,7 @@ void ShowUsage(string? message = null)
     Console.WriteLine("  [--issue-model {path/to/issue-model.zip} --issue {issue-number}]");
     Console.WriteLine("  [--pull-model {path/to/pull-model.zip} --pull {pull-number}]");
     Console.WriteLine("  [--default-label {needs-area-label}]");
+    Console.WriteLine("  [--test]");
 
     Environment.Exit(-1);
 }
@@ -21,12 +22,13 @@ string? org = null;
 string? repo = null;
 string? githubToken = null;
 string? issueModelPath = null;
-ulong? issueNumber = null;
+List<ulong>? issueNumbers = null;
 string? pullModelPath = null;
-ulong? pullNumber = null;
+List<ulong>? pullNumbers = null;
 float? threshold = null;
 Func<string, bool>? labelPredicate = null;
 string? defaultLabel = null;
+bool test = false;
 
 while (arguments.Count > 0)
 {
@@ -54,13 +56,15 @@ while (arguments.Count > 0)
             issueModelPath = arguments.Dequeue();
             break;
         case "--issue":
-            issueNumber = ulong.Parse(arguments.Dequeue());
+            issueNumbers ??= new();
+            issueNumbers.Add(ulong.Parse(arguments.Dequeue()));
             break;
         case "--pull-model":
             pullModelPath = arguments.Dequeue();
             break;
         case "--pull":
-            pullNumber = ulong.Parse(arguments.Dequeue());
+            pullNumbers ??= new();
+            pullNumbers.Add(ulong.Parse(arguments.Dequeue()));
             break;
         case "--label-prefix":
             string labelPrefix = arguments.Dequeue();
@@ -72,6 +76,9 @@ while (arguments.Count > 0)
         case "--default-label":
             defaultLabel = arguments.Dequeue();
             break;
+        case "--test":
+            test = true;
+            break;
         default:
             ShowUsage($"Unrecognized argument: {argument}");
             return;
@@ -79,35 +86,47 @@ while (arguments.Count > 0)
 }
 
 if (org is null || repo is null || githubToken is null || threshold is null || labelPredicate is null ||
-    (issueModelPath is null != issueNumber is null) ||
-    (pullModelPath is null != pullNumber is null) ||
+    (issueModelPath is null != issueNumbers is null) ||
+    (pullModelPath is null != pullNumbers is null) ||
     (issueModelPath is null && pullModelPath is null))
 {
     ShowUsage();
     return;
 }
 
-if (issueModelPath is not null && issueNumber is not null)
+List<Task> tasks = new();
+
+if (issueModelPath is not null && issueNumbers is not null)
 {
-    await ProcessPrediction(
-        issueModelPath,
-        issueNumber.Value,
-        async () => new Issue(await GitHubApi.GetIssue(githubToken, org, repo, issueNumber.Value)),
-        labelPredicate,
-        "issue");
+    foreach (ulong issueNumber in issueNumbers)
+    {
+        tasks.Add(Task.Run(() => ProcessPrediction(
+            issueModelPath,
+            issueNumber,
+            async () => new Issue(await GitHubApi.GetIssue(githubToken, org, repo, issueNumber)),
+            labelPredicate,
+            "issue",
+            test)));
+    }
 }
 
-if (pullModelPath is not null && pullNumber is not null)
+if (pullModelPath is not null && pullNumbers is not null)
 {
-    await ProcessPrediction(
-        pullModelPath,
-        pullNumber.Value,
-        async () => new PullRequest(await GitHubApi.GetPullRequest(githubToken, org, repo, pullNumber.Value)),
-        labelPredicate,
-        "pull request");
+    foreach (ulong pullNumber in pullNumbers)
+    {
+        tasks.Add(Task.Run(() => ProcessPrediction(
+            pullModelPath,
+            pullNumber,
+            async () => new PullRequest(await GitHubApi.GetPullRequest(githubToken, org, repo, pullNumber)),
+            labelPredicate,
+            "pull request",
+            test)));
+    }
 }
 
-async Task ProcessPrediction<T>(string modelPath, ulong number, Func<Task<T>> getItem, Func<string, bool> labelPredicate, string itemType) where T : Issue
+await Task.WhenAll(tasks);
+
+async Task ProcessPrediction<T>(string modelPath, ulong number, Func<Task<T>> getItem, Func<string, bool> labelPredicate, string itemType, bool test) where T : Issue
 {
     var issueOrPull = await getItem();
 
@@ -160,7 +179,11 @@ async Task ProcessPrediction<T>(string modelPath, ulong number, Func<Task<T>> ge
     if (bestScore is not null)
     {
         Console.WriteLine($"Predicted Label: {bestScore.Label}");
-        await GitHubApi.AddLabel(githubToken, org, repo, number, bestScore.Label);
+
+        if (!test)
+        {
+            await GitHubApi.AddLabel(githubToken, org, repo, number, bestScore.Label);
+        }
     }
     else
     {
@@ -168,8 +191,12 @@ async Task ProcessPrediction<T>(string modelPath, ulong number, Func<Task<T>> ge
 
         if (defaultLabel is not null)
         {
-            Console.WriteLine($"Applying default label: {defaultLabel}");
-            await GitHubApi.AddLabel(githubToken, org, repo, number, defaultLabel);
+            Console.WriteLine($"Using default label: {defaultLabel}");
+
+            if (!test)
+            {
+                await GitHubApi.AddLabel(githubToken, org, repo, number, defaultLabel);
+            }
         }
     }
 }

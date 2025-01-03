@@ -128,7 +128,7 @@ async Task DownloadIssues(string outputPath)
     byte perFlushCount = 0;
 
     using StreamWriter writer = new StreamWriter(outputPath);
-    writer.WriteLine(string.Join('\t', "Number", "Label", "Title", "Body"));
+    writer.WriteLine(string.Join('\t', "Label", "Title", "Body"));
 
     await foreach (var issue in GitHubApi.DownloadIssues(githubToken, org, repo, labelPredicate, issueLimit, pageSize ?? 100, pageLimit ?? 1000, retries, verbose))
     {
@@ -151,7 +151,7 @@ async Task DownloadPullRequests(string outputPath)
     byte perFlushCount = 0;
 
     using StreamWriter writer = new StreamWriter(outputPath);
-    writer.WriteLine(string.Join('\t', "Number", "Label", "Title", "Body", "FileNames", "FolderNames"));
+    writer.WriteLine(string.Join('\t', "Label", "Title", "Body", "FileNames", "FolderNames"));
 
     await foreach (var pullRequest in GitHubApi.DownloadPullRequests(githubToken, org, repo, labelPredicate, pullLimit, pageSize ?? 25, pageLimit ?? 4000, retries, verbose))
     {
@@ -176,7 +176,7 @@ static string SanitizeText(string text) => text
 static string SanitizeTextArray(string[] texts) => string.Join(" ", texts.Select(SanitizeText));
 
 static string FormatIssueRecord(Issue issue, string label) =>
-    $"{issue.Number}\t{label}\t{SanitizeText(issue.Title)}\t{SanitizeText(issue.Body)}";
+    $"{label}\t{SanitizeText(issue.Title)}\t{SanitizeText(issue.Body)}";
 
 static string FormatPullRequestRecord(PullRequest pull, string label) =>
-    $"{pull.Number}\t{label}\t{SanitizeText(pull.Title)}\t{SanitizeText(pull.Body)}\t{SanitizeTextArray(pull.FileNames)}\t{SanitizeTextArray(pull.FolderNames)}";
+    $"{label}\t{SanitizeText(pull.Title)}\t{SanitizeText(pull.Body)}\t{SanitizeTextArray(pull.FileNames)}\t{SanitizeTextArray(pull.FolderNames)}";

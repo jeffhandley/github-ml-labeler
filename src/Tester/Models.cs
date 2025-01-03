@@ -6,6 +6,11 @@ public class Issue
     public string? Title { get; set; }
     public string? Body { get; set; }
 
+    // The Area and Description properties allow loading
+    // models from the issue-labeler implementation
+    public string? Area { get => Label; }
+    public string? Description { get => Body; }
+
     [NoColumn]
     public string[]? Labels { get; set; }
 
