@@ -5,11 +5,11 @@ using GitHubClient;
 void ShowUsage(string? message = null)
 {
     Console.WriteLine($"Invalid or missing arguments.{(message is null ? "" : " " + message)}");
-    Console.WriteLine("  --token {github_token}");
-    Console.WriteLine("  --repo {org}/{repo}");
-    Console.WriteLine("  --label-prefix {label-prefix}");
     Console.WriteLine("  --threshold {threshold}");
+    Console.WriteLine("  [--token {github_token} --repo {org}/{repo} --label-prefix {label-prefix}]");
+    Console.WriteLine("  [--issue-data {path/to/issue-data.tsv}");
     Console.WriteLine("  [--issue-model {path/to/issue-model.zip} --issue-limit {issues}]");
+    Console.WriteLine("  [--pull-data {path/to/pull-data.tsv}");
     Console.WriteLine("  [--pull-model {path/to/pull-model.zip} --pull-limit {pulls}]");
 
     Environment.Exit(-1);
@@ -19,8 +19,10 @@ Queue<string> arguments = new(args);
 string? org = null;
 string? repo = null;
 string? githubToken = null;
+string? issueDataPath = null;
 string? issueModelPath = null;
 int? issueLimit = null;
+string? pullDataPath = null;
 string? pullModelPath = null;
 int? pullLimit = null;
 float? threshold = null;
@@ -48,11 +50,17 @@ while (arguments.Count > 0)
             org = parts[0];
             repo = parts[1];
             break;
+        case "--issue-data":
+            issueDataPath = arguments.Dequeue();
+            break;
         case "--issue-model":
             issueModelPath = arguments.Dequeue();
             break;
         case "--issue-limit":
             issueLimit = int.Parse(arguments.Dequeue());
+            break;
+        case "--pull-data":
+            pullDataPath = arguments.Dequeue();
             break;
         case "--pull-model":
             pullModelPath = arguments.Dequeue();
@@ -73,7 +81,12 @@ while (arguments.Count > 0)
     }
 }
 
-if (org is null || repo is null || githubToken is null || threshold is null || labelPredicate is null ||
+if (
+    threshold is null || labelPredicate is null ||
+    (
+        issueDataPath is null && pullDataPath is null &&
+        (org is null || repo is null || githubToken is null)
+    ) ||
     (issueModelPath is null && pullModelPath is null))
 {
     ShowUsage();
@@ -99,18 +112,63 @@ async Task TestIssues()
     var context = new MLContext();
     var model = context.Model.Load(issueModelPath, out _);
     var predictor = context.Model.CreatePredictionEngine<Issue, LabelPrediction>(model);
+    int rowLimit = issueLimit ?? 50000;
 
     int matches = 0;
     int mismatches = 0;
     int noPrediction = 0;
     int noExisting = 0;
 
-    await foreach (var result in GitHubApi.DownloadIssues(githubToken, org, repo, labelPredicate, issueLimit ?? 50000, 100, 1000, [30, 30, 30], false))
+    async IAsyncEnumerable<(ulong Number, Issue Issue)> DownloadIssues()
+    {
+        if (githubToken is not null && org is not null && repo is not null)
+        {
+            await foreach (var result in GitHubApi.DownloadIssues(githubToken, org, repo, labelPredicate, rowLimit, 100, 1000, [30, 30, 30], false))
+            {
+                yield return (result.Issue.Number, new Issue(result.Issue));
+            }
+        }
+    }
+
+    async IAsyncEnumerable<(ulong Number, Issue Issue)> ReadIssues()
+    {
+        var allLines = File.ReadLinesAsync(issueDataPath);
+        int rowNum = 0;
+
+        await foreach (var line in allLines)
+        {
+            if (rowNum++ == 0)
+            {
+                continue;
+            }
+
+            var parts = line.Split('\t');
+            yield return (
+                (ulong)rowNum,
+                new()
+                {
+                    Label = parts[0],
+                    Labels = [parts[0]],
+                    Title = parts[1],
+                    Body = parts[2]
+                }
+            );
+
+            if (rowNum >= rowLimit)
+            {
+                break;
+            }
+        }
+    }
+
+    var issueList = issueDataPath is null ? DownloadIssues() : ReadIssues();
+
+    await foreach (var result in issueList)
     {
         (string? PredictedLabel, string? ExistingLabel)? prediction = GetPrediction(
             predictor,
-            result.Issue.Number,
-            new Issue(result.Issue),
+            result.Number,
+            result.Issue,
             labelPredicate,
             "Issue");
 
@@ -138,7 +196,7 @@ async Task TestIssues()
 
         float total = matches + mismatches + noPrediction + noExisting;
 
-        Console.WriteLine($"Issue #{result.Issue.Number} - Predicted: {(prediction?.PredictedLabel ?? "<NONE>")} - Existing: {(prediction?.ExistingLabel ?? "<NONE>")}");
+        Console.WriteLine($"Issue #{result.Number} - Predicted: {(prediction?.PredictedLabel ?? "<NONE>")} - Existing: {(prediction?.ExistingLabel ?? "<NONE>")}");
         Console.WriteLine($"  Matches      : {matches} ({(float)matches / total:P2})");
         Console.WriteLine($"  Mismatches   : {mismatches} ({(float)mismatches / total:P2})");
         Console.WriteLine($"  No Prediction: {noPrediction} ({(float)noPrediction / total:P2})");
@@ -153,6 +211,7 @@ async Task TestPullRequests()
     var context = new MLContext();
     var model = context.Model.Load(pullModelPath, out _);
     var predictor = context.Model.CreatePredictionEngine<PullRequest, LabelPrediction>(model);
+    int rowLimit = pullLimit ?? 50000;
 
     List<(string PredictedLabel, string ExistingLabel, bool Match)>? testResults = new();
 
@@ -161,12 +220,58 @@ async Task TestPullRequests()
     int noPrediction = 0;
     int noExisting = 0;
 
-    await foreach (var result in GitHubApi.DownloadPullRequests(githubToken, org, repo, labelPredicate, pullLimit ?? 50000, 25, 4000, [30, 30, 30], true))
+    async IAsyncEnumerable<(ulong Number, PullRequest PullRequest)> DownloadPullRequests()
+    {
+        if (githubToken is not null && org is not null && repo is not null)
+        {
+            await foreach (var result in GitHubApi.DownloadPullRequests(githubToken, org, repo, labelPredicate, rowLimit, 25, 4000, [30, 30, 30], true))
+            {
+                yield return (result.PullRequest.Number, new PullRequest(result.PullRequest));
+            }
+        }
+    }
+
+    async IAsyncEnumerable<(ulong Number, PullRequest PullRequest)> ReadPullRequests()
+    {
+        var allLines = File.ReadLinesAsync(pullDataPath);
+        int rowNum = 0;
+
+        await foreach (var line in allLines)
+        {
+            if (rowNum++ == 0)
+            {
+                continue;
+            }
+
+            var parts = line.Split('\t');
+            yield return (
+                (ulong)rowNum,
+                new()
+                {
+                    Label = parts[0],
+                    Labels = [parts[0]],
+                    Title = parts[1],
+                    Body = parts[2],
+                    FileNames = parts[3],
+                    FolderNames = parts[4]
+                }
+            );
+
+            if (rowNum >= rowLimit)
+            {
+                break;
+            }
+        }
+    }
+
+    var pullList = pullDataPath is null ? DownloadPullRequests() : ReadPullRequests();
+
+    await foreach (var result in pullList)
     {
         (string? PredictedLabel, string? ExistingLabel)? prediction = GetPrediction(
             predictor,
-            result.PullRequest.Number,
-            new PullRequest(result.PullRequest),
+            result.Number,
+            result.PullRequest,
             labelPredicate,
             "Pull Request");
 
@@ -194,7 +299,7 @@ async Task TestPullRequests()
 
         float total = matches + mismatches + noPrediction + noExisting;
 
-        Console.WriteLine($"Pull Request #{result.PullRequest.Number} - Predicted: {(prediction?.PredictedLabel ?? "<NONE>")} - Existing: {(prediction?.ExistingLabel ?? "<NONE>")}");
+        Console.WriteLine($"Pull Request #{result.Number} - Predicted: {(prediction?.PredictedLabel ?? "<NONE>")} - Existing: {(prediction?.ExistingLabel ?? "<NONE>")}");
         Console.WriteLine($"  Matches      : {matches} ({(float)matches / total:P2})");
         Console.WriteLine($"  Mismatches   : {mismatches} ({(float)mismatches / total:P2})");
         Console.WriteLine($"  No Prediction: {noPrediction} ({(float)noPrediction / total:P2})");

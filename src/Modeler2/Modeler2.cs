@@ -51,10 +51,9 @@ void TrainIssues(string dataPath, string modelPath)
         TrimWhitespace = true,
         UseThreads = true,
         Columns = [
-            new("Number", DataKind.Single, 0),
-            new("Label", DataKind.String, 1),
-            new("Title", DataKind.String, 2),
-            new("Body", DataKind.String, 3)
+            new("Label", DataKind.String, 0),
+            new("Title", DataKind.String, 1),
+            new("Body", DataKind.String, 2)
         ]
     };
 
