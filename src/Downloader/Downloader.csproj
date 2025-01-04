@@ -15,4 +15,8 @@
     <ProjectReference Include="..\GitHubClient\GitHubClient.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Common\**\*.cs" />
+  </ItemGroup>
+
 </Project>

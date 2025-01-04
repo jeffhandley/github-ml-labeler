@@ -1,99 +1,22 @@
+using static DataFileUtils;
 using GitHubClient;
 
-void ShowUsage(string? message = null)
-{
-    Console.WriteLine($"Invalid or missing arguments.{(message is null ? "" : " " + message)}");
-    Console.WriteLine("  --token {github_token}");
-    Console.WriteLine("  --repo {org/repo}");
-    Console.WriteLine("  --label-prefix {label-prefix}");
-    Console.WriteLine("  [--issue-data {path/to/issues.tsv}]");
-    Console.WriteLine("  [--issue-limit {rows}]");
-    Console.WriteLine("  [--pull-data {path/to/pulls.tsv}]");
-    Console.WriteLine("  [--pull-limit {rows}]");
-    Console.WriteLine("  [--page-size {size}]");
-    Console.WriteLine("  [--page-limit {pages}]");
-    Console.WriteLine("  [--retries {comma-separated-retries-in-seconds}]");
-    Console.WriteLine("  [--verbose]");
-
-    Environment.Exit(-1);
-}
-
-Queue<string> arguments = new(args);
-string? org = null;
-string? repo = null;
-string? githubToken = null;
-string? issuesPath = null;
-int? issueLimit = null;
-string? pullsPath = null;
-int? pullLimit = null;
-int? pageSize = null;
-int? pageLimit = null;
-int[] retries = [10, 20, 30, 60, 120];
-Predicate<string>? labelPredicate = null;
-bool verbose = false;
-
-while (arguments.Count > 0)
-{
-    string argument = arguments.Dequeue();
-
-    switch (argument)
-    {
-        case "--token":
-            githubToken = arguments.Dequeue();
-            break;
-        case "--repo":
-            string orgRepo = arguments.Dequeue();
-
-            if (!orgRepo.Contains('/'))
-            {
-                ShowUsage($$"""Argument 'repo' is not in the format of '{org}/{repo}': {{orgRepo}}""");
-                return;
-            }
-
-            string[] parts = orgRepo.Split('/');
-            org = parts[0];
-            repo = parts[1];
-            break;
-        case "--issue-data":
-            issuesPath = arguments.Dequeue();
-            break;
-        case "--issue-limit":
-            issueLimit = int.Parse(arguments.Dequeue());
-            break;
-        case "--pull-data":
-            pullsPath = arguments.Dequeue();
-            break;
-        case "--pull-limit":
-            pullLimit = int.Parse(arguments.Dequeue());
-            break;
-        case "--page-size":
-            pageSize = int.Parse(arguments.Dequeue());
-            break;
-        case "--page-limit":
-            pageLimit = int.Parse(arguments.Dequeue());
-            break;
-        case "--retries":
-            retries = arguments.Dequeue().Split(',').Select(r => int.Parse(r)).ToArray();
-            break;
-        case "--label-prefix":
-            string labelPrefix = arguments.Dequeue();
-            labelPredicate = (label) => label.StartsWith(labelPrefix, StringComparison.OrdinalIgnoreCase);
-            break;
-        case "--verbose":
-            verbose = true;
-            break;
-        default:
-            ShowUsage($"Unrecognized argument: {argument}");
-            return;
-    }
-}
-
-if (org is null || repo is null || githubToken is null || labelPredicate is null ||
-    (issuesPath is null && pullsPath is null))
-{
-    ShowUsage();
-    return;
-}
+var arguments = Args.Parse(args);
+if (arguments is null) return;
+(
+    string org,
+    string repo,
+    string githubToken,
+    string? issuesPath,
+    int? issueLimit,
+    string? pullsPath,
+    int? pullLimit,
+    int? pageSize,
+    int? pageLimit,
+    int[] retries,
+    Predicate<string> labelPredicate,
+    bool verbose
+) = arguments.Value;
 
 List<Task> tasks = new();
 
@@ -111,16 +34,6 @@ if (!string.IsNullOrEmpty(pullsPath))
 
 await Task.WhenAll(tasks);
 
-void EnsureOutputDirectory(string outputFile)
-{
-    string? outputDir = Path.GetDirectoryName(outputFile);
-
-    if (!string.IsNullOrEmpty(outputDir))
-    {
-        Directory.CreateDirectory(outputDir);
-    }
-}
-
 async Task DownloadIssues(string outputPath)
 {
     Console.WriteLine($"Issues Data Path: {outputPath}");
@@ -128,11 +41,11 @@ async Task DownloadIssues(string outputPath)
     byte perFlushCount = 0;
 
     using StreamWriter writer = new StreamWriter(outputPath);
-    writer.WriteLine(string.Join('\t', "Label", "Title", "Body"));
+    writer.WriteLine(FormatIssueRecord("Label", "Title", "Body"));
 
-    await foreach (var issue in GitHubApi.DownloadIssues(githubToken, org, repo, labelPredicate, issueLimit, pageSize ?? 100, pageLimit ?? 1000, retries, verbose))
+    await foreach (var result in GitHubApi.DownloadIssues(githubToken, org, repo, labelPredicate, issueLimit, pageSize ?? 100, pageLimit ?? 1000, retries, verbose))
     {
-        writer.WriteLine(FormatIssueRecord(issue.Issue, issue.Label));
+        writer.WriteLine(FormatIssueRecord(result.Label, result.Issue.Title, result.Issue.Body));
 
         if (++perFlushCount == 100)
         {
@@ -151,11 +64,11 @@ async Task DownloadPullRequests(string outputPath)
     byte perFlushCount = 0;
 
     using StreamWriter writer = new StreamWriter(outputPath);
-    writer.WriteLine(string.Join('\t', "Label", "Title", "Body", "FileNames", "FolderNames"));
+    writer.WriteLine(FormatPullRequestRecord("Label", "Title", "Body", ["FileNames"], ["FolderNames"]));
 
-    await foreach (var pullRequest in GitHubApi.DownloadPullRequests(githubToken, org, repo, labelPredicate, pullLimit, pageSize ?? 25, pageLimit ?? 4000, retries, verbose))
+    await foreach (var result in GitHubApi.DownloadPullRequests(githubToken, org, repo, labelPredicate, pullLimit, pageSize ?? 25, pageLimit ?? 4000, retries, verbose))
     {
-        writer.WriteLine(FormatPullRequestRecord(pullRequest.PullRequest, pullRequest.Label));
+        writer.WriteLine(FormatPullRequestRecord(result.Label, result.PullRequest.Title, result.PullRequest.Body, result.PullRequest.FileNames, result.PullRequest.FolderNames));
 
         if (++perFlushCount == 100)
         {
@@ -166,17 +79,3 @@ async Task DownloadPullRequests(string outputPath)
 
     writer.Close();
 }
-
-static string SanitizeText(string text) => text
-    .Replace('\r', ' ')
-    .Replace('\n', ' ')
-    .Replace('\t', ' ')
-    .Replace('"', '`');
-
-static string SanitizeTextArray(string[] texts) => string.Join(" ", texts.Select(SanitizeText));
-
-static string FormatIssueRecord(Issue issue, string label) =>
-    $"{label}\t{SanitizeText(issue.Title)}\t{SanitizeText(issue.Body)}";
-
-static string FormatPullRequestRecord(PullRequest pull, string label) =>
-    $"{label}\t{SanitizeText(pull.Title)}\t{SanitizeText(pull.Body)}\t{SanitizeTextArray(pull.FileNames)}\t{SanitizeTextArray(pull.FolderNames)}";
