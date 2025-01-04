@@ -29,7 +29,7 @@ static void CreateModel(string dataPath, string modelPath, ModelType type)
     var columns = context.Auto().InferColumns(
         dataPath,
         separatorChar: '\t',
-        labelColumnIndex: 1,
+        labelColumnIndex: 0,
         hasHeader: true
     );
 

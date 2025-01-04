@@ -36,17 +36,15 @@ static void CreateModel(string dataPath, string modelPath, ModelType type)
         TrimWhitespace = true,
         UseThreads = true,
         Columns = type == ModelType.Issue ? [
-            new("Number", DataKind.Single, 0),
-            new("Label", DataKind.String, 1),
-            new("Title", DataKind.String, 2),
-            new("Body", DataKind.String, 3),
+            new("Label", DataKind.String, 0),
+            new("Title", DataKind.String, 1),
+            new("Body", DataKind.String, 2),
         ] : [
-            new("Number", DataKind.Single, 0),
-            new("Label", DataKind.String, 1),
-            new("Title", DataKind.String, 2),
-            new("Body", DataKind.String, 3),
-            new("FileNames", DataKind.String, 4),
-            new("FolderNames", DataKind.String, 5)
+            new("Label", DataKind.String, 0),
+            new("Title", DataKind.String, 1),
+            new("Body", DataKind.String, 2),
+            new("FileNames", DataKind.String, 3),
+            new("FolderNames", DataKind.String, 4)
         ]
     };
 

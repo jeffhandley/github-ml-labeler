@@ -2,6 +2,7 @@ using Microsoft.ML.Data;
 
 public class Issue
 {
+    public ulong Number { get; set; }
     public string? Label { get; set; }
     public string? Title { get; set; }
     public string? Body { get; set; }
@@ -11,20 +12,16 @@ public class Issue
     public string? Area { get => Label; }
     public string? Description { get => Body; }
 
-    [NoColumn]
-    public string[]? Labels { get; set; }
-
-    [NoColumn]
-    public bool HasMoreLabels { get; set; }
-
     public Issue() { }
 
-    public Issue(GitHubClient.Issue issue)
+    public Issue(GitHubClient.Issue issue, Predicate<string> labelPredicate)
     {
+        Number = issue.Number;
         Title = issue.Title;
         Body = issue.Body;
-        Labels = issue.LabelNames;
-        HasMoreLabels = issue.Labels.HasNextPage;
+        Label = issue.Labels.HasNextPage ?
+            (string?) null :
+            issue.LabelNames?.SingleOrDefault(l => labelPredicate(l));
     }
 }
 
@@ -35,7 +32,7 @@ public class PullRequest : Issue
 
     public PullRequest() { }
 
-    public PullRequest(GitHubClient.PullRequest pull) : base(pull)
+    public PullRequest(GitHubClient.PullRequest pull, Predicate<string> labelPredicate) : base(pull, labelPredicate)
     {
         FileNames = string.Join(' ', pull.FileNames);
         FolderNames = string.Join(' ', pull.FolderNames);

@@ -3,7 +3,7 @@ public static class Args
     public static void ShowUsage(string? message = null)
     {
         Console.WriteLine($"Invalid or missing arguments.{(message is null ? "" : " " + message)}");
-        Console.WriteLine("  --threshold {threshold}");
+        Console.WriteLine("  [--threshold {threshold}]");
         Console.WriteLine("  [--token {github_token} --repo {org}/{repo} --label-prefix {label-prefix}]");
         Console.WriteLine("  [--issue-data {path/to/issue-data.tsv}");
         Console.WriteLine("  [--issue-model {path/to/issue-model.zip} --issue-limit {issues}]");
@@ -23,7 +23,7 @@ public static class Args
         string? pullDataPath,
         string? pullModelPath,
         int? pullLimit,
-        float threshold,
+        float? threshold,
         Predicate<string> labelPredicate
     )?
     Parse(string[] args)
@@ -95,7 +95,7 @@ public static class Args
         }
 
         if (
-            threshold is null || labelPredicate is null ||
+            labelPredicate is null ||
             (
                 issueDataPath is null && pullDataPath is null &&
                 (org is null || repo is null || githubToken is null)
@@ -117,7 +117,7 @@ public static class Args
             pullDataPath,
             pullModelPath,
             pullLimit,
-            (float)threshold,
+            threshold,
             (Predicate<string>)labelPredicate
         );
     }

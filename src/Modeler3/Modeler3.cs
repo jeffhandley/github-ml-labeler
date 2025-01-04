@@ -48,7 +48,7 @@ static void CreateModel(string dataPath, string modelPath, ModelType type)
     var settings = new MulticlassExperimentSettings();
     settings.Trainers.Clear();
     settings.Trainers.Add(MulticlassClassificationTrainer.SdcaMaximumEntropy);
-    settings.MaxExperimentTimeInSeconds = 60 * 5;
+    settings.MaxExperimentTimeInSeconds = 60 * 60;
 
     string[] featurizedColumns = type == ModelType.Issue ?
         [ "Title", "Body" ] :
@@ -57,19 +57,19 @@ static void CreateModel(string dataPath, string modelPath, ModelType type)
     var xf = mlContext.Transforms;
     var preFeaturizer =
         xf.Text.FeaturizeText("TextFeatures", new TextFeaturizingEstimator.Options(), featurizedColumns)
-        .Append(xf.FeatureSelection.SelectFeaturesBasedOnCount("TextFeatures", count: 2))
+        .Append(xf.FeatureSelection.SelectFeaturesBasedOnCount("TextFeatures", "TextFeatures", count: 2))
         .AppendCacheCheckpoint(mlContext);
 
     var experiment = mlContext.Auto().CreateMulticlassClassificationExperiment(settings);
     var result = experiment.Execute(
         split.TrainSet,
-        split.TestSet,
+        columns.ColumnInformation,
         preFeaturizer: preFeaturizer);
 
-    Console.WriteLine("Fitting model...");
-    result.BestRun.Estimator.Fit(data);
+    Console.WriteLine("Fitting model against combined data set...");
+    var fitModel = result.BestRun.Estimator.Fit(data);
 
     Console.WriteLine("Saving model...");
     EnsureOutputDirectory(modelPath);
-    mlContext.Model.Save(result.BestRun.Model, split.TrainSet.Schema, modelPath);
+    mlContext.Model.Save(fitModel, split.TrainSet.Schema, modelPath);
 }
