@@ -24,10 +24,18 @@ if (issueModelPath is not null && issueNumbers is not null)
 {
     foreach (ulong issueNumber in issueNumbers)
     {
+        var result = await GitHubApi.GetIssue(githubToken, org, repo, issueNumber);
+
+        if (result is null)
+        {
+            Console.WriteLine($"Issue #{issueNumber} was not found. Skipping.");
+            continue;
+        }
+
         tasks.Add(Task.Run(() => ProcessPrediction(
             issueModelPath,
             issueNumber,
-            async () => new Issue(await GitHubApi.GetIssue(githubToken, org, repo, issueNumber)),
+            new Issue(result),
             labelPredicate,
             ModelType.Issue,
             test
@@ -39,10 +47,18 @@ if (pullModelPath is not null && pullNumbers is not null)
 {
     foreach (ulong pullNumber in pullNumbers)
     {
+        var result = await GitHubApi.GetPullRequest(githubToken, org, repo, pullNumber);
+
+        if (result is null)
+        {
+            Console.WriteLine($"Pull Request #{pullNumber} was not found. Skipping.");
+            continue;
+        }
+
         tasks.Add(Task.Run(() => ProcessPrediction(
             pullModelPath,
             pullNumber,
-            async () => new PullRequest(await GitHubApi.GetPullRequest(githubToken, org, repo, pullNumber)),
+            new PullRequest(result),
             labelPredicate,
             ModelType.PullRequest,
             test
@@ -52,10 +68,8 @@ if (pullModelPath is not null && pullNumbers is not null)
 
 await Task.WhenAll(tasks);
 
-async Task ProcessPrediction<T>(string modelPath, ulong number, Func<Task<T>> getItem, Func<string, bool> labelPredicate, ModelType type, bool test) where T : Issue
+async Task ProcessPrediction<T>(string modelPath, ulong number, T issueOrPull, Func<string, bool> labelPredicate, ModelType type, bool test) where T : Issue
 {
-    var issueOrPull = await getItem();
-
     if (issueOrPull.HasMoreLabels)
     {
         Console.WriteLine($"{type} #{number} has too many labels applied already. Cannot be sure no applicable label is already applied. Aborting.");

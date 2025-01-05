@@ -7,8 +7,8 @@ on:
   workflow_call:
     inputs:
       number:
-        description: "Pull Number"
-        type: number
+        description: "Pull Number(s)"
+        type: string
         required: true
       label_prefix:
         description: "Label Prefix"
@@ -35,8 +35,8 @@ on:
         description: "The org/repo to use (defaults to current repository)"
         type: string
       number:
-        description: "Pull Number"
-        type: number
+        description: "Pull Number(s)"
+        type: string
         required: true
       label_prefix:
         description: "Label Prefix"
@@ -90,7 +90,7 @@ jobs:
           dotnet run --project src/Predictor --                                 \
             --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}"        \
             --repo "${{ inputs.repository || github.repository }}"              \
-          --pull-model ${{ env.MODEL_PATH }}                                    \
+            --pull-model ${{ env.MODEL_PATH }}                                  \
             --pull ${{ fromJSON(inputs.number || github.event.number) }}        \
             --label-prefix "${{ inputs.label_prefix || 'area-' }}"              \
             --threshold ${{ fromJSON( inputs.threshold || 0.40 ) }}             \

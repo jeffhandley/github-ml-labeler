@@ -7,8 +7,8 @@ on:
   workflow_call:
     inputs:
       number:
-        description: "Issue Number"
-        type: number
+        description: "Issue Number(s)"
+        type: string
         required: true
       label_prefix:
         description: "Label Prefix"
@@ -35,8 +35,8 @@ on:
         description: "The org/repo to use (defaults to current repository)"
         type: string
       number:
-        description: "Issue Number"
-        type: number
+        description: "Issue Number(s)"
+        type: string
         required: true
       label_prefix:
         description: "Label Prefix"

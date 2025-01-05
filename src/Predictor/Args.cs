@@ -70,14 +70,14 @@ public static class Args
                     break;
                 case "--issue":
                     issueNumbers ??= new();
-                    issueNumbers.Add(ulong.Parse(arguments.Dequeue()));
+                    issueNumbers.AddRange(ParseNumbers(arguments.Dequeue()));
                     break;
                 case "--pull-model":
                     pullModelPath = arguments.Dequeue();
                     break;
                 case "--pull":
                     pullNumbers ??= new();
-                    pullNumbers.Add(ulong.Parse(arguments.Dequeue()));
+                    pullNumbers.AddRange(ParseNumbers(arguments.Dequeue()));
                     break;
                 case "--label-prefix":
                     string labelPrefix = arguments.Dequeue();
@@ -120,5 +120,37 @@ public static class Args
             defaultLabel,
             test
         );
+    }
+
+    private static ulong[] ParseNumbers(string argument)
+    {
+        List<ulong> numbers = new();
+
+        foreach (var range in argument.Split(','))
+        {
+            var beginEnd = range.Split('-');
+
+            if (beginEnd.Length == 1)
+            {
+                numbers.Add(ulong.Parse(beginEnd[0]));
+            }
+            else if (beginEnd.Length == 2)
+            {
+                var begin = ulong.Parse(beginEnd[0]);
+                var end = ulong.Parse(beginEnd[1]);
+
+                for (var number = begin; number <= end; number++)
+                {
+                    numbers.Add(number);
+                }
+            }
+            else
+            {
+                ShowUsage($"Issue and pull numbers must be comma-separated lists of numbers or dash-separated ranges.");
+                return [];
+            }
+        }
+
+        return numbers.ToArray();
     }
 }

@@ -196,13 +196,13 @@ public class GitHubApi
         return response.Data.Repository.Result;
     }
 
-    public static async Task<Issue> GetIssue(string githubToken, string org, string repo, ulong number) =>
+    public static async Task<Issue?> GetIssue(string githubToken, string org, string repo, ulong number) =>
         await GetItem<Issue>(githubToken, org, repo, number, "issue");
 
-    public static async Task<PullRequest> GetPullRequest(string githubToken, string org, string repo, ulong number) =>
+    public static async Task<PullRequest?> GetPullRequest(string githubToken, string org, string repo, ulong number) =>
         await GetItem<PullRequest>(githubToken, org, repo, number, "pullRequest");
 
-    private static async Task<T> GetItem<T>(string githubToken, string org, string repo, ulong number, string itemQueryName) where T : Issue
+    private static async Task<T?> GetItem<T>(string githubToken, string org, string repo, ulong number, string itemQueryName) where T : Issue
     {
         using GraphQLHttpClient client = CreateGraphQLClient(githubToken);
 
