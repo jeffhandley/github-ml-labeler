@@ -281,7 +281,7 @@ public class GitHubApi
         using var client = CreateRestClient(githubToken);
 
         var response = await client.DeleteAsync(
-            $"/repos/{org}/{repo}/issues/{number}/labels/{label}",
+            $"https://api.github.com/repos/{org}/{repo}/issues/{number}/labels/{label}",
             CancellationToken.None);
 
         if (!response.IsSuccessStatusCode)
