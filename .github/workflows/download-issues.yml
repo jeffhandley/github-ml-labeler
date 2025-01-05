@@ -33,7 +33,7 @@ on:
         type: string
         default: "30,30,300,300,3000,3000"
       data_cache_key:
-        description: "The optional cache key override to use for saving the data"
+        description: "The optional cache key suffix to use for saving the data (defaults to repository name)"
         type: string
 
   workflow_dispatch:
