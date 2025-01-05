@@ -1,6 +1,6 @@
-public static class Args
+static class Args
 {
-    public static void ShowUsage(string? message = null)
+    static void ShowUsage(string? message = null)
     {
         Console.WriteLine($"Invalid or missing arguments.{(message is null ? "" : " " + message)}");
         Console.WriteLine("  [--issue-data {path/to/issue-data.tsv} --issue-model {path/to/issue-model.zip}]");
@@ -10,10 +10,10 @@ public static class Args
     }
 
     public static (
-        string? issueDataPath,
-        string? issueModelPath,
-        string? pullDataPath,
-        string? pullModelPath
+        string? IssueDataPath,
+        string? IssueModelPath,
+        string? PullDataPath,
+        string? PullModelPath
     )
     Parse(string[] args)
     {
@@ -55,11 +55,6 @@ public static class Args
             return (null, null, null, null);
         }
 
-        return (
-            issueDataPath,
-            issueModelPath,
-            pullDataPath,
-            pullModelPath
-        );
+        return (issueDataPath, issueModelPath, pullDataPath, pullModelPath);
     }
 }

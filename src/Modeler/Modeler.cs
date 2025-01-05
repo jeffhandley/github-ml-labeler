@@ -1,8 +1,6 @@
 ﻿using static DataFileUtils;
 using Microsoft.ML;
-using Microsoft.ML.AutoML;
 using Microsoft.ML.Data;
-using Microsoft.ML.Transforms;
 using Microsoft.ML.Transforms.Text;
 
 (
@@ -24,70 +22,67 @@ if (pullDataPath is not null && pullModelPath is not null)
 
 static void CreateModel(string dataPath, string modelPath, ModelType type)
 {
-    Console.WriteLine("Inferring model schema from data...");
-    var context = new MLContext();
-    var columns = context.Auto().InferColumns(
-        dataPath,
-        separatorChar: '\t',
-        labelColumnIndex: 0,
-        hasHeader: true
-    );
+    Console.WriteLine("Loading data into train/test sets...");
+    MLContext mlContext = new();
 
-    var textColumns = columns.ColumnInformation.TextColumnNames;
+    TextLoader.Column[] columns = type == ModelType.Issue ? [
+        new("Label", DataKind.String, 0),
+        new("Title", DataKind.String, 1),
+        new("Body", DataKind.String, 2),
+    ] : [
+        new("Label", DataKind.String, 0),
+        new("Title", DataKind.String, 1),
+        new("Body", DataKind.String, 2),
+        new("FileNames", DataKind.String, 3),
+        new("FolderNames", DataKind.String, 4)
+    ];
 
-    if (!textColumns.Contains("Title") || !textColumns.Contains("Body"))
+    TextLoader.Options textLoaderOptions = new()
     {
-        throw new ApplicationException("Model loading failed; Title and Body columns were not inferred in the model. It's likely the data set is too small.");
-    }
+        AllowQuoting = false,
+        AllowSparse = false,
+        EscapeChar = '"',
+        HasHeader = true,
+        ReadMultilines = false,
+        Separators = ['\t'],
+        TrimWhitespace = true,
+        UseThreads = true,
+        Columns = columns
+    };
 
-    if (type == ModelType.PullRequest && (!textColumns.Contains("FileNames") || !textColumns.Contains("FolderNames")))
-    {
-        throw new ApplicationException("Model loading failed; FileNames and FolderNames columns were not inferred in the model. It's likely the data set is too small.");
-    }
-
-    Console.WriteLine("Loading data into model...");
-    var loader = context.Data.CreateTextLoader(columns.TextLoaderOptions);
+    var loader = mlContext.Data.CreateTextLoader(textLoaderOptions);
     var data = loader.Load(dataPath);
+    var split = mlContext.Data.TrainTestSplit(data, testFraction: 0.1);
 
-    Console.WriteLine("Splitting data into train and test data sets...");
-    var dataSplit = context.Data.TrainTestSplit(data, testFraction: 0.2);
+    Console.WriteLine("Building pipeline...");
 
-    Console.WriteLine("Constructing pipeline...");
-    var trainer = context.MulticlassClassification.Trainers.SdcaMaximumEntropy("LabelKey", "Features");
-    var featurizedPipeline = context
-        .Transforms.Conversion.MapValueToKey(outputColumnName: "LabelKey", inputColumnName: "Label")
-        .Append(context.Transforms.Text.FeaturizeText(outputColumnName: "TitleFeature", inputColumnName: "Title"))
-        .Append(context.Transforms.Text.FeaturizeText(outputColumnName: "BodyFeature", inputColumnName: "Body"));
+    var xf = mlContext.Transforms;
+    var pipeline = xf.Conversion.MapValueToKey(inputColumnName: "Label", outputColumnName: "LabelKey")
+        .Append(xf.Text.FeaturizeText(
+            "Features",
+            new TextFeaturizingEstimator.Options(),
+            columns.Select(c => c.Name).ToArray()))
+        .AppendCacheCheckpoint(mlContext)
+        .Append(mlContext.MulticlassClassification.Trainers.SdcaMaximumEntropy("LabelKey"))
+        .Append(xf.Conversion.MapKeyToValue("PredictedLabel"));
 
-    string[] featurizedColumns = ["TitleFeature", "BodyFeature"];
+    Console.WriteLine("Fitting the model with all data...");
+    var trainedModel = pipeline.Fit(data);
+    var testModel = trainedModel.Transform(split.TestSet);
 
-    if (type == ModelType.PullRequest)
-    {
-        featurizedPipeline = featurizedPipeline
-        .Append(context.Transforms.Text.FeaturizeText(outputColumnName: "FileNamesFeature", inputColumnName: "FileNames"))
-        .Append(context.Transforms.Text.FeaturizeText(outputColumnName: "FolderNamesFeature", inputColumnName: "FolderNames"));
+    Console.WriteLine("Evaluating against the test set...");
+    var metrics = mlContext.MulticlassClassification.Evaluate(testModel, labelColumnName: "LabelKey");
 
-        featurizedColumns = ["TitleFeature", "BodyFeature", "FileNamesFeature", "FolderNamesFeature"];
-    }
+    Console.WriteLine($"************************************************************");
+    Console.WriteLine($"MacroAccuracy = {metrics.MacroAccuracy:0.####}, a value between 0 and 1, the closer to 1, the better");
+    Console.WriteLine($"MicroAccuracy = {metrics.MicroAccuracy:0.####}, a value between 0 and 1, the closer to 1, the better");
+    Console.WriteLine($"LogLoss = {metrics.LogLoss:0.####}, the closer to 0, the better");
+    Console.WriteLine($"LogLoss for class 1 = {metrics.PerClassLogLoss[0]:0.####}, the closer to 0, the better");
+    Console.WriteLine($"LogLoss for class 2 = {metrics.PerClassLogLoss[1]:0.####}, the closer to 0, the better");
+    Console.WriteLine($"LogLoss for class 3 = {metrics.PerClassLogLoss[2]:0.####}, the closer to 0, the better");
+    Console.WriteLine($"************************************************************");
 
-    var pipeline = featurizedPipeline
-        .Append(context.Transforms.Concatenate(outputColumnName: "Features", featurizedColumns))
-        .Append(trainer)
-        .Append(context.Transforms.Conversion.MapKeyToValue("PredictedLabel"));
-
-    Console.WriteLine("Cross-validating model...");
-    context.MulticlassClassification.CrossValidate(
-        data: dataSplit.TrainSet,
-        estimator: pipeline,
-        numberOfFolds: 6,
-        labelColumnName: "LabelKey");
-
-    Console.WriteLine("Fitting model...");
-    var model = pipeline.Fit(dataSplit.TrainSet);
-
-    Console.WriteLine($"Saving model to {modelPath}...");
+    Console.WriteLine("Saving model...");
     EnsureOutputDirectory(modelPath);
-    context.Model.Save(model, dataSplit.TrainSet.Schema, modelPath);
-
-    Console.WriteLine("Model successfully saved.");
+    mlContext.Model.Save(trainedModel, split.TrainSet.Schema, modelPath);
 }
