@@ -83,10 +83,10 @@ jobs:
 
       - name: "Run Tester"
         run: |
-          dotnet run --project src/Tester --                                    \
-            --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}"        \
-            --repo "${{ inputs.repository || github.repository }}"              \
-            --pull-model ${{ env.MODEL_PATH }}                                 \
-            --pull-limit ${{ fromJSON(inputs.pull_limit || 50000 ) }}         \
-            --label-prefix "${{ inputs.label_prefix || 'area-' }}"              \
-            --threshold ${{ fromJSON( inputs.threshold || 0.40 ) }}             \
+          dotnet run --project src/Tester -- \
+            --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}" \
+            --repo "${{ inputs.repository || github.repository }}" \
+            --pull-model ${{ env.MODEL_PATH }} \
+            --pull-limit ${{ fromJSON(inputs.pull_limit ) }} \
+            --label-prefix "${{ inputs.label_prefix }}" \
+            --threshold ${{ fromJSON( inputs.threshold ) }}

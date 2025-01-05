@@ -87,11 +87,11 @@ jobs:
 
       - name: "Run Predictor"
         run: |
-          dotnet run --project src/Predictor --                                 \
-            --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}"        \
-            --repo "${{ inputs.repository || github.repository }}"              \
-            --issue-model ${{ env.MODEL_PATH }}                                 \
+          dotnet run --project src/Predictor -- \
+            --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}" \
+            --repo "${{ inputs.repository || github.repository }}" \
+            --issue-model ${{ env.MODEL_PATH }} \
             --issue ${{ inputs.number || github.event.issue.number }} \
-            --label-prefix "${{ inputs.label_prefix || 'area-' }}"              \
-            --threshold ${{ fromJSON( inputs.threshold || 0.40 ) }}             \
-            --default-label "${{ inputs.default_label || 'needs-area-label' }}"
+            --label-prefix "${{ inputs.label_prefix || (github.event.issue.number && 'area-') }}" \
+            --threshold ${{ fromJSON( inputs.threshold || (github.event.issue.number && 0.40) ) }} \
+            --default-label "${{ inputs.default_label || (github.event.issue.number && 'needs-area-label') }}"
