@@ -37,6 +37,7 @@ if (issueModelPath is not null && issueNumbers is not null)
             issueNumber,
             new Issue(result),
             labelPredicate,
+            defaultLabel,
             ModelType.Issue,
             test
         )));
@@ -60,6 +61,7 @@ if (pullModelPath is not null && pullNumbers is not null)
             pullNumber,
             new PullRequest(result),
             labelPredicate,
+            defaultLabel,
             ModelType.PullRequest,
             test
         )));
@@ -68,19 +70,34 @@ if (pullModelPath is not null && pullNumbers is not null)
 
 await Task.WhenAll(tasks);
 
-async Task ProcessPrediction<T>(string modelPath, ulong number, T issueOrPull, Func<string, bool> labelPredicate, ModelType type, bool test) where T : Issue
+async Task ProcessPrediction<T>(string modelPath, ulong number, T issueOrPull, Func<string, bool> labelPredicate, string? defaultLabel, ModelType type, bool test) where T : Issue
 {
     if (issueOrPull.HasMoreLabels)
     {
-        Console.WriteLine($"{type} #{number} has too many labels applied already. Cannot be sure no applicable label is already applied. Aborting.");
+        Console.WriteLine($"{type} #{number} has too many labels applied already. Cannot be sure no applicable label is already applied.");
         return;
     }
 
     var applicableLabel = issueOrPull.Labels?.FirstOrDefault(labelPredicate);
 
+    bool hasDefaultLabel =
+        (defaultLabel is not null) &&
+        (issueOrPull.Labels?.Any(l => l.Equals(defaultLabel, StringComparison.OrdinalIgnoreCase)) ?? false);
+
     if (applicableLabel is not null)
     {
-        Console.WriteLine($"{type} #{number} already has an applicable label '{applicableLabel}'. Aborting.");
+        Console.WriteLine($"{type} #{number} already has an applicable label '{applicableLabel}'.");
+
+        if (hasDefaultLabel)
+        {
+            Console.WriteLine($"Removing the default label '{defaultLabel}' from {type} #{number} since it has an applicable label.");
+
+            if (!test && defaultLabel is not null)
+            {
+                await GitHubApi.RemoveLabel(githubToken, org, repo, number, defaultLabel);
+            }
+        }
+
         return;
     }
 
@@ -91,7 +108,7 @@ async Task ProcessPrediction<T>(string modelPath, ulong number, T issueOrPull, F
 
     if (prediction.Score is null || prediction.Score.Length == 0)
     {
-        Console.WriteLine($"No prediction was made for {type} {org}/{repo}#{number}");
+        Console.WriteLine($"No prediction was made for {type} #{number}.");
         return;
     }
 
@@ -107,22 +124,32 @@ async Task ProcessPrediction<T>(string modelPath, ulong number, T issueOrPull, F
         .OrderByDescending(p => p.Score)
         .Take(3);
 
-    Console.WriteLine($"Label predictions for {type} {org}/{repo}#{number}:");
+    Console.WriteLine($"Label predictions for {type} #{number}:");
 
     foreach (var pred in predictions)
     {
-        Console.WriteLine($"  Label: {pred.Label} - Score: {pred.Score}");
+        Console.WriteLine($"  {type} #{number} - Label: {pred.Label} - Score: {pred.Score}");
     }
 
     var bestScore = predictions.FirstOrDefault(p => p.Score >= threshold);
 
     if (bestScore is not null)
     {
-        Console.WriteLine($"Predicted Label: {bestScore.Label}");
+        Console.WriteLine($"Predicted label for {type} #{number}: {bestScore.Label}");
 
         if (!test)
         {
             await GitHubApi.AddLabel(githubToken, org, repo, number, bestScore.Label);
+        }
+
+        if (hasDefaultLabel && defaultLabel is not null)
+        {
+            Console.WriteLine($"Removing default label '{defaultLabel}' from {type} #{number}.");
+
+            if (!test)
+            {
+                await GitHubApi.RemoveLabel(githubToken, org, repo, number, defaultLabel);
+            }
         }
     }
     else
@@ -131,7 +158,7 @@ async Task ProcessPrediction<T>(string modelPath, ulong number, T issueOrPull, F
 
         if (defaultLabel is not null)
         {
-            Console.WriteLine($"Using default label: {defaultLabel}");
+            Console.WriteLine($"Using default label '{defaultLabel}' for {type} #{number}.");
 
             if (!test)
             {

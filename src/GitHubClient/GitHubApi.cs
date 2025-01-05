@@ -8,7 +8,7 @@ namespace GitHubClient;
 
 public class GitHubApi
 {
-    public static GraphQLHttpClient CreateGraphQLClient(string githubToken)
+    private static GraphQLHttpClient CreateGraphQLClient(string githubToken)
     {
         GraphQLHttpClient client = new GraphQLHttpClient(
             "https://api.github.com/graphql",
@@ -237,15 +237,22 @@ public class GitHubApi
         return (await client.SendQueryAsync<RepositoryQuery<T>>(query)).Data.Repository.Result;
     }
 
-    public static async Task AddLabel(string githubToken, string org, string repo, ulong number, string label)
+    private static HttpClient CreateRestClient(string githubToken)
     {
-        using var client = new HttpClient();
+        HttpClient client = new();
         client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(
             scheme: "bearer",
             parameter: githubToken);
         client.DefaultRequestHeaders.Accept.Add(new("application/vnd.github+json"));
         client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
         client.DefaultRequestHeaders.Add("User-Agent", "GitHub-ML-Labeler");
+
+        return client;
+    }
+
+    public static async Task AddLabel(string githubToken, string org, string repo, ulong number, string label)
+    {
+        using var client = CreateRestClient(githubToken);
 
         var response = await client.PostAsJsonAsync(
             $"https://api.github.com/repos/{org}/{repo}/issues/{number}/labels",
@@ -254,7 +261,7 @@ public class GitHubApi
 
         if (!response.IsSuccessStatusCode)
         {
-            Console.WriteLine($"GitHub Request to add label failed with status code {response.StatusCode} ({response.ReasonPhrase}).");
+            Console.WriteLine($"GitHub request to add label failed with status code {response.StatusCode} ({response.ReasonPhrase}).");
 
             foreach (var h in response.Headers)
             {
@@ -266,6 +273,31 @@ public class GitHubApi
         else
         {
             Console.WriteLine($"Label '{label}' added to {org}/{repo}#{number}");
+        }
+    }
+
+    public static async Task RemoveLabel(string githubToken, string org, string repo, ulong number, string label)
+    {
+        using var client = CreateRestClient(githubToken);
+
+        var response = await client.DeleteAsync(
+            $"/repos/{org}/{repo}/issues/{number}/labels/{label}",
+            CancellationToken.None);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            Console.WriteLine($"GitHub request to remove label failed with status code {response.StatusCode} ({response.ReasonPhrase}).");
+
+            foreach (var h in response.Headers)
+            {
+                Console.WriteLine($"Response Header: {h.Key} = {string.Join(',', (string[])h.Value)}");
+            }
+
+            Console.WriteLine(await response.Content.ReadAsStringAsync());
+        }
+        else
+        {
+            Console.WriteLine($"Label '{label}' removed from {org}/{repo}#{number}");
         }
     }
 }
