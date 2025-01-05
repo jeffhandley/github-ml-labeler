@@ -91,7 +91,7 @@ jobs:
             --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}"        \
             --repo "${{ inputs.repository || github.repository }}"              \
             --pull-model ${{ env.MODEL_PATH }}                                  \
-            --pull ${{ fromJSON(inputs.number || github.event.number) }}        \
+            --pull ${{ inputs.number || github.event.number }}        \
             --label-prefix "${{ inputs.label_prefix || 'area-' }}"              \
             --threshold ${{ fromJSON( inputs.threshold || 0.40 ) }}             \
             --default-label "${{ inputs.default_label || 'needs-area-label' }}"
