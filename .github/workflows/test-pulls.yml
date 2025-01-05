@@ -21,7 +21,7 @@ on:
       threshold:
         description: "The minimum confidence score for a label prediction"
         type: number
-        default: 0.75
+        default: 0.40
         required: true
       model_cache_key:
         description: "The optional cache key suffix to use for loading the model (defaults to repository name)"
@@ -47,7 +47,7 @@ on:
       threshold:
         description: "The minimum confidence score for a label prediction"
         type: number
-        default: 0.75
+        default: 0.40
         required: true
       model_cache_key:
         description: "The optional cache key suffix to use for loading the model (defaults to repository name)"
@@ -89,4 +89,4 @@ jobs:
             --pull-model ${{ env.MODEL_PATH }}                                 \
             --pull-limit ${{ fromJSON(inputs.pull_limit || 50000 ) }}         \
             --label-prefix "${{ inputs.label_prefix || 'area-' }}"              \
-            --threshold ${{ fromJSON( inputs.threshold || 0.75 ) }}             \
+            --threshold ${{ fromJSON( inputs.threshold || 0.40 ) }}             \
