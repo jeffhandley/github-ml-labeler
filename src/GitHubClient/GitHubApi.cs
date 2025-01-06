@@ -25,6 +25,19 @@ public class GitHubApi
         return client;
     }
 
+    private static HttpClient CreateRestClient(string githubToken)
+    {
+        HttpClient client = new();
+        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(
+            scheme: "bearer",
+            parameter: githubToken);
+        client.DefaultRequestHeaders.Accept.Add(new("application/vnd.github+json"));
+        client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
+        client.DefaultRequestHeaders.Add("User-Agent", "GitHub-ML-Labeler");
+
+        return client;
+    }
+
     public static async IAsyncEnumerable<(Issue Issue, string Label)> DownloadIssues(string githubToken, string org, string repo, Predicate<string> labelPredicate, int? issueLimit, int pageSize, int pageLimit, int[] retries, bool verbose = false)
     {
         await foreach (var item in DownloadItems<Issue>("issues", githubToken, org, repo, labelPredicate, issueLimit, pageSize, pageLimit, retries, verbose))
@@ -235,19 +248,6 @@ public class GitHubApi
         };
 
         return (await client.SendQueryAsync<RepositoryQuery<T>>(query)).Data.Repository.Result;
-    }
-
-    private static HttpClient CreateRestClient(string githubToken)
-    {
-        HttpClient client = new();
-        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(
-            scheme: "bearer",
-            parameter: githubToken);
-        client.DefaultRequestHeaders.Accept.Add(new("application/vnd.github+json"));
-        client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
-        client.DefaultRequestHeaders.Add("User-Agent", "GitHub-ML-Labeler");
-
-        return client;
     }
 
     public static async Task AddLabel(string githubToken, string org, string repo, ulong number, string label)

@@ -3,8 +3,10 @@ static class Args
     static void ShowUsage(string? message = null)
     {
         Console.WriteLine($"Invalid or missing arguments.{(message is null ? "" : " " + message)}");
-        Console.WriteLine("  [--issue-data {path/to/issue-data.tsv} --issue-model {path/to/issue-model.zip}]");
-        Console.WriteLine("  [--pull-data {path/to/pull-data.tsv} --pull-model {path/to/pull-model.zip}]");
+        Console.WriteLine("  [--issue-data {path/to/issue-data.tsv}]");
+        Console.WriteLine("  [--issue-model {path/to/issue-model.zip}]");
+        Console.WriteLine("  [--pull-data {path/to/pull-data.tsv}]");
+        Console.WriteLine("  [--pull-model {path/to/pull-model.zip}]");
 
         Environment.Exit(-1);
     }

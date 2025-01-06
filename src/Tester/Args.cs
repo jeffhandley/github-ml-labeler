@@ -3,12 +3,15 @@ public static class Args
     public static void ShowUsage(string? message = null)
     {
         Console.WriteLine($"Invalid or missing arguments.{(message is null ? "" : " " + message)}");
+        Console.WriteLine("  --label-prefix {label-prefix}");
         Console.WriteLine("  [--threshold {threshold}]");
-        Console.WriteLine("  [--token {github_token} --repo {org}/{repo} --label-prefix {label-prefix}]");
+        Console.WriteLine("  [--token {github_token} --repo {org}/{repo}]");
         Console.WriteLine("  [--issue-data {path/to/issue-data.tsv}");
-        Console.WriteLine("  [--issue-model {path/to/issue-model.zip} --issue-limit {issues}]");
+        Console.WriteLine("  [--issue-model {path/to/issue-model.zip}]");
+        Console.WriteLine("  [--issue-limit {issues}]");
         Console.WriteLine("  [--pull-data {path/to/pull-data.tsv}");
-        Console.WriteLine("  [--pull-model {path/to/pull-model.zip} --pull-limit {pulls}]");
+        Console.WriteLine("  [--pull-model {path/to/pull-model.zip}]");
+        Console.WriteLine("  [--pull-limit {pulls}]");
 
         Environment.Exit(-1);
     }

@@ -7,8 +7,10 @@ public static class Args
         Console.WriteLine("  --repo {org}/{repo}");
         Console.WriteLine("  --label-prefix {label-prefix}");
         Console.WriteLine("  --threshold {threshold}");
-        Console.WriteLine("  [--issue-model {path/to/issue-model.zip} --issue {issue-number}]");
-        Console.WriteLine("  [--pull-model {path/to/pull-model.zip} --pull {pull-number}]");
+        Console.WriteLine("  [--issue-model {path/to/issue-model.zip}]");
+        Console.WriteLine("  [--issue {issue-number}]");
+        Console.WriteLine("  [--pull-model {path/to/pull-model.zip}]");
+        Console.WriteLine("  [--pull {pull-number}]");
         Console.WriteLine("  [--default-label {needs-area-label}]");
         Console.WriteLine("  [--test]");
 
