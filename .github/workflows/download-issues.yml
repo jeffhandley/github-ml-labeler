@@ -120,7 +120,7 @@ jobs:
             ${{ format('--repo "{0}"', inputs.repository || github.repository) }}" \
             ${{ format('--issue-data "{0}"', env.DATA_PATH) }} \
             ${{ format('--label-prefix "{0}"', inputs.label_prefix) }}" \
-            ${{ inputs.issue_limit && format('--issue-limit {0}', inputs.issue_limit }} \
+            ${{ inputs.issue_limit && format('--issue-limit {0}', inputs.issue_limit) }} \
             ${{ inputs.retries && format('--retries "{0}"', inputs.retries) }} \
             ${{ inputs.page_size && format('--page-size {0}', inputs.page_size) }} \
             ${{ inputs.page_limit && format('--page-limit {0}', inputs.page_limit) }}

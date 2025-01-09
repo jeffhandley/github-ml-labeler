@@ -98,7 +98,7 @@ jobs:
             ${{ format('--token "{0}"', inputs.github_token || secrets.GITHUB_TOKEN) }} \
             ${{ format('--repo "{0}"', inputs.repository || github.repository) }} \
             ${{ format('--pull-model "{0}"', env.MODEL_PATH) }} \
-            ${{ format('--pull-numbers "{0}", env.PULL_NUMBERS }} \
+            ${{ format('--pull-numbers "{0}"', env.PULL_NUMBERS) }} \
             ${{ format('--label-prefix "{0}"', env.LABEL_PREFIX) }} \
-            ${{ format('--threshold {0}', env.THRESHOLD }} \
+            ${{ format('--threshold {0}', env.THRESHOLD) }} \
             ${{ env.DEFAULT_LABEL && format('--default-label "{0}"', env.DEFAULT_LABEL) }}

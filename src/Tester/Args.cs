@@ -58,7 +58,7 @@ public static class Args
 
                     if (!orgRepo.Contains('/'))
                     {
-                        ShowUsage($$"""Argument 'repo' is not in the format of '{org}/{repo}': {{orgRepo}}""");
+                        ShowUsage($$"""Argument '--repo' is not in the format of '{org}/{repo}': {{orgRepo}}""");
                         return null;
                     }
 
@@ -68,24 +68,54 @@ public static class Args
                     break;
                 case "--issue-data":
                     issueDataPath = arguments.Dequeue();
+                    if (string.IsNullOrWhiteSpace(issueDataPath))
+                    {
+                        ShowUsage("Argument '--issue-data' has an empty value.");
+                        return null;
+                    }
+
                     break;
                 case "--issue-model":
                     issueModelPath = arguments.Dequeue();
+                    if (string.IsNullOrWhiteSpace(issueModelPath))
+                    {
+                        ShowUsage("Argument '--issue-model' has an empty value.");
+                        return null;
+                    }
+
                     break;
                 case "--issue-limit":
                     issueLimit = int.Parse(arguments.Dequeue());
                     break;
                 case "--pull-data":
                     pullDataPath = arguments.Dequeue();
+                    if (string.IsNullOrWhiteSpace(pullDataPath))
+                    {
+                        ShowUsage("Argument '--pull-data' has an empty value.");
+                        return null;
+                    }
+
                     break;
                 case "--pull-model":
                     pullModelPath = arguments.Dequeue();
+                    if (string.IsNullOrWhiteSpace(pullModelPath))
+                    {
+                        ShowUsage("Argument '--pull-model' has an empty value.");
+                        return null;
+                    }
+
                     break;
                 case "--pull-limit":
                     pullLimit = int.Parse(arguments.Dequeue());
                     break;
                 case "--label-prefix":
                     string labelPrefix = arguments.Dequeue();
+                    if (string.IsNullOrWhiteSpace(labelPrefix))
+                    {
+                        ShowUsage("Argument '--label-prefix' has an empty value.");
+                        return null;
+                    }
+
                     labelPredicate = label => label.StartsWith(labelPrefix, StringComparison.OrdinalIgnoreCase);
                     break;
                 case "--threshold":

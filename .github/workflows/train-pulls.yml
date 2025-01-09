@@ -82,8 +82,8 @@ jobs:
       - name: "Run Trainer"
         run: |
           dotnet run -c Release --project src/Trainer -- \
-            ${{ format('--pull-data "{0}"', env.DATA_PATH) }}" \
-            ${{ format('--pull-model "{0}"', env.MODEL_PATH) }}"
+            ${{ format('--pull-data "{0}"', env.DATA_PATH) }} \
+            ${{ format('--pull-model "{0}"', env.MODEL_PATH) }}
 
       - name: "Save model to cache"
         uses: actions/cache/save@v4
