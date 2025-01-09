@@ -14,7 +14,7 @@ public static class Args
         Console.WriteLine("  [--default-label {needs-area-label}]");
         Console.WriteLine("  [--test]");
 
-        Environment.Exit(-1);
+        Environment.Exit(1);
     }
 
     public static (

@@ -8,7 +8,7 @@ static class Args
         Console.WriteLine("  [--pull-data {path/to/pull-data.tsv}]");
         Console.WriteLine("  [--pull-model {path/to/pull-model.zip}]");
 
-        Environment.Exit(-1);
+        Environment.Exit(1);
     }
 
     public static (

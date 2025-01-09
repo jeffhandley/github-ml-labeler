@@ -13,7 +13,7 @@ public static class Args
         Console.WriteLine("  [--pull-model {path/to/pull-model.zip}]");
         Console.WriteLine("  [--pull-limit {pulls}]");
 
-        Environment.Exit(-1);
+        Environment.Exit(1);
     }
 
     public static (

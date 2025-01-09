@@ -9,11 +9,7 @@ on:
       repository:
         description: "The org/repo to download data from (defaults to current repository)"
         type: string
-      issue_limit:
-        description: "Max number of items to include in the test"
-        type: number
-        default: 50000
-        required: true
+
       label_prefix:
         description: "Label Prefix"
         type: string
@@ -21,8 +17,11 @@ on:
       threshold:
         description: "The minimum confidence score for a label prediction"
         type: number
-        default: 0.40
         required: true
+
+      issue_limit:
+        description: "Max number of items to include in the test"
+        type: number
       model_cache_key:
         description: "The optional cache key suffix to use for loading the model (defaults to repository name)"
         type: string
@@ -35,11 +34,7 @@ on:
       repository:
         description: "The org/repo to use (defaults to current repository)"
         type: string
-      issue_limit:
-        description: "Max number of items to include in the test"
-        type: number
-        default: 50000
-        required: true
+
       label_prefix:
         description: "Label Prefix"
         default: "area-"
@@ -49,6 +44,11 @@ on:
         type: number
         default: 0.40
         required: true
+
+      issue_limit:
+        description: "Max number of items to include in the test"
+        type: number
+        default: 50000
       model_cache_key:
         description: "The optional cache key suffix to use for loading the model (defaults to repository name)"
         type: string
@@ -60,7 +60,6 @@ env:
 jobs:
   test-issues:
     runs-on: ubuntu-latest
-    timeout-minutes: 2
 
     steps:
       - name: "Check out the 'jeffhandley/github-ml-labeler' repo"
@@ -84,9 +83,9 @@ jobs:
       - name: "Run Tester"
         run: |
           dotnet run -c Release --project src/Tester -- \
-            --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}" \
-            --repo "${{ inputs.repository || github.repository }}" \
-            --issue-model ${{ env.MODEL_PATH }} \
-            --issue-limit ${{ fromJSON(inputs.issue_limit ) }} \
-            --label-prefix "${{ inputs.label_prefix }}" \
-            --threshold ${{ fromJSON( inputs.threshold ) }}
+            ${{ format('--token "{0}"', inputs.github_token || secrets.GITHUB_TOKEN) }}" \
+            ${{ format('--repo "{0}"',inputs.repository || github.repository) }}" \
+            ${{ format('--issue-model "{0}"', env.MODEL_PATH) }} \
+            ${{ format('--label-prefix "{0}"', inputs.label_prefix) }}" \
+            ${{ format('--threshold {0}', inputs.threshold) }} \
+            ${{ inputs.issue_limit && format('--issue-limit {0}', inputs.issue_limit) }}

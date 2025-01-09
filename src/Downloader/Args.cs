@@ -15,7 +15,7 @@ public static class Args
         Console.WriteLine("  [--retries {comma-separated-retries-in-seconds}]");
         Console.WriteLine("  [--verbose]");
 
-        Environment.Exit(-1);
+        Environment.Exit(1);
     }
 
     public static (
@@ -44,7 +44,7 @@ public static class Args
         int? pullLimit = null;
         int? pageSize = null;
         int? pageLimit = null;
-        int[] retries = [10, 20, 30, 60, 120];
+        int[] retries = [30, 30, 300, 300, 3000, 3000];
         Predicate<string>? labelPredicate = null;
         bool verbose = false;
 
