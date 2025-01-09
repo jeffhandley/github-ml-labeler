@@ -83,9 +83,9 @@ jobs:
       - name: "Run Tester"
         run: |
           dotnet run -c Release --project src/Tester -- \
-            ${{ format('--token "{0}"', inputs.github_token || secrets.GITHUB_TOKEN) }}" \
-            ${{ format('--repo "{0}"',inputs.repository || github.repository) }}" \
+            ${{ format('--token "{0}"', inputs.github_token || secrets.GITHUB_TOKEN) }} \
+            ${{ format('--repo "{0}"',inputs.repository || github.repository) }} \
             ${{ format('--issue-model "{0}"', env.MODEL_PATH) }} \
-            ${{ format('--label-prefix "{0}"', inputs.label_prefix) }}" \
+            ${{ format('--label-prefix "{0}"', inputs.label_prefix) }} \
             ${{ format('--threshold {0}', inputs.threshold) }} \
             ${{ inputs.issue_limit && format('--issue-limit {0}', inputs.issue_limit) }}

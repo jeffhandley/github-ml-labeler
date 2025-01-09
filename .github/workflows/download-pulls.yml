@@ -64,7 +64,7 @@ on:
         type: string
 
 permissions:
-  pulls: read
+  pull-requests: read
   actions: write
 
 env:
@@ -116,10 +116,10 @@ jobs:
       - name: "Run Downloader"
         run: |
           dotnet run -c Release --project src/Downloader -- \
-            ${{ format('--token "{0}"', inputs.github_token || secrets.GITHUB_TOKEN) }}" \
-            ${{ format('--repo "{0}"', inputs.repository || github.repository) }}" \
+            ${{ format('--token "{0}"', inputs.github_token || secrets.GITHUB_TOKEN) }} \
+            ${{ format('--repo "{0}"', inputs.repository || github.repository) }} \
             ${{ format('--pull-data "{0}"', env.DATA_PATH) }} \
-            ${{ format('--label-prefix "{0}"', inputs.label_prefix) }}" \
+            ${{ format('--label-prefix "{0}"', inputs.label_prefix) }} \
             ${{ inputs.pull_limit && format('--pull-limit {0}', inputs.pull_limit) }} \
             ${{ inputs.retries && format('--retries "{0}"', inputs.retries) }} \
             ${{ inputs.page_size && format('--page-size {0}', inputs.page_size) }} \
