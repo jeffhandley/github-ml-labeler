@@ -8,9 +8,9 @@ public static class Args
         Console.WriteLine("  --label-prefix {label-prefix}");
         Console.WriteLine("  --threshold {threshold}");
         Console.WriteLine("  [--issue-model {path/to/issue-model.zip}]");
-        Console.WriteLine("  [--issue {issue-number}]");
+        Console.WriteLine("  [--issue-numbers {issue-numbers}]");
         Console.WriteLine("  [--pull-model {path/to/pull-model.zip}]");
-        Console.WriteLine("  [--pull {pull-number}]");
+        Console.WriteLine("  [--pull-numbers {pull-numbers}]");
         Console.WriteLine("  [--default-label {needs-area-label}]");
         Console.WriteLine("  [--test]");
 
@@ -70,14 +70,14 @@ public static class Args
                 case "--issue-model":
                     issueModelPath = arguments.Dequeue();
                     break;
-                case "--issue":
+                case "--issue-numbers":
                     issueNumbers ??= new();
                     issueNumbers.AddRange(ParseNumbers(arguments.Dequeue()));
                     break;
                 case "--pull-model":
                     pullModelPath = arguments.Dequeue();
                     break;
-                case "--pull":
+                case "--pull-numbers":
                     pullNumbers ??= new();
                     pullNumbers.AddRange(ParseNumbers(arguments.Dequeue()));
                     break;
