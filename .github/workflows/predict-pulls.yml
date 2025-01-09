@@ -2,7 +2,8 @@ name: "Labeler: Predict Pull Labels"
 
 on:
   pull_request:
-    types: [opened, edited, synchronize]
+    types: opened
+    branches: main
 
   workflow_call:
     inputs:
