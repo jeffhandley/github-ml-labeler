@@ -81,7 +81,7 @@ jobs:
 
       - name: "Run Modeler"
         run: |
-          dotnet run --project src/Modeler -- \
+          dotnet run -c Release --project src/Modeler -- \
             --issue-data ${{ env.DATA_PATH }} \
             --issue-model ${{ env.MODEL_PATH }}
 

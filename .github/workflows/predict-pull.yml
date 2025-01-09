@@ -87,7 +87,7 @@ jobs:
 
       - name: "Run Predictor"
         run: |
-          dotnet run --project src/Predictor -- \
+          dotnet run -c Release --project src/Predictor -- \
             --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}" \
             --repo "${{ inputs.repository || github.repository }}" \
             --pull-model ${{ env.MODEL_PATH }} \
