@@ -2,7 +2,7 @@ name: "Labeler: Predict Issue Labels"
 
 on:
   issues:
-    types: [opened, edited, labeled]
+    types: opened
 
   workflow_call:
     inputs:
