@@ -9,31 +9,25 @@ on:
       repository:
         description: "The org/repo to download data from (defaults to current repository)"
         type: string
+
       label_prefix:
         description: "Label prefix"
         type: string
         default: "area-"
         required: true
+
       pull_limit:
         description: "Max number of items to include in the model"
         type: number
-        default: 50000
-        required: true
       page_size:
-        description: "The number of items to include on each request"
+        description: "The number of items to include on each request (max 100)"
         type: number
-        default: 25
-        required: true
       page_limit:
         description: "Max pages of items to download"
         type: number
-        default: 4000
-        required: true
       retries:
         description: "Comma-separated list of retry delays in seconds"
         type: string
-        default: "30,30,300,300,3000,3000"
-        required: true
       data_cache_key:
         description: "The optional cache key suffix to use for saving the data (defaults to repository name)"
         type: string
@@ -46,37 +40,31 @@ on:
       repository:
         description: "The org/repo to download data from (defaults to current repository)"
         type: string
+
       label_prefix:
         description: "Label prefix"
         type: string
         default: "area-"
         required: true
+
       pull_limit:
         description: "Max number of items to include in the model"
         type: number
-        default: 50000
-        required: true
       page_size:
-        description: "The number of items to include on each request"
+        description: "The number of items to include on each request (max 100)"
         type: number
-        default: 25
-        required: true
       page_limit:
         description: "Max pages of items to download"
         type: number
-        default: 4000
-        required: true
       retries:
         description: "Comma-separated list of retry delays in seconds"
         type: string
-        default: "30,30,300,300,3000,3000"
-        required: true
       data_cache_key:
         description: "The optional cache key suffix to use for saving the data (defaults to repository name)"
         type: string
 
 permissions:
-  pull-requests: read
+  pulls: read
   actions: write
 
 env:
@@ -85,7 +73,7 @@ env:
   GH_TOKEN: ${{ github.token }}
 
 jobs:
-  labeler-download-pulls:
+  download-pulls:
     runs-on: ubuntu-latest
     timeout-minutes: 360
 
@@ -128,14 +116,14 @@ jobs:
       - name: "Run Downloader"
         run: |
           dotnet run -c Release --project src/Downloader -- \
-            --token "${{ inputs.github_token || secrets.GITHUB_TOKEN }}" \
-            --repo "${{ inputs.repository || github.repository }}" \
-            --pull-data ${{ env.DATA_PATH }} \
-            --pull-limit ${{ fromJSON( inputs.pull_limit ) }} \
-            --retries "${{ inputs.retries }}" \
-            --label-prefix "${{ inputs.label_prefix }}" \
-            --page-size ${{ fromJSON( inputs.page_size ) }} \
-            --page-limit ${{ fromJSON( inputs.page_limit ) }}
+            ${{ format('--token "{0}"', inputs.github_token || secrets.GITHUB_TOKEN) }}" \
+            ${{ format('--repo "{0}"', inputs.repository || github.repository) }}" \
+            ${{ format('--pull-data "{0}"', env.DATA_PATH) }} \
+            ${{ format('--label-prefix "{0}"', inputs.label_prefix) }}" \
+            ${{ inputs.pull_limit && format('--pull-limit {0}', inputs.pull_limit) }} \
+            ${{ inputs.retries && format('--retries "{0}"', inputs.retries) }} \
+            ${{ inputs.page_size && format('--page-size {0}', inputs.page_size) }} \
+            ${{ inputs.page_limit && format('--page-limit {0}', inputs.page_limit) }}
 
       - name: "Save data to cache"
         uses: actions/cache/save@v4

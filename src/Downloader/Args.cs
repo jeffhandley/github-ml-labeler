@@ -15,7 +15,7 @@ public static class Args
         Console.WriteLine("  [--retries {comma-separated-retries-in-seconds}]");
         Console.WriteLine("  [--verbose]");
 
-        Environment.Exit(-1);
+        Environment.Exit(1);
     }
 
     public static (
@@ -44,7 +44,7 @@ public static class Args
         int? pullLimit = null;
         int? pageSize = null;
         int? pageLimit = null;
-        int[] retries = [10, 20, 30, 60, 120];
+        int[] retries = [30, 30, 300, 300, 3000, 3000];
         Predicate<string>? labelPredicate = null;
         bool verbose = false;
 
@@ -62,7 +62,7 @@ public static class Args
 
                     if (!orgRepo.Contains('/'))
                     {
-                        ShowUsage($$"""Argument 'repo' is not in the format of '{org}/{repo}': {{orgRepo}}""");
+                        ShowUsage($$"""Argument '--repo' is not in the format of '{org}/{repo}': {{orgRepo}}""");
                         return null;
                     }
 
@@ -78,6 +78,12 @@ public static class Args
                     break;
                 case "--pull-data":
                     pullsPath = arguments.Dequeue();
+                    if (string.IsNullOrWhiteSpace(pullsPath))
+                    {
+                        ShowUsage("Argument '--pull-data' has an empty value.");
+                        return null;
+                    }
+
                     break;
                 case "--pull-limit":
                     pullLimit = int.Parse(arguments.Dequeue());
@@ -93,6 +99,12 @@ public static class Args
                     break;
                 case "--label-prefix":
                     string labelPrefix = arguments.Dequeue();
+                    if (string.IsNullOrWhiteSpace(labelPrefix))
+                    {
+                        ShowUsage("Argument '--label-prefix' has an empty value.");
+                        return null;
+                    }
+
                     labelPredicate = (label) => label.StartsWith(labelPrefix, StringComparison.OrdinalIgnoreCase);
                     break;
                 case "--verbose":

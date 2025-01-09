@@ -3,9 +3,9 @@ Use a machine learning model to automatically label issues and pull requests.
 
 ## Downloader
 
-Download issue and pull request data from GitHub, creating tab-separated (.tsv) data files to be consumed by the Modeler.
+Download issue and pull request data from GitHub, creating tab-separated (.tsv) data files to be consumed by the Trainer.
 
-## Modeler
+## Trainer
 
 Load the tab-separated issue and pull request data that has already been downloaded, and train an ML.NET model over the data to prepare for making label predictions.
 
@@ -27,7 +27,7 @@ Invokes the Downloader, saving the `.tsv` file to the Actions cache withing the 
 
 ### `model-issues.yml` / `model-pulls.yml`
 
-Invokes the Modeler, consuming a `.tsv` data file from the Actions cache to build a model. The model is persisted into the Actions cache. Supports storing multiple models in cache side-by-side using cache key suffixes, which enables testing and staging new models without disrupting predictions.
+Invokes the Trainer, consuming a `.tsv` data file from the Actions cache to build a model. The model is persisted into the Actions cache. Supports storing multiple models in cache side-by-side using cache key suffixes, which enables testing and staging new models without disrupting predictions.
 
 ### `test-issues.yml` / `test-pulls.yml`
 

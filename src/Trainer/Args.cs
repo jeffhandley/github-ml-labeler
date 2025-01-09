@@ -8,7 +8,7 @@ static class Args
         Console.WriteLine("  [--pull-data {path/to/pull-data.tsv}]");
         Console.WriteLine("  [--pull-model {path/to/pull-model.zip}]");
 
-        Environment.Exit(-1);
+        Environment.Exit(1);
     }
 
     public static (
@@ -33,15 +33,39 @@ static class Args
             {
                 case "--issue-data":
                     issueDataPath = arguments.Dequeue();
+                    if (string.IsNullOrWhiteSpace(issueDataPath))
+                    {
+                        ShowUsage("Argument '--issue-data' has an empty value.");
+                        return (null, null, null, null);
+                    }
+
                     break;
                 case "--issue-model":
                     issueModelPath = arguments.Dequeue();
+                    if (string.IsNullOrWhiteSpace(issueModelPath))
+                    {
+                        ShowUsage("Argument '--issue-model' has an empty value.");
+                        return (null, null, null, null);
+                    }
+
                     break;
                 case "--pull-data":
                     pullDataPath = arguments.Dequeue();
+                    if (string.IsNullOrWhiteSpace(pullDataPath))
+                    {
+                        ShowUsage("Argument '--pull-data' has an empty value.");
+                        return (null, null, null, null);
+                    }
+
                     break;
                 case "--pull-model":
                     pullModelPath = arguments.Dequeue();
+                    if (string.IsNullOrWhiteSpace(pullModelPath))
+                    {
+                        ShowUsage("Argument '--pull-model' has an empty value.");
+                        return (null, null, null, null);
+                    }
+
                     break;
                 default:
                     ShowUsage($"Unrecognized argument: {argument}");

@@ -1,4 +1,4 @@
-name: "Labeler: Model Issues"
+name: "Labeler: Train Issues"
 
 on:
   workflow_call:
@@ -79,11 +79,11 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      - name: "Run Modeler"
+      - name: "Run Trainer"
         run: |
-          dotnet run -c Release --project src/Modeler -- \
-            --issue-data ${{ env.DATA_PATH }} \
-            --issue-model ${{ env.MODEL_PATH }}
+          dotnet run -c Release --project src/Trainer -- \
+            ${{ format('--issue-data "{0}"', env.DATA_PATH) }} \
+            ${{ format('--issue-model "{0}"', env.MODEL_PATH) }}
 
       - name: "Save model to cache"
         uses: actions/cache/save@v4
