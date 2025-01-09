@@ -250,7 +250,7 @@ public class GitHubApi
         return (await client.SendQueryAsync<RepositoryQuery<T>>(query)).Data.Repository.Result;
     }
 
-    public static async Task AddLabel(string githubToken, string org, string repo, ulong number, string label)
+    public static async Task<string?> AddLabel(string githubToken, string org, string repo, ulong number, string label)
     {
         using var client = CreateRestClient(githubToken);
 
@@ -261,22 +261,22 @@ public class GitHubApi
 
         if (!response.IsSuccessStatusCode)
         {
-            Console.WriteLine($"GitHub request to add label failed with status code {response.StatusCode} ({response.ReasonPhrase}).");
-
+#if DEBUG
             foreach (var h in response.Headers)
             {
                 Console.WriteLine($"Response Header: {h.Key} = {string.Join(',', (string[])h.Value)}");
             }
 
             Console.WriteLine(await response.Content.ReadAsStringAsync());
+#endif
+
+            return $"GitHub request to add label failed with status code {response.StatusCode} ({response.ReasonPhrase}).";
         }
-        else
-        {
-            Console.WriteLine($"Label '{label}' added to {org}/{repo}#{number}");
-        }
+
+        return null;
     }
 
-    public static async Task RemoveLabel(string githubToken, string org, string repo, ulong number, string label)
+    public static async Task<string?> RemoveLabel(string githubToken, string org, string repo, ulong number, string label)
     {
         using var client = CreateRestClient(githubToken);
 
@@ -286,18 +286,18 @@ public class GitHubApi
 
         if (!response.IsSuccessStatusCode)
         {
-            Console.WriteLine($"GitHub request to remove label failed with status code {response.StatusCode} ({response.ReasonPhrase}).");
-
+#if DEBUG
             foreach (var h in response.Headers)
             {
                 Console.WriteLine($"Response Header: {h.Key} = {string.Join(',', (string[])h.Value)}");
             }
 
             Console.WriteLine(await response.Content.ReadAsStringAsync());
+#endif
+
+            return $"GitHub request to remove label failed with status code {response.StatusCode} ({response.ReasonPhrase}).";
         }
-        else
-        {
-            Console.WriteLine($"Label '{label}' removed from {org}/{repo}#{number}");
-        }
+
+        return null;
     }
 }

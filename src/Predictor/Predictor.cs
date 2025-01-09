@@ -18,7 +18,7 @@ if (arguments is null) return;
     bool test
 ) = arguments.Value;
 
-List<Task> tasks = new();
+List<Task<(ModelType Type, ulong Number, bool Success, string[] Output)>> tasks = new();
 
 if (issueModelPath is not null && issueNumbers is not null)
 {
@@ -28,7 +28,7 @@ if (issueModelPath is not null && issueNumbers is not null)
 
         if (result is null)
         {
-            Console.WriteLine($"Issue #{issueNumber} was not found. Skipping.");
+            Console.WriteLine($"[Issue #{issueNumber}] Issue not found.");
             continue;
         }
 
@@ -52,7 +52,7 @@ if (pullModelPath is not null && pullNumbers is not null)
 
         if (result is null)
         {
-            Console.WriteLine($"Pull Request #{pullNumber} was not found. Skipping.");
+            Console.WriteLine($"[Pull Request #{pullNumber}] Pull request not found.");
             continue;
         }
 
@@ -68,14 +68,32 @@ if (pullModelPath is not null && pullNumbers is not null)
     }
 }
 
-await Task.WhenAll(tasks);
+var allTasks = Task.WhenAll(tasks);
 
-async Task ProcessPrediction<T>(string modelPath, ulong number, T issueOrPull, Func<string, bool> labelPredicate, string? defaultLabel, ModelType type, bool test) where T : Issue
+try
 {
+    allTasks.Wait();
+}
+catch (AggregateException) { }
+
+foreach (var prediction in allTasks.Result)
+{
+    Console.WriteLine($"""
+        [{prediction.Type} #{prediction.Number}{(prediction.Success ? "" : " FAILURE")}]
+          {string.Join("\n  ", prediction.Output)}
+
+        """);
+}
+
+async Task<(ModelType, ulong, bool, string[])> ProcessPrediction<T>(string modelPath, ulong number, T issueOrPull, Func<string, bool> labelPredicate, string? defaultLabel, ModelType type, bool test) where T : Issue
+{
+    List<string> output = new();
+    string? error = null;
+
     if (issueOrPull.HasMoreLabels)
     {
-        Console.WriteLine($"{type} #{number} has too many labels applied already. Cannot be sure no applicable label is already applied.");
-        return;
+        output.Add($"[{type} #{number}] No action taken. Too many labels applied already; cannot be sure no applicable label is already applied.");
+        return (type, number, true, output.ToArray());
     }
 
     var applicableLabel = issueOrPull.Labels?.FirstOrDefault(labelPredicate);
@@ -86,19 +104,19 @@ async Task ProcessPrediction<T>(string modelPath, ulong number, T issueOrPull, F
 
     if (applicableLabel is not null)
     {
-        Console.WriteLine($"{type} #{number} already has an applicable label '{applicableLabel}'.");
+        output.Add($"Applicable label '{applicableLabel}' already exists.");
 
-        if (hasDefaultLabel)
+        if (hasDefaultLabel && defaultLabel is not null)
         {
-            Console.WriteLine($"Removing the default label '{defaultLabel}' from {type} #{number} since it has an applicable label.");
-
-            if (!test && defaultLabel is not null)
+            if (!test)
             {
-                await GitHubApi.RemoveLabel(githubToken, org, repo, number, defaultLabel);
+                error = await GitHubApi.RemoveLabel(githubToken, org, repo, number, defaultLabel);
             }
+
+            output.Add(error ?? $"Removed default label '{defaultLabel}'.");
         }
 
-        return;
+        return (type, number, error is null, output.ToArray());
     }
 
     var context = new MLContext();
@@ -108,8 +126,8 @@ async Task ProcessPrediction<T>(string modelPath, ulong number, T issueOrPull, F
 
     if (prediction.Score is null || prediction.Score.Length == 0)
     {
-        Console.WriteLine($"No prediction was made for {type} #{number}.");
-        return;
+        output.Add("No prediction was made.");
+        return (type, number, true, output.ToArray());
     }
 
     VBuffer<ReadOnlyMemory<char>> labels = default;
@@ -124,46 +142,57 @@ async Task ProcessPrediction<T>(string modelPath, ulong number, T issueOrPull, F
         .OrderByDescending(p => p.Score)
         .Take(3);
 
-    Console.WriteLine($"Label predictions for {type} #{number}:");
-
-    foreach (var pred in predictions)
-    {
-        Console.WriteLine($"  {type} #{number} - Label: {pred.Label} - Score: {pred.Score}");
-    }
+    output.Add("Label predictions:");
+    output.AddRange(predictions.Select(p => $"  '{p.Label}' - Score: {p.Score}"));
 
     var bestScore = predictions.FirstOrDefault(p => p.Score >= threshold);
+    output.Add(bestScore is not null ?
+        $"Label '{bestScore.Label}' meets threshold of {threshold}." :
+        $"No label meets the threshold of {threshold}.");
 
     if (bestScore is not null)
     {
-        Console.WriteLine($"Predicted label for {type} #{number}: {bestScore.Label}");
-
         if (!test)
         {
-            await GitHubApi.AddLabel(githubToken, org, repo, number, bestScore.Label);
+            error = await GitHubApi.AddLabel(githubToken, org, repo, number, bestScore.Label);
+        }
+
+        output.Add(error ?? $"Added label '{bestScore.Label}'");
+
+        if (error is not null)
+        {
+            return (type, number, false, output.ToArray());
         }
 
         if (hasDefaultLabel && defaultLabel is not null)
         {
-            Console.WriteLine($"Removing default label '{defaultLabel}' from {type} #{number}.");
-
             if (!test)
             {
-                await GitHubApi.RemoveLabel(githubToken, org, repo, number, defaultLabel);
+                error = await GitHubApi.RemoveLabel(githubToken, org, repo, number, defaultLabel);
             }
+
+            output.Add(error ?? $"Removed default label '{defaultLabel}'");
         }
+
+        return (type, number, error is null, output.ToArray());
     }
-    else
+
+    if (defaultLabel is not null)
     {
-        Console.WriteLine($"No label score met the specified threshold of {threshold}.");
-
-        if (defaultLabel is not null)
+        if (hasDefaultLabel)
         {
-            Console.WriteLine($"Using default label '{defaultLabel}' for {type} #{number}.");
-
+            output.Add($"Default label '{defaultLabel}' is already applied.");
+        }
+        else
+        {
             if (!test)
             {
-                await GitHubApi.AddLabel(githubToken, org, repo, number, defaultLabel);
+                error = await GitHubApi.AddLabel(githubToken, org, repo, number, defaultLabel);
             }
+
+            output.Add(error ?? $"Applied default label '{defaultLabel}'.");
         }
     }
+
+    return (type, number, error is null, output.ToArray());
 }
