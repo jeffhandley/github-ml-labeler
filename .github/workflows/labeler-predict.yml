@@ -30,25 +30,23 @@ on:
 
 jobs:
   predict-issues:
-    if: ${{ inputs.issue_numbers || github.event.issue.number }}
     permissions:
       issues: write
     uses: jeffhandley/github-ml-labeler/.github/workflows/predict-issues.yml@main
     with:
       model_cache_key: ${{ inputs.model_cache_key || github.repository }}
-      issue_numbers: ${{ inputs.issue_numbers || github.event.issue.number }}
+      issue_numbers: "1-30"
       label_prefix: 'area-'
-      threshold: 0.40
-      default_label: 'needs-area-label'
+      threshold: 0.10
+      default_label: "APPROVED"
 
   predict-pulls:
-    if: ${{ inputs.pull_numbers || github.event.number }}
     permissions:
       pull-requests: write
     uses: jeffhandley/github-ml-labeler/.github/workflows/predict-pulls.yml@main
     with:
       model_cache_key: ${{ inputs.model_cache_key || github.repository }}
-      pull_numbers: ${{ inputs.pull_numbers || github.event.number }}
-      label_prefix: 'area-'
-      threshold: 0.40
-      default_label: 'needs-area-label'
+      pull_numbers: 1-50
+      label_prefix: "A"
+      threshold: 0.10
+      default_label: "APPROVED"
