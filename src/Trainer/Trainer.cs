@@ -77,9 +77,16 @@ static void CreateModel(string dataPath, string modelPath, ModelType type)
     Console.WriteLine($"MacroAccuracy = {metrics.MacroAccuracy:0.####}, a value between 0 and 1, the closer to 1, the better");
     Console.WriteLine($"MicroAccuracy = {metrics.MicroAccuracy:0.####}, a value between 0 and 1, the closer to 1, the better");
     Console.WriteLine($"LogLoss = {metrics.LogLoss:0.####}, the closer to 0, the better");
-    Console.WriteLine($"LogLoss for class 1 = {metrics.PerClassLogLoss[0]:0.####}, the closer to 0, the better");
-    Console.WriteLine($"LogLoss for class 2 = {metrics.PerClassLogLoss[1]:0.####}, the closer to 0, the better");
-    Console.WriteLine($"LogLoss for class 3 = {metrics.PerClassLogLoss[2]:0.####}, the closer to 0, the better");
+
+    if (metrics.PerClassLogLoss.Count() > 0)
+        Console.WriteLine($"LogLoss for class 1 = {metrics.PerClassLogLoss[0]:0.####}, the closer to 0, the better");
+
+    if (metrics.PerClassLogLoss.Count() > 1)
+        Console.WriteLine($"LogLoss for class 2 = {metrics.PerClassLogLoss[1]:0.####}, the closer to 0, the better");
+
+    if (metrics.PerClassLogLoss.Count() > 2)
+        Console.WriteLine($"LogLoss for class 3 = {metrics.PerClassLogLoss[2]:0.####}, the closer to 0, the better");
+
     Console.WriteLine($"************************************************************");
 
     Console.WriteLine("Saving model...");
