@@ -58,6 +58,8 @@ public class GitHubApi
 
     private static async IAsyncEnumerable<(T Item, string Label)> DownloadItems<T>(string itemQueryName, string githubToken, string org, string repo, Predicate<string> labelPredicate, int? itemLimit, int pageSize, int pageLimit, int[] retries, bool verbose) where T : Issue
     {
+        pageSize = Math.Min(pageSize, 100);
+
         int pageNumber = 0;
         string? after = null;
         bool hasNextPage = true;
