@@ -22,6 +22,10 @@ List<Task<(ModelType Type, ulong Number, bool Success, string[] Output)>> tasks 
 
 if (issueModelPath is not null && issueNumbers is not null)
 {
+    var issueContext = new MLContext();
+    var issueModel = issueContext.Model.Load(issueModelPath, out _);
+    var issuePredictor = issueContext.Model.CreatePredictionEngine<Issue, LabelPrediction>(issueModel);
+
     foreach (ulong issueNumber in issueNumbers)
     {
         var result = await GitHubApi.GetIssue(githubToken, org, repo, issueNumber);
@@ -33,7 +37,7 @@ if (issueModelPath is not null && issueNumbers is not null)
         }
 
         tasks.Add(Task.Run(() => ProcessPrediction(
-            issueModelPath,
+            issuePredictor,
             issueNumber,
             new Issue(result),
             labelPredicate,
@@ -46,6 +50,10 @@ if (issueModelPath is not null && issueNumbers is not null)
 
 if (pullModelPath is not null && pullNumbers is not null)
 {
+    var pullContext = new MLContext();
+    var pullModel = pullContext.Model.Load(pullModelPath, out _);
+    var pullPredictor = pullContext.Model.CreatePredictionEngine<PullRequest, LabelPrediction>(pullModel);
+
     foreach (ulong pullNumber in pullNumbers)
     {
         var result = await GitHubApi.GetPullRequest(githubToken, org, repo, pullNumber);
@@ -57,7 +65,7 @@ if (pullModelPath is not null && pullNumbers is not null)
         }
 
         tasks.Add(Task.Run(() => ProcessPrediction(
-            pullModelPath,
+            pullPredictor,
             pullNumber,
             new PullRequest(result),
             labelPredicate,
@@ -85,7 +93,7 @@ foreach (var prediction in allTasks.Result)
         """);
 }
 
-async Task<(ModelType, ulong, bool, string[])> ProcessPrediction<T>(string modelPath, ulong number, T issueOrPull, Func<string, bool> labelPredicate, string? defaultLabel, ModelType type, bool test) where T : Issue
+async Task<(ModelType, ulong, bool, string[])> ProcessPrediction<T>(PredictionEngine<T, LabelPrediction> predictor, ulong number, T issueOrPull, Func<string, bool> labelPredicate, string? defaultLabel, ModelType type, bool test) where T : Issue
 {
     List<string> output = new();
     string? error = null;
@@ -119,9 +127,6 @@ async Task<(ModelType, ulong, bool, string[])> ProcessPrediction<T>(string model
         return (type, number, error is null, output.ToArray());
     }
 
-    var context = new MLContext();
-    var model = context.Model.Load(modelPath, out _);
-    var predictor = context.Model.CreatePredictionEngine<T, LabelPrediction>(model);
     var prediction = predictor.Predict(issueOrPull);
 
     if (prediction.Score is null || prediction.Score.Length == 0)
