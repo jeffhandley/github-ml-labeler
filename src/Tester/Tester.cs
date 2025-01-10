@@ -7,7 +7,7 @@ if (arguments is null) return;
 
 (
     string? org,
-    string? repo,
+    string[]? repos,
     string? githubToken,
     string? issueDataPath,
     string? issueModelPath,
@@ -58,22 +58,19 @@ async IAsyncEnumerable<T> ReadData<T>(string dataPath, Func<ulong, string[], T> 
     }
 }
 
-async IAsyncEnumerable<Issue> DownloadIssues()
+async IAsyncEnumerable<Issue> DownloadIssues(string githubToken, string org, string repo)
 {
-    if (githubToken is not null && org is not null && repo is not null)
+    await foreach (var result in GitHubApi.DownloadIssues(githubToken, org, repo, labelPredicate, issueLimit, 100, 1000, [30, 30, 30]))
     {
-        await foreach (var result in GitHubApi.DownloadIssues(githubToken, org, repo, labelPredicate, issueLimit, 100, 1000, [30, 30, 30]))
-        {
-            yield return new(result.Issue, labelPredicate);
-        }
+        yield return new(result.Issue, labelPredicate);
     }
 }
 
 async Task TestIssues()
 {
-    var issueList = issueDataPath is null ?
-        DownloadIssues() :
-        ReadData(issueDataPath, (num, columns) => new Issue()
+    if (issueDataPath is not null)
+    {
+        var issueList = ReadData(issueDataPath, (num, columns) => new Issue()
         {
             Number = num,
             Label = columns[0],
@@ -81,25 +78,35 @@ async Task TestIssues()
             Body = columns[2]
         }, issueLimit);
 
-    await TestPredictions(issueList, issueModelPath);
+        await TestPredictions(issueList, issueModelPath);
+        return;
+    }
+
+    if (githubToken is not null && org is not null && repos is not null)
+    {
+        foreach (var repo in repos)
+        {
+            Console.WriteLine($"Downloading and testing issues from {org}/{repo}.");
+
+            var issueList = DownloadIssues(githubToken, org, repo);
+            await TestPredictions(issueList, issueModelPath);
+        }
+    }
 }
 
-async IAsyncEnumerable<PullRequest> DownloadPullRequests()
+async IAsyncEnumerable<PullRequest> DownloadPullRequests(string githubToken, string org, string repo)
 {
-    if (githubToken is not null && org is not null && repo is not null)
+    await foreach (var result in GitHubApi.DownloadPullRequests(githubToken, org, repo, labelPredicate, pullLimit, 25, 4000, [30, 30, 30]))
     {
-        await foreach (var result in GitHubApi.DownloadPullRequests(githubToken, org, repo, labelPredicate, pullLimit, 25, 4000, [30, 30, 30]))
-        {
-            yield return new(result.PullRequest, labelPredicate);
-        }
+        yield return new(result.PullRequest, labelPredicate);
     }
 }
 
 async Task TestPullRequests()
 {
-    var pullList = pullDataPath is null ?
-        DownloadPullRequests() :
-        ReadData(pullDataPath, (num, columns) => new PullRequest()
+    if (pullDataPath is not null)
+    {
+        var pullList = ReadData(pullDataPath, (num, columns) => new PullRequest()
         {
             Number = num,
             Label = columns[0],
@@ -109,7 +116,20 @@ async Task TestPullRequests()
             FolderNames = columns[4]
         }, pullLimit);
 
-    await TestPredictions(pullList, pullModelPath);
+        await TestPredictions(pullList, pullModelPath);
+        return;
+    }
+
+    if (githubToken is not null && org is not null && repos is not null)
+    {
+        foreach (var repo in repos)
+        {
+            Console.WriteLine($"Downloading and testing pull requests from {org}/{repo}.");
+
+            var pullList = DownloadPullRequests(githubToken, org, repo);
+            await TestPredictions(pullList, pullModelPath);
+        }
+    }
 }
 
 static string GetStats(List<float> values)
@@ -193,7 +213,7 @@ async Task TestPredictions<T>(IAsyncEnumerable<T> results, string modelPath) whe
 
     if (prediction.Score is null || prediction.Score.Length == 0)
     {
-        Console.WriteLine($"No prediction was made for {itemType} {org}/{repo}#{issueOrPull.Number}.");
+        Console.WriteLine($"No prediction was made for {itemType} #{issueOrPull.Number}.");
         return (null, null);
     }
 
