@@ -38,7 +38,7 @@ jobs:
       issue_numbers: "1-30"
       label_prefix: 'area-'
       threshold: 0.10
-      default_label: "APPROVED"
+      default_label: "Servicing-approved"
 
   predict-pulls:
     permissions:
@@ -49,4 +49,4 @@ jobs:
       pull_numbers: 1-50
       label_prefix: "A"
       threshold: 0.10
-      default_label: "APPROVED"
+      default_label: "Servicing-approved"
