@@ -7,12 +7,6 @@ on:
 
   workflow_dispatch:
     inputs:
-      github_token:
-        description: "The GitHub token (defaults to action token)"
-        type: string
-      repository:
-        description: "The org/repo to use (defaults to current repository)"
-        type: string
       pull_numbers:
         description: "Pull Numbers"
         type: string
