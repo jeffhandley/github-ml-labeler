@@ -252,54 +252,60 @@ public class GitHubApi
         return (await client.SendQueryAsync<RepositoryQuery<T>>(query)).Data.Repository.Result;
     }
 
-    public static async Task<string?> AddLabel(string githubToken, string org, string repo, ulong number, string label)
+    public static async Task<string?> AddLabel(string githubToken, string org, string repo, string type, ulong number, string label)
     {
         using var client = CreateRestClient(githubToken);
+        int[] retries = [5, 10, 30];
+        byte retry = 0;
 
-        var response = await client.PostAsJsonAsync(
-            $"https://api.github.com/repos/{org}/{repo}/issues/{number}/labels",
-            new string[] { label },
-            CancellationToken.None);
-
-        if (!response.IsSuccessStatusCode)
+        while (retry < retries.Length)
         {
-#if DEBUG
-            foreach (var h in response.Headers)
+            var response = await client.PostAsJsonAsync(
+                $"https://api.github.com/repos/{org}/{repo}/issues/{number}/labels",
+                new string[] { label },
+                CancellationToken.None);
+
+            if (response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"Response Header: {h.Key} = {string.Join(',', (string[])h.Value)}");
+                return null;
             }
 
-            Console.WriteLine(await response.Content.ReadAsStringAsync());
-#endif
+            Console.WriteLine($"""
+                [{type} #{number}] Failed to add label '{label}'. {response.ReasonPhrase} ({response.StatusCode})
+                    {(retry < retries.Length ? $"Will proceed with retry {retry + 1} of {retries.Length} after {retries[retry]} seconds..." : $"Retry limit of {retries.Length} reached.")}
+                """);
 
-            return $"GitHub request to add label failed with status code {response.StatusCode} ({response.ReasonPhrase}).";
+            await Task.Delay(retries[retry++] * 1000);
         }
 
-        return null;
+        return $"Failed to add label '{label}' after {retries.Length} retries.";
     }
 
-    public static async Task<string?> RemoveLabel(string githubToken, string org, string repo, ulong number, string label)
+    public static async Task<string?> RemoveLabel(string githubToken, string org, string repo, string type, ulong number, string label)
     {
         using var client = CreateRestClient(githubToken);
+        int[] retries = [5, 10, 30];
+        byte retry = 0;
 
-        var response = await client.DeleteAsync(
-            $"https://api.github.com/repos/{org}/{repo}/issues/{number}/labels/{label}",
-            CancellationToken.None);
-
-        if (!response.IsSuccessStatusCode)
+        while (retry < retries.Length)
         {
-#if DEBUG
-            foreach (var h in response.Headers)
+            var response = await client.DeleteAsync(
+                $"https://api.github.com/repos/{org}/{repo}/issues/{number}/labels/{label}",
+                CancellationToken.None);
+
+            if (response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"Response Header: {h.Key} = {string.Join(',', (string[])h.Value)}");
+                return null;
             }
 
-            Console.WriteLine(await response.Content.ReadAsStringAsync());
-#endif
+            Console.WriteLine($"""
+                [{type} #{number}] Failed to remove label '{label}'. {response.ReasonPhrase} ({response.StatusCode})
+                    {(retry < retries.Length ? $"Will proceed with retry {retry + 1} of {retries.Length} after {retries[retry]} seconds..." : $"Retry limit of {retries.Length} reached.")}
+                """);
 
-            return $"GitHub request to remove label failed with status code {response.StatusCode} ({response.ReasonPhrase}).";
+            await Task.Delay(retries[retry++] * 1000);
         }
 
-        return null;
+        return $"Failed to remove label '{label}' after {retries.Length} retries.";
     }
 }
