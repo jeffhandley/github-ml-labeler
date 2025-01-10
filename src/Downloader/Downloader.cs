@@ -5,7 +5,7 @@ var arguments = Args.Parse(args);
 if (arguments is null) return;
 (
     string org,
-    string repo,
+    string[] repos,
     string githubToken,
     string? issuesPath,
     int? issueLimit,
@@ -43,14 +43,17 @@ async Task DownloadIssues(string outputPath)
     using StreamWriter writer = new StreamWriter(outputPath);
     writer.WriteLine(FormatIssueRecord("Label", "Title", "Body"));
 
-    await foreach (var result in GitHubApi.DownloadIssues(githubToken, org, repo, labelPredicate, issueLimit, pageSize ?? 100, pageLimit ?? 1000, retries, verbose))
+    foreach (var repo in repos)
     {
-        writer.WriteLine(FormatIssueRecord(result.Label, result.Issue.Title, result.Issue.Body));
-
-        if (++perFlushCount == 100)
+        await foreach (var result in GitHubApi.DownloadIssues(githubToken, org, repo, labelPredicate, issueLimit, pageSize ?? 100, pageLimit ?? 1000, retries, verbose))
         {
-            writer.Flush();
-            perFlushCount = 0;
+            writer.WriteLine(FormatIssueRecord(result.Label, result.Issue.Title, result.Issue.Body));
+
+            if (++perFlushCount == 100)
+            {
+                writer.Flush();
+                perFlushCount = 0;
+            }
         }
     }
 
@@ -66,14 +69,17 @@ async Task DownloadPullRequests(string outputPath)
     using StreamWriter writer = new StreamWriter(outputPath);
     writer.WriteLine(FormatPullRequestRecord("Label", "Title", "Body", ["FileNames"], ["FolderNames"]));
 
-    await foreach (var result in GitHubApi.DownloadPullRequests(githubToken, org, repo, labelPredicate, pullLimit, pageSize ?? 25, pageLimit ?? 4000, retries, verbose))
+    foreach (var repo in repos)
     {
-        writer.WriteLine(FormatPullRequestRecord(result.Label, result.PullRequest.Title, result.PullRequest.Body, result.PullRequest.FileNames, result.PullRequest.FolderNames));
-
-        if (++perFlushCount == 100)
+        await foreach (var result in GitHubApi.DownloadPullRequests(githubToken, org, repo, labelPredicate, pullLimit, pageSize ?? 25, pageLimit ?? 4000, retries, verbose))
         {
-            writer.Flush();
-            perFlushCount = 0;
+            writer.WriteLine(FormatPullRequestRecord(result.Label, result.PullRequest.Title, result.PullRequest.Body, result.PullRequest.FileNames, result.PullRequest.FolderNames));
+
+            if (++perFlushCount == 100)
+            {
+                writer.Flush();
+                perFlushCount = 0;
+            }
         }
     }
 

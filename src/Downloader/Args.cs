@@ -4,7 +4,7 @@ public static class Args
     {
         Console.WriteLine($"Invalid or missing arguments.{(message is null ? "" : " " + message)}");
         Console.WriteLine("  --token {github_token}");
-        Console.WriteLine("  --repo {org/repo}");
+        Console.WriteLine("  --repo {org/repo1}[,{org/repo2},...]");
         Console.WriteLine("  --label-prefix {label-prefix}");
         Console.WriteLine("  [--issue-data {path/to/issues.tsv}]");
         Console.WriteLine("  [--issue-limit {rows}]");
@@ -20,7 +20,7 @@ public static class Args
 
     public static (
         string org,
-        string repo,
+        string[] repos,
         string githubToken,
         string? issuesPath,
         int? issueLimit,
@@ -36,7 +36,7 @@ public static class Args
     {
         Queue<string> arguments = new(args);
         string? org = null;
-        string? repo = null;
+        List<string>? repos = null;
         string? githubToken = null;
         string? issuesPath = null;
         int? issueLimit = null;
@@ -58,17 +58,29 @@ public static class Args
                     githubToken = arguments.Dequeue();
                     break;
                 case "--repo":
-                    string orgRepo = arguments.Dequeue();
+                    string orgRepos = arguments.Dequeue();
 
-                    if (!orgRepo.Contains('/'))
+                    foreach (var orgRepo in orgRepos.Split(',').Select(r => r.Trim()))
                     {
-                        ShowUsage($$"""Argument '--repo' is not in the format of '{org}/{repo}': {{orgRepo}}""");
-                        return null;
+                        if (!orgRepo.Contains('/'))
+                        {
+                            ShowUsage($$"""Argument '--repo' is not in the format of '{org}/{repo}': {{orgRepo}}""");
+                            return null;
+                        }
+
+                        string[] parts = orgRepo.Split('/');
+
+                        if (org is not null && org != parts[0])
+                        {
+                            ShowUsage("All '--repo' values must be from the same org.");
+                            return null;
+                        }
+
+                        org ??= parts[0];
+                        repos ??= new();
+                        repos.Add(parts[1]);
                     }
 
-                    string[] parts = orgRepo.Split('/');
-                    org = parts[0];
-                    repo = parts[1];
                     break;
                 case "--issue-data":
                     issuesPath = arguments.Dequeue();
@@ -116,7 +128,7 @@ public static class Args
             }
         }
 
-        if (org is null || repo is null || githubToken is null || labelPredicate is null ||
+        if (org is null || repos is null || githubToken is null || labelPredicate is null ||
             (issuesPath is null && pullsPath is null))
         {
             ShowUsage();
@@ -125,7 +137,7 @@ public static class Args
 
         return (
             org,
-            repo,
+            repos.ToArray(),
             githubToken,
             issuesPath,
             issueLimit,
