@@ -22,9 +22,11 @@ List<Task<(ModelType Type, ulong Number, bool Success, string[] Output)>> tasks 
 
 if (issueModelPath is not null && issueNumbers is not null)
 {
+    Console.WriteLine("Loading issues model...");
     var issueContext = new MLContext();
     var issueModel = issueContext.Model.Load(issueModelPath, out _);
     var issuePredictor = issueContext.Model.CreatePredictionEngine<Issue, LabelPrediction>(issueModel);
+    Console.WriteLine("Issues prediction engine ready.");
 
     foreach (ulong issueNumber in issueNumbers)
     {
@@ -50,9 +52,11 @@ if (issueModelPath is not null && issueNumbers is not null)
 
 if (pullModelPath is not null && pullNumbers is not null)
 {
+    Console.WriteLine("Loading pulls model...");
     var pullContext = new MLContext();
     var pullModel = pullContext.Model.Load(pullModelPath, out _);
     var pullPredictor = pullContext.Model.CreatePredictionEngine<PullRequest, LabelPrediction>(pullModel);
+    Console.WriteLine("Pulls prediction engine ready.");
 
     foreach (ulong pullNumber in pullNumbers)
     {
