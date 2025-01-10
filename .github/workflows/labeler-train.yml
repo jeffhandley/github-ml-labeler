@@ -1,6 +1,9 @@
 name: "Labeler: Train Models"
 
 on:
+  pull_request:
+    types: opened
+    
   workflow_dispatch:
     inputs:
       download_issues:
@@ -35,7 +38,6 @@ on:
 
 jobs:
   labeler-download-issues:
-    if: ${{ inputs.download_issues }}
     permissions:
       issues: read
       actions: write
@@ -48,7 +50,6 @@ jobs:
 
   labeler-train-issues:
     needs: labeler-download-issues
-    if: ${{ inputs.train_issues && always() }}
     permissions:
       actions: write
     uses: jeffhandley/github-ml-labeler/.github/workflows/train-issues.yml@main
@@ -58,7 +59,6 @@ jobs:
 
   labeler-test-issues:
     needs: labeler-train-issues
-    if: ${{ inputs.test_issues && always() }}
     uses: jeffhandley/github-ml-labeler/.github/workflows/test-issues.yml@main
     with:
       github_token: ${{ github.token }}
@@ -68,7 +68,6 @@ jobs:
       threshold: 0.40
 
   labeler-download-pulls:
-    if: ${{ inputs.download_pulls }}
     permissions:
       pull-requests: read
       actions: write
@@ -81,7 +80,6 @@ jobs:
 
   labeler-train-pulls:
     needs: labeler-download-pulls
-    if: ${{ inputs.train_pulls && always() }}
     permissions:
       actions: write
     uses: jeffhandley/github-ml-labeler/.github/workflows/train-pulls.yml@main
@@ -91,7 +89,6 @@ jobs:
 
   labeler-test-pulls:
     needs: labeler-train-pulls
-    if: ${{ inputs.test_pulls && always() }}
     uses: jeffhandley/github-ml-labeler/.github/workflows/test-pulls.yml@main
     with:
       github_token: ${{ github.token }}
