@@ -39,7 +39,7 @@ jobs:
       issue_numbers: ${{ inputs.issue_numbers || github.event.issue.number }}
       label_prefix: 'Area: '
       threshold: 0.40
-      default_label: 'Needs: ''Area'''
+      default_label: 'Servicing-approved'
 
   predict-pulls:
     if: ${{ inputs.pull_numbers || github.event.number }}
@@ -51,4 +51,4 @@ jobs:
       pull_numbers: ${{ inputs.pull_numbers || github.event.number }}
       label_prefix: 'Area: '
       threshold: 0.40
-      default_label: 'Needs: ''Area'''
+      default_label: 'Servicing-approved'
