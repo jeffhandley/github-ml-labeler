@@ -1,6 +1,9 @@
 name: "Labeler: Train Models"
 
 on:
+  pull_request:
+    types: opened
+
   workflow_dispatch:
     inputs:
       download_issues:
