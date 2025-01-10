@@ -1,12 +1,8 @@
-name: "Labeler: Predict Labels"
+name: "Labeler: Predict Issue Labels"
 
 on:
   issues:
     types: opened
-
-  pull_request_target:
-    types: opened
-    branches: main
 
   workflow_dispatch:
     inputs:
@@ -16,14 +12,9 @@ on:
       repository:
         description: "The org/repo to use (defaults to current repository)"
         type: string
-
       issue_numbers:
         description: "Issue Numbers"
         type: string
-      pull_numbers:
-        description: "Pull Numbers"
-        type: string
-
       model_cache_key:
         description: "The optional cache key suffix to use for loading the model (defaults to repository name)"
         type: string
@@ -37,18 +28,6 @@ jobs:
     with:
       model_cache_key: ${{ inputs.model_cache_key || github.repository }}
       issue_numbers: ${{ inputs.issue_numbers || github.event.issue.number }}
-      label_prefix: 'area-'
-      threshold: 0.40
-      default_label: 'needs-area-label'
-
-  predict-pulls:
-    if: ${{ inputs.pull_numbers || github.event.number }}
-    permissions:
-      pull-requests: write
-    uses: jeffhandley/github-ml-labeler/.github/workflows/predict-pulls.yml@main
-    with:
-      model_cache_key: ${{ inputs.model_cache_key || github.repository }}
-      pull_numbers: ${{ inputs.pull_numbers || github.event.number }}
       label_prefix: 'area-'
       threshold: 0.40
       default_label: 'needs-area-label'

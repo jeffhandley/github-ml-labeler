@@ -1,0 +1,34 @@
+name: "Labeler: Predict Pull Labels"
+
+on:
+  pull_request_target:
+    types: opened
+    branches: main
+
+  workflow_dispatch:
+    inputs:
+      github_token:
+        description: "The GitHub token (defaults to action token)"
+        type: string
+      repository:
+        description: "The org/repo to use (defaults to current repository)"
+        type: string
+      pull_numbers:
+        description: "Pull Numbers"
+        type: string
+      model_cache_key:
+        description: "The optional cache key suffix to use for loading the model (defaults to repository name)"
+        type: string
+
+jobs:
+  predict-pulls:
+    if: ${{ inputs.pull_numbers || github.event.number }}
+    permissions:
+      pull-requests: write
+    uses: jeffhandley/github-ml-labeler/.github/workflows/predict-pulls.yml@main
+    with:
+      model_cache_key: ${{ inputs.model_cache_key || github.repository }}
+      pull_numbers: ${{ inputs.pull_numbers || github.event.number }}
+      label_prefix: 'area-'
+      threshold: 0.40
+      default_label: 'needs-area-label'
