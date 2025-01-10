@@ -62,7 +62,7 @@ jobs:
     uses: jeffhandley/github-ml-labeler/.github/workflows/test-issues.yml@main
     with:
       github_token: ${{ github.token }}
-      repository: ${{ github.repository }}
+      repository: ${{ inputs.repository || github.repository }}
       model_cache_key: ${{ inputs.cache_key_suffix || github.repository }}
       label_prefix: 'area-'
       threshold: 0.40
@@ -95,7 +95,7 @@ jobs:
     uses: jeffhandley/github-ml-labeler/.github/workflows/test-pulls.yml@main
     with:
       github_token: ${{ github.token }}
-      repository: ${{ github.repository }}
+      repository: ${{ inputs.repository || github.repository }}
       model_cache_key: ${{ inputs.cache_key_suffix || github.repository }}
       label_prefix: 'area-'
       threshold: 0.40
