@@ -40,3 +40,34 @@ Promotes a model persisted to cache with a cache key suffix to use the default c
 ### `predict-issue.yml` / `predict-pull.yml`
 
 Invokes the Predictor, predicting and applying labels to issues and pull requests. This can be called with either a single issue/pull number, or a comma-separated list of number ranges (e.g. `1-1000,2000-3000`). Supports specifying a cache key suffix for making predictions from a model in a test/staging slot.
+
+## Example Usage
+
+The reusable workflows referenced above can be composed together into very simple workflows within a repository. In fact, this repository itself uses the reusable workflows in the prescribed manner. To adopt the modeler in your own repository, you can follow the example set in the 4 `labeler-*.yml` files in the `.github/workflows` folder.
+
+### `labeler-train.yml`
+
+This single workflow can be manually triggered from the Actions page, and each of the following steps can be enabled or disabled.
+
+1. Download issues from GitHub
+2. Download pull requests from GitHub
+3. Train an issues model
+4. Train a pulls model
+5. Test the issues model
+6. Test the pulls model
+
+If all of these steps are enabled for the run, the single workflow will do all the work necessary to prepare a repository for predicting labels on issues and pull requests.
+
+By default, the workflow will save the new data and models into `staging` slots within the cache. For initial onboarding of a repository, the `cache_key_suffix` field can be left blank.
+
+### `labeler-promote.yml`
+
+This workflow can promote issue and/or pull request models into the primary cache slot to be used by predictions. The approach of training new models into a `staging` slot is that the new model can be tested without disrupting ongoing labeling in the repository. Once a new model is confirmed to meet expectations, it can be promoted.
+
+### `labeler-predict-issues.yml`
+
+Predict labels for issues as they are opened in the repository. This workflow can also be triggered manually to label ranges of issue numbers.
+
+### `labeler-predict-pulls.yml`
+
+Predict labels for pull requests as they are opened in the repository. This workflow can also be triggered manually to label ranges of pull request numbers.
