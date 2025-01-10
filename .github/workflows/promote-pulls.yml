@@ -1,4 +1,4 @@
-name: "Labeler: Promote Pull Model"
+name: "Labeler: Promote Pulls Model"
 
 on:
   workflow_call:
@@ -11,19 +11,6 @@ on:
         description: "The cache key suffix to use for backing up the currently promoted model"
         type: string
         required: true
-        default: "backup"
-
-  workflow_dispatch:
-    inputs:
-      model_cache_key:
-        description: "The cache key suffix to promote"
-        type: string
-        required: true
-      backup_cache_key:
-        description: "The cache key suffix to use for backing up the currently promoted model"
-        type: string
-        required: true
-        default: "backup"
 
 env:
   MODEL_PATH: labeler-cache/pull-model.zip

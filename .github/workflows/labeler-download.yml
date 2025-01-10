@@ -1,0 +1,40 @@
+name: "Labeler: Download Data"
+
+on:
+  workflow_dispatch:
+    inputs:
+      github_token:
+        description: "The GitHub token (defaults to action token)"
+        type: string
+      repository:
+        description: "The org/repo to download data from (defaults to current repository)"
+        type: string
+      data_cache_key:
+        description: "The optional cache key suffix to use for saving the data (defaults to repository name)"
+        type: string
+
+env:
+  LABEL_PREFIX: 'area-'
+
+jobs:
+  labeler-download-issues:
+    permissions:
+      issues: read
+      actions: write
+    uses: jeffhandley/github-ml-labeler/.github/workflows/download-issues.yml@main
+    with:
+      github_token: ${{ inputs.github_token || github.token }}
+      repository: ${{ inputs.repository || github.repository }}
+      label_prefix: ${{ env.LABEL_PREFIX }}
+      data_cache_key: ${{ inputs.data_cache_key }}
+
+  labeler-download-pulls:
+    permissions:
+      pull-requests: read
+      actions: write
+    uses: jeffhandley/github-ml-labeler/.github/workflows/download-pulls.yml@main
+    with:
+      github_token: ${{ inputs.github_token || github.token }}
+      repository: ${{ inputs.repository || github.repository }}
+      label_prefix: ${{ env.LABEL_PREFIX }}
+      data_cache_key: ${{ inputs.data_cache_key }}

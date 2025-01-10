@@ -1,0 +1,59 @@
+name: "Labeler: Predict Labels"
+
+on:
+  issues:
+    types: opened
+
+  pull_requests:
+    types: opened
+    branches: main
+
+  workflow_dispatch:
+    inputs:
+      github_token:
+        description: "The GitHub token (defaults to action token)"
+        type: string
+      repository:
+        description: "The org/repo to use (defaults to current repository)"
+        type: string
+
+      issue_numbers:
+        description: "Issue Numbers"
+        type: string
+      pull_numbers:
+        description: "Pull Numbers"
+        type: string
+
+      model_cache_key:
+        description: "The optional cache key suffix to use for loading the model (defaults to repository name)"
+        type: string
+
+env:
+  LABEL_PREFIX: 'area-'
+  THRESHOLD: 0.40
+  DEFAULT_LABEL: 'needs-area-label'
+
+jobs:
+  predict-issues:
+    if: ${{ inputs.issue_numbers || github.event.issue.number }}
+    permissions:
+      issues: write
+    uses: jeffhandley/github-ml-labeler/.github/workflows/predict-issues.yml@main
+    with:
+      model_cache_key: ${{ inputs.model_cache_key || github.repository }}
+      issue_numbers: ${{ inputs.issue_numbers || github.event.issue.number }}
+      label_prefix: ${{ env.LABEL_PREFIX }}
+      threshold: ${{ env.THRESHOLD }}
+      default_label: ${{ env.DEFAULT_LABEL }}
+
+  predict-pulls:
+    if: ${{ inputs.pull_numbers || github.event.number }}
+    permissions:
+      pull-requests: write
+    uses: jeffhandley/github-ml-labeler/.github/workflows/predict-pulls.yml@main
+    with:
+      model_cache_key: ${{ inputs.model_cache_key || github.repository }}
+      pull_numbers: ${{ inputs.pull_numbers || github.event.number }}
+      label_prefix: ${{ env.LABEL_PREFIX }}
+      threshold: ${{ env.THRESHOLD }}
+      default_label: ${{ env.DEFAULT_LABEL }}

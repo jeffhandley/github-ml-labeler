@@ -1,0 +1,52 @@
+name: "Labeler: Train Models"
+
+on:
+  workflow_dispatch:
+    inputs:
+      data_cache_key:
+        description: "The optional cache key suffix to use for loading the data (defaults to repository name)"
+        type: string
+      model_cache_key:
+        description: "The optional cache key suffix to use for saving the model (defaults to repository name)"
+        type: string
+        default: 'staging'
+
+env:
+  LABEL_PREFIX: 'area-'
+  THRESHOLD: 0.40
+
+permissions:
+  actions: write
+
+jobs:
+  labeler-train-issues:
+    uses: jeffhandley/github-ml-labeler/.github/workflows/train-issues.yml@main
+    with:
+      data_cache_key: ${{ inputs.data_cache_key || github.repository }}
+      model_cache_key: ${{ inputs.model_cache_key || github.repository }}
+
+  labeler-test-issues:
+    needs: labeler-train-issues
+    uses: jeffhandley/github-ml-labeler/.github/workflows/test-issues.yml@main
+    with:
+      github_token: ${{ github.token }}
+      repository: ${{ github.repository }}
+      model_cache_key: ${{ inputs.model_cache_key || github.repository }}
+      label_prefix: ${{ env.LABEL_PREFIX }}
+      threshold: ${{ env.THRESHOLD }}
+
+  labeler-train-pulls:
+    uses: jeffhandley/github-ml-labeler/.github/workflows/train-pulls.yml@main
+    with:
+      data_cache_key: ${{ inputs.data_cache_key || github.repository }}
+      model_cache_key: ${{ inputs.model_cache_key || github.repository }}
+
+  labeler-test-pulls:
+    needs: labeler-train-issues
+    uses: jeffhandley/github-ml-labeler/.github/workflows/test-pulls.yml@main
+    with:
+      github_token: ${{ github.token }}
+      repository: ${{ github.repository }}
+      model_cache_key: ${{ inputs.model_cache_key || github.repository }}
+      label_prefix: ${{ env.LABEL_PREFIX }}
+      threshold: ${{ env.THRESHOLD }}

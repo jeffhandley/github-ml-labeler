@@ -1,10 +1,6 @@
 name: "Labeler: Predict Pull Labels"
 
 on:
-  pull_request:
-    types: opened
-    branches: main
-
   workflow_call:
     inputs:
       pull_numbers:
@@ -19,40 +15,9 @@ on:
         description: "The minimum confidence score for a label prediction"
         type: number
         required: true
-
       default_label:
         description: "Default Label (leave blank for no default label)"
         type: string
-      model_cache_key:
-        description: "The optional cache key suffix to use for loading the model (defaults to repository name)"
-        type: string
-
-  workflow_dispatch:
-    inputs:
-      github_token:
-        description: "The GitHub token (defaults to action token)"
-        type: string
-      repository:
-        description: "The org/repo to use (defaults to current repository)"
-        type: string
-
-      pull_numbers:
-        description: "Pull Numbers"
-        type: string
-        required: true
-      label_prefix:
-        description: "Label Prefix"
-        default: "area-"
-        required: true
-      threshold:
-        description: "The minimum confidence score for a label prediction"
-        type: number
-        default: 0.40
-        required: true
-
-      default_label:
-        description: "Default Label (leave blank for no default label)"
-        default: "needs-area-label"
       model_cache_key:
         description: "The optional cache key suffix to use for loading the model (defaults to repository name)"
         type: string
@@ -62,16 +27,10 @@ permissions:
 
 env:
   MODEL_PATH: labeler-cache/pull-model.zip
-  MODEL_CACHE_KEY: github-ml-labeler/pulls/model/${{ inputs.model_cache_key || inputs.repository || github.repository }}
-
-  # Apply inputs for this repository when invoked via a GitHub event
-  PULL_NUMBERS: ${{ inputs.pull_numbers || github.event.number }}
-  LABEL_PREFIX: ${{ inputs.label_prefix || (github.event.number && 'area-') }}
-  THRESHOLD: ${{ inputs.threshold || (github.event.number && 0.40) }}
-  DEFAULT_LABEL: ${{ inputs.default_label || (github.event.number && 'needs-area-label') }}
+  MODEL_CACHE_KEY: github-ml-labeler/pulls/model/${{ inputs.model_cache_key || github.repository }}
 
 jobs:
-  predict-pull:
+  predict-pulls:
     runs-on: ubuntu-latest
 
     steps:
@@ -96,10 +55,10 @@ jobs:
       - name: "Run Predictor"
         run: |
           dotnet run -c Release --project src/Predictor -- \
-            ${{ format('--token "{0}"', inputs.github_token || secrets.GITHUB_TOKEN) }} \
-            ${{ format('--repo "{0}"', inputs.repository || github.repository) }} \
+            ${{ format('--token "{0}"', secrets.GITHUB_TOKEN) }} \
+            ${{ format('--repo "{0}"', github.repository) }} \
             ${{ format('--pull-model "{0}"', env.MODEL_PATH) }} \
-            ${{ format('--pull-numbers "{0}"', env.PULL_NUMBERS) }} \
-            ${{ format('--label-prefix "{0}"', env.LABEL_PREFIX) }} \
-            ${{ format('--threshold {0}', env.THRESHOLD) }} \
-            ${{ env.DEFAULT_LABEL && format('--default-label "{0}"', env.DEFAULT_LABEL) }}
+            ${{ format('--pull-numbers "{0}"', inputs.pull_numbers) }} \
+            ${{ format('--label-prefix "{0}"', inputs.label_prefix) }} \
+            ${{ format('--threshold {0}', inputs.threshold) }} \
+            ${{ inputs.default_label && format('--default-label "{0}"', inputs.default_label) }}

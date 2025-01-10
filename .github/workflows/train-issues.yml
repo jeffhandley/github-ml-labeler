@@ -10,15 +10,6 @@ on:
         description: "The optional cache key suffix to use for saving the model (defaults to repository name)"
         type: string
 
-  workflow_dispatch:
-    inputs:
-      data_cache_key:
-        description: "The optional cache key suffix to use for loading the data (defaults to repository name)"
-        type: string
-      model_cache_key:
-        description: "The optional cache key suffix to use for saving the model (defaults to repository name)"
-        type: string
-
 permissions:
   actions: write
 
