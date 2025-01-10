@@ -39,6 +39,7 @@ permissions:
 env:
   DATA_PATH: labeler-cache/issue-data.tsv
   DATA_CACHE_KEY: github-ml-labeler/issues/data/${{ inputs.data_cache_key || inputs.repository || github.repository }}
+  BACKUP_CACHE_KEY: github-ml-labeler/issues/data/${{ inputs.data_cache_key || inputs.repository || github.repository }}/backup
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -54,13 +55,30 @@ jobs:
           key: ${{ env.DATA_CACHE_KEY }}
           fail-on-cache-miss: false
 
+      - name: "Check for existing backup cache entry"
+        id: check-backup
+        if: steps.check-cache.outputs.cache-hit == 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.DATA_PATH }}
+          key: ${{ env.BACKUP_CACHE_KEY }}
+          fail-on-cache-miss: false
+
+      - name: "Abort if backup cache entry already exists"
+        if: steps.check-backup.outputs.cache-hit == 'true'
+        run: |
+            echo "Cannot save backup of existing data. Backup cache key already exists."
+            echo "Key: ${{ env.BACKUP_CACHE_KEY }}"
+
+            exit 1
+
       - name: "Cache backup of existing data"
         if: steps.check-cache.outputs.cache-hit == 'true'
         id: backup-data
         uses: actions/cache/save@v4
         with:
           path: ${{ env.DATA_PATH }}
-          key: ${{ env.DATA_CACHE_KEY }}/backup
+          key: ${{ env.BACKUP_CACHE_KEY }}
 
       - name: "Delete existing cache entry"
         if: steps.check-cache.outputs.cache-hit == 'true'
