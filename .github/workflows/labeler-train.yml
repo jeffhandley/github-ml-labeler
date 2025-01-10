@@ -48,12 +48,12 @@ jobs:
       github_token: ${{ inputs.github_token || github.token }}
       repository: ${{ inputs.repository || github.repository }}
       data_cache_key: ${{ inputs.cache_key_suffix }}
-      issue_limit: ${{ fromJSON(inputs.data_limit) }}
+      issue_limit: ${{ inputs.data_limit && fromJSON(inputs.data_limit) || 0 }}
       label_prefix: 'area-'
 
   labeler-train-issues:
     needs: labeler-download-issues
-    if: ${{ inputs.train_issues && always() }}
+    if: ${{ inputs.train_issues && always() && (needs.labeler-download-issues.result == 'success' || needs.labeler-download-issues.result == 'skipped') }}
     permissions:
       actions: write
     uses: jeffhandley/github-ml-labeler/.github/workflows/train-issues.yml@main
@@ -63,7 +63,7 @@ jobs:
 
   labeler-test-issues:
     needs: labeler-train-issues
-    if: ${{ inputs.test_issues && always() }}
+    if: ${{ inputs.test_issues && always() && (needs.labeler-train-issues.result == 'success' || needs.labeler-train-issues.result == 'skipped') }}
     uses: jeffhandley/github-ml-labeler/.github/workflows/test-issues.yml@main
     with:
       github_token: ${{ github.token }}
@@ -82,12 +82,12 @@ jobs:
       github_token: ${{ inputs.github_token || github.token }}
       repository: ${{ inputs.repository || github.repository }}
       data_cache_key: ${{ inputs.cache_key_suffix }}
-      pull_limit: ${{ fromJSON(inputs.data_limit) }}
+      pull_limit: ${{ inputs.data_limit && fromJSON(inputs.data_limit) || 0 }}
       label_prefix: 'area-'
 
   labeler-train-pulls:
     needs: labeler-download-pulls
-    if: ${{ inputs.train_pulls && always() }}
+    if: ${{ inputs.train_pulls && always() && (needs.labeler-download-pulls.result == 'success' || needs.labeler-download-pulls.result == 'skipped') }}
     permissions:
       actions: write
     uses: jeffhandley/github-ml-labeler/.github/workflows/train-pulls.yml@main
@@ -97,7 +97,7 @@ jobs:
 
   labeler-test-pulls:
     needs: labeler-train-pulls
-    if: ${{ inputs.test_pulls && always() }}
+    if: ${{ inputs.test_pulls && always() && (needs.labeler-train-pulls.result == 'success' || needs.labeler-train-pulls.result == 'skipped') }}
     uses: jeffhandley/github-ml-labeler/.github/workflows/test-pulls.yml@main
     with:
       github_token: ${{ github.token }}
