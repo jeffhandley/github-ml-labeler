@@ -9,13 +9,13 @@ Download issue and pull request data from GitHub, creating tab-separated (.tsv) 
 
 Load the tab-separated issue and pull request data that has already been downloaded, and train an ML.NET model over the data to prepare for making label predictions.
 
-## Predictor
-
-Consume the ML.NET model and make predictions for issues and pull requests.
-
 ## Tester
 
 Perform a comparison test run over GitHub data, predicting labels and comparing the predictions against the actual values. This can be performed either by downloading issue and pull request data from GitHub or loading a tab-separated (.tsv) file created by the Downloader.
+
+## Predictor
+
+Consume the ML.NET model and make predictions for issues and pull requests.
 
 ## Reusable GitHub Workflows
 
@@ -25,7 +25,7 @@ The `.github/workflows` folder exposes reusable workflows that can be used from 
 
 Invokes the Downloader, saving the `.tsv` file to the Actions cache withing the calling repository. Supports storing multiple data files in cache side-by-side using cache key suffixes, which enables building and testing new models without disrupting predictions.
 
-### `model-issues.yml` / `model-pulls.yml`
+### `train-issues.yml` / `train-pulls.yml`
 
 Invokes the Trainer, consuming a `.tsv` data file from the Actions cache to build a model. The model is persisted into the Actions cache. Supports storing multiple models in cache side-by-side using cache key suffixes, which enables testing and staging new models without disrupting predictions.
 

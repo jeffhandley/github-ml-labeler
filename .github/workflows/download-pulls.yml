@@ -32,37 +32,6 @@ on:
         description: "The optional cache key suffix to use for saving the data (defaults to repository name)"
         type: string
 
-  workflow_dispatch:
-    inputs:
-      github_token:
-        description: "The GitHub token (defaults to action token)"
-        type: string
-      repository:
-        description: "The org/repo to download data from (defaults to current repository)"
-        type: string
-
-      label_prefix:
-        description: "Label prefix"
-        type: string
-        default: "area-"
-        required: true
-
-      pull_limit:
-        description: "Max number of items to include in the model"
-        type: number
-      page_size:
-        description: "The number of items to include on each request (max 100)"
-        type: number
-      page_limit:
-        description: "Max pages of items to download"
-        type: number
-      retries:
-        description: "Comma-separated list of retry delays in seconds"
-        type: string
-      data_cache_key:
-        description: "The optional cache key suffix to use for saving the data (defaults to repository name)"
-        type: string
-
 permissions:
   pull-requests: read
   actions: write
@@ -75,7 +44,6 @@ env:
 jobs:
   download-pulls:
     runs-on: ubuntu-latest
-    timeout-minutes: 360
 
     steps:
       - name: "Check cache for existing data"
@@ -120,10 +88,10 @@ jobs:
             ${{ format('--repo "{0}"', inputs.repository || github.repository) }} \
             ${{ format('--pull-data "{0}"', env.DATA_PATH) }} \
             ${{ format('--label-prefix "{0}"', inputs.label_prefix) }} \
-            ${{ inputs.pull_limit && format('--pull-limit {0}', inputs.pull_limit) }} \
             ${{ inputs.retries && format('--retries "{0}"', inputs.retries) }} \
-            ${{ inputs.page_size && format('--page-size {0}', inputs.page_size) }} \
-            ${{ inputs.page_limit && format('--page-limit {0}', inputs.page_limit) }}
+            ${{ inputs.pull_limit && format('--pull-limit {0}', inputs.pull_limit) || '' }} \
+            ${{ inputs.page_size && format('--page-size {0}', inputs.page_size) || '' }} \
+            ${{ inputs.page_limit && format('--page-limit {0}', inputs.page_limit) || '' }}
 
       - name: "Save data to cache"
         uses: actions/cache/save@v4
