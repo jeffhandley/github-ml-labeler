@@ -154,7 +154,7 @@ public static class Args
 
         return (
             org,
-            repos.ToArray(),
+            repos?.ToArray(),
             githubToken,
             issueDataPath,
             issueModelPath,
