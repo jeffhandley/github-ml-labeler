@@ -71,7 +71,7 @@ public class GitHubApi
 
         do
         {
-            Console.WriteLine($"Downloading {itemQueryName} page {pageNumber + 1}...{(retry > 0 ? $" (retry {retry} of {retries.Length}) " : "")}{(after is not null ? $" (cursor: '{after}')" : "")}");
+            Console.WriteLine($"Downloading {itemQueryName} page {pageNumber + 1} from {org}/{repo}...{(retry > 0 ? $" (retry {retry} of {retries.Length}) " : "")}{(after is not null ? $" (cursor: '{after}')" : "")}");
 
             Page<T> page;
 
