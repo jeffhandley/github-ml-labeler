@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       promote_issues:
-        description: "Promote Issues Model"
+        description: "Issues: Promote Model"
         type: boolean
         required: true
       promote_pulls:
-        description: "Promote Pulls Model"
+        description: "Pulls: Promote Model"
         type: boolean
         required: true
       model_cache_key:

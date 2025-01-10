@@ -4,23 +4,27 @@ on:
   workflow_dispatch:
     inputs:
       download_issues:
-        description: "Download Issue Data"
+        description: "Issues: Download Data"
         type: boolean
       train_issues:
-        description: "Train Issues Model"
+        description: "Issues: Train Model"
         type: boolean
       test_issues:
-        description: "Test Issues Model"
+        description: "Issues: Test Model"
         type: boolean
       download_pulls:
-        description: "Download Pull Data"
+        description: "Pulls: Download Data"
         type: boolean
       train_pulls:
-        description: "Train Pulls Model"
+        description: "Pulls: Train Model"
         type: boolean
       test_pulls:
-        description: "Test Pulls Model"
+        description: "Pulls: Test Model"
         type: boolean
+
+      data_limit:
+        description: "Max number of items to include in the model"
+        type: number
 
       github_token:
         description: "The GitHub token (defaults to action token)"
@@ -44,6 +48,7 @@ jobs:
       github_token: ${{ inputs.github_token || github.token }}
       repository: ${{ inputs.repository || github.repository }}
       data_cache_key: ${{ inputs.cache_key_suffix }}
+      issue_limit: ${{ fromJSON(inputs.data_limit) }}
       label_prefix: 'area-'
 
   labeler-train-issues:
@@ -77,6 +82,7 @@ jobs:
       github_token: ${{ inputs.github_token || github.token }}
       repository: ${{ inputs.repository || github.repository }}
       data_cache_key: ${{ inputs.cache_key_suffix }}
+      pull_limit: ${{ fromJSON(inputs.data_limit) }}
       label_prefix: 'area-'
 
   labeler-train-pulls:
