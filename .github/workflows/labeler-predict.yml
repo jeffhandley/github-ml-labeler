@@ -37,9 +37,9 @@ jobs:
     with:
       model_cache_key: ${{ inputs.model_cache_key || github.repository }}
       issue_numbers: ${{ inputs.issue_numbers || github.event.issue.number }}
-      label_prefix: 'area-'
+      label_prefix: 'Area: '
       threshold: 0.40
-      default_label: 'needs-area-label'
+      default_label: 'Needs: ''Area'''
 
   predict-pulls:
     if: ${{ inputs.pull_numbers || github.event.number }}
@@ -49,6 +49,6 @@ jobs:
     with:
       model_cache_key: ${{ inputs.model_cache_key || github.repository }}
       pull_numbers: ${{ inputs.pull_numbers || github.event.number }}
-      label_prefix: 'area-'
+      label_prefix: 'Area: '
       threshold: 0.40
-      default_label: 'needs-area-label'
+      default_label: 'Needs: ''Area'''
