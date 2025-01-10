@@ -3,46 +3,99 @@ name: "Labeler: Train Models"
 on:
   workflow_dispatch:
     inputs:
-      data_cache_key:
-        description: "The optional cache key suffix to use for loading the data (defaults to repository name)"
+      download_issues:
+        description: "Download Issue Data"
+        type: boolean
+      train_issues:
+        description: "Train Issues Model"
+        type: boolean
+      test_issues:
+        description: "Test Issues Model"
+        type: boolean
+      download_pulls:
+        description: "Download Pull Data"
+        type: boolean
+      train_pulls:
+        description: "Train Pulls Model"
+        type: boolean
+      test_pulls:
+        description: "Test Pulls Model"
+        type: boolean
+
+      github_token:
+        description: "The GitHub token (defaults to action token)"
         type: string
-      model_cache_key:
-        description: "The optional cache key suffix to use for saving the model (defaults to repository name)"
+      repository:
+        description: "The org/repo to download data from (defaults to current repository)"
+        type: string
+      cache_key_suffix:
+        description: "The optional cache key suffix to use for staging data/models (defaults to repository name)"
         type: string
         default: 'staging'
 
-permissions:
-  actions: write
-
 jobs:
+  labeler-download-issues:
+    if: ${{ inputs.download_issues }}
+    permissions:
+      issues: read
+      actions: write
+    uses: jeffhandley/github-ml-labeler/.github/workflows/download-issues.yml@main
+    with:
+      github_token: ${{ inputs.github_token || github.token }}
+      repository: ${{ inputs.repository || github.repository }}
+      data_cache_key: ${{ inputs.cache_key_suffix }}
+      label_prefix: 'area-'
+
   labeler-train-issues:
+    needs: labeler-download-issues
+    if: ${{ inputs.train_issues && always() }}
+    permissions:
+      actions: write
     uses: jeffhandley/github-ml-labeler/.github/workflows/train-issues.yml@main
     with:
-      data_cache_key: ${{ inputs.data_cache_key || github.repository }}
-      model_cache_key: ${{ inputs.model_cache_key || github.repository }}
+      data_cache_key: ${{ inputs.cache_key_suffix || github.repository }}
+      model_cache_key: ${{ inputs.cache_key_suffix || github.repository }}
 
   labeler-test-issues:
     needs: labeler-train-issues
+    if: ${{ inputs.test_issues && always() }}
     uses: jeffhandley/github-ml-labeler/.github/workflows/test-issues.yml@main
     with:
       github_token: ${{ github.token }}
       repository: ${{ github.repository }}
-      model_cache_key: ${{ inputs.model_cache_key || github.repository }}
+      model_cache_key: ${{ inputs.cache_key_suffix || github.repository }}
       label_prefix: 'area-'
       threshold: 0.40
 
+  labeler-download-pulls:
+    if: ${{ inputs.download_pulls }}
+    permissions:
+      pull-requests: read
+      actions: write
+    uses: jeffhandley/github-ml-labeler/.github/workflows/download-pulls.yml@main
+    with:
+      github_token: ${{ inputs.github_token || github.token }}
+      repository: ${{ inputs.repository || github.repository }}
+      data_cache_key: ${{ inputs.cache_key_suffix }}
+      label_prefix: 'area-'
+
   labeler-train-pulls:
+    needs: labeler-download-pulls
+    if: ${{ inputs.train_pulls && always() }}
+    permissions:
+      actions: write
     uses: jeffhandley/github-ml-labeler/.github/workflows/train-pulls.yml@main
     with:
-      data_cache_key: ${{ inputs.data_cache_key || github.repository }}
-      model_cache_key: ${{ inputs.model_cache_key || github.repository }}
+      data_cache_key: ${{ inputs.cache_key_suffix || github.repository }}
+      model_cache_key: ${{ inputs.cache_key_suffix || github.repository }}
 
   labeler-test-pulls:
     needs: labeler-train-pulls
+    if: ${{ inputs.test_pulls && always() }}
     uses: jeffhandley/github-ml-labeler/.github/workflows/test-pulls.yml@main
     with:
       github_token: ${{ github.token }}
       repository: ${{ github.repository }}
-      model_cache_key: ${{ inputs.model_cache_key || github.repository }}
+      model_cache_key: ${{ inputs.cache_key_suffix || github.repository }}
       label_prefix: 'area-'
       threshold: 0.40
