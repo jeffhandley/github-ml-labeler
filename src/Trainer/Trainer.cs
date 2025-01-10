@@ -66,8 +66,8 @@ static void CreateModel(string dataPath, string modelPath, ModelType type)
         .Append(mlContext.MulticlassClassification.Trainers.SdcaMaximumEntropy("LabelKey"))
         .Append(xf.Conversion.MapKeyToValue("PredictedLabel"));
 
-    Console.WriteLine("Fitting the model with all data...");
-    var trainedModel = pipeline.Fit(data);
+    Console.WriteLine("Fitting the model with the training data set...");
+    var trainedModel = pipeline.Fit(split.TrainSet);
     var testModel = trainedModel.Transform(split.TestSet);
 
     Console.WriteLine("Evaluating against the test set...");
