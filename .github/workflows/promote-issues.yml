@@ -36,7 +36,7 @@ jobs:
           fail-on-cache-miss: false
 
       - name: "Abort if backup cache entry already exists"
-        if: steps.check-backup.outputs.cache-hit == 'true'
+        if: ${{ steps.check-backup.outputs.cache-hit == 'true' }}
         run: |
             echo "Cannot save backup of currently promoted model. Backup cache key already exists."
             echo "Key: ${{ env.BACKUP_CACHE_KEY }}"
@@ -44,7 +44,7 @@ jobs:
             exit 1
 
       - name: "Check for existing promotion cache entry"
-        if: steps.check-backup.outputs.cache-hit != 'true'
+        if: ${{ steps.check-backup.outputs.cache-hit != 'true' }}
         id: check-promotion
         uses: actions/cache/restore@v4
         with:
@@ -53,7 +53,7 @@ jobs:
           fail-on-cache-miss: false
 
       - name: "Cache backup of existing promotion model"
-        if: steps.check-promotion.outputs.cache-hit == 'true'
+        if: ${{ steps.check-promotion.outputs.cache-hit == 'true' }}
         id: backup-model
         uses: actions/cache/save@v4
         with:
@@ -61,7 +61,7 @@ jobs:
           key: ${{ env.BACKUP_CACHE_KEY }}
 
       - name: "Remove local copy of currently promoted model"
-        if: steps.check-promotion.outputs.cache-hit == 'true'
+        if: ${{ steps.check-promotion.outputs.cache-hit == 'true' }}
         run: rm ${{ env.MODEL_PATH }}
 
       - name: "Restore model to be promoted from cache"
@@ -73,7 +73,7 @@ jobs:
           fail-on-cache-miss: true
 
       - name: "Delete existing cache entry"
-        if: steps.check-promotion.outputs.cache-hit == 'true'
+        if: ${{ steps.check-promotion.outputs.cache-hit == 'true' }}
         run: |
             gh api --method DELETE \
               -H "Accept: application/vnd.github+json" \

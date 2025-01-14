@@ -31,16 +31,21 @@ env:
   MODEL_CACHE_KEY: github-ml-labeler/issues/model/${{ inputs.model_cache_key || inputs.repository || github.repository }}
 
 jobs:
+  build-labeler:
+    uses: jeffhandley/github-ml-labeler/.github/workflows/build-apps.yml@main
+
   test-issues:
     runs-on: ubuntu-24.04
-
+    needs: build-labeler
     steps:
-      - name: "Check out the 'jeffhandley/github-ml-labeler' repo"
-        uses: actions/checkout@v4
+      - name: "Restore the labeler apps from cache"
+        id: restore-apps
+        uses: actions/cache/restore@v4
         with:
-          repository: jeffhandley/github-ml-labeler
+          path: labeler-build
+          key: 'github-ml-labeler/apps'
+          fail-on-cache-miss: true
 
-      # Restore cache after checkout to ensure files aren't cleaned or removed
       - name: "Restore model from cache"
         id: restore-cache
         uses: actions/cache/restore@v4
@@ -49,13 +54,9 @@ jobs:
           key: ${{ env.MODEL_CACHE_KEY }}
           fail-on-cache-miss: true
 
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
-
       - name: "Run Tester"
         run: |
-          dotnet run -c Release --project src/Tester -- \
+          ./labeler-build/Tester/Tester \
             ${{ format('--token "{0}"', inputs.github_token || secrets.GITHUB_TOKEN) }} \
             ${{ format('--repo "{0}"',inputs.repository || github.repository) }} \
             ${{ format('--issue-model "{0}"', env.MODEL_PATH) }} \

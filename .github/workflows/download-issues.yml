@@ -1,36 +1,6 @@
 name: "Download Issues"
 
 on:
-  workflow_dispatch:
-    inputs:
-      github_token:
-        description: "The GitHub token (defaults to action token)"
-        type: string
-      repository:
-        description: "The org/repo to download data from (defaults to current repository)"
-        type: string
-
-      label_prefix:
-        description: "Label prefix"
-        type: string
-        required: true
-
-      issue_limit:
-        description: "Max number of items to include in the model"
-        type: number
-      page_size:
-        description: "The number of items to include on each request (max 100)"
-        type: number
-      page_limit:
-        description: "Max pages of items to download"
-        type: number
-      retries:
-        description: "Comma-separated list of retry delays in seconds"
-        type: string
-      data_cache_key:
-        description: "The optional cache key suffix to use for saving the data (defaults to repository name)"
-        type: string
-
   workflow_call:
     inputs:
       github_token:
@@ -79,6 +49,14 @@ jobs:
     runs-on: ubuntu-24.04
     needs: build-labeler
     steps:
+      - name: "Restore the labeler apps from cache"
+        id: restore-apps
+        uses: actions/cache/restore@v4
+        with:
+          path: labeler-build
+          key: 'github-ml-labeler/apps'
+          fail-on-cache-miss: true
+
       - name: "Check cache for existing data"
         id: check-cache
         uses: actions/cache/restore@v4
@@ -89,7 +67,7 @@ jobs:
 
       - name: "Check for existing backup cache entry"
         id: check-backup
-        if: steps.check-cache.outputs.cache-hit == 'true'
+        if: ${{ steps.check-cache.outputs.cache-hit == 'true' }}
         uses: actions/cache/restore@v4
         with:
           path: ${{ env.DATA_PATH }}
@@ -97,7 +75,7 @@ jobs:
           fail-on-cache-miss: false
 
       - name: "Abort if backup cache entry already exists"
-        if: steps.check-backup.outputs.cache-hit == 'true'
+        if: ${{ steps.check-backup.outputs.cache-hit == 'true' }}
         run: |
             echo "Cannot save backup of existing data. Backup cache key already exists."
             echo "Key: ${{ env.BACKUP_CACHE_KEY }}"
@@ -105,7 +83,7 @@ jobs:
             exit 1
 
       - name: "Cache backup of existing data"
-        if: steps.check-cache.outputs.cache-hit == 'true'
+        if: ${{ steps.check-cache.outputs.cache-hit == 'true' }}
         id: backup-data
         uses: actions/cache/save@v4
         with:
@@ -113,7 +91,7 @@ jobs:
           key: ${{ env.BACKUP_CACHE_KEY }}
 
       - name: "Delete existing cache entry"
-        if: steps.check-cache.outputs.cache-hit == 'true'
+        if: ${{ steps.check-cache.outputs.cache-hit == 'true' }}
         run: |
             gh api --method DELETE \
               -H "Accept: application/vnd.github+json" \
@@ -121,14 +99,6 @@ jobs:
               /repos/${{ github.repository }}/actions/caches?key=${{ env.DATA_CACHE_KEY }}
 
             rm ${{ env.DATA_PATH }}
-
-      - name: "Restore the labeler apps from cache"
-        id: restore-apps
-        uses: actions/cache/restore@v4
-        with:
-          path: labeler-build
-          key: 'github-ml-labeler'
-          fail-on-cache-miss: true
 
       - name: "Run Downloader"
         run: |

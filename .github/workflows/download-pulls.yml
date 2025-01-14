@@ -42,10 +42,21 @@ env:
   GH_TOKEN: ${{ github.token }}
 
 jobs:
+  build-labeler:
+    uses: jeffhandley/github-ml-labeler/.github/workflows/build-apps.yml@main
+
   download-pulls:
     runs-on: ubuntu-24.04
-
+    needs: build-labeler
     steps:
+      - name: "Restore the labeler apps from cache"
+        id: restore-apps
+        uses: actions/cache/restore@v4
+        with:
+          path: labeler-build
+          key: 'github-ml-labeler/apps'
+          fail-on-cache-miss: true
+
       - name: "Check cache for existing data"
         id: check-cache
         uses: actions/cache/restore@v4
@@ -56,7 +67,7 @@ jobs:
 
       - name: "Check for existing backup cache entry"
         id: check-backup
-        if: steps.check-cache.outputs.cache-hit == 'true'
+        if: ${{ steps.check-cache.outputs.cache-hit == 'true' }}
         uses: actions/cache/restore@v4
         with:
           path: ${{ env.DATA_PATH }}
@@ -64,7 +75,7 @@ jobs:
           fail-on-cache-miss: false
 
       - name: "Abort if backup cache entry already exists"
-        if: steps.check-backup.outputs.cache-hit == 'true'
+        if: ${{ steps.check-backup.outputs.cache-hit == 'true' }}
         run: |
             echo "Cannot save backup of existing data. Backup cache key already exists."
             echo "Key: ${{ env.BACKUP_CACHE_KEY }}"
@@ -72,7 +83,7 @@ jobs:
             exit 1
 
       - name: "Cache backup of existing data"
-        if: steps.check-cache.outputs.cache-hit == 'true'
+        if: ${{ steps.check-cache.outputs.cache-hit == 'true' }}
         id: backup-data
         uses: actions/cache/save@v4
         with:
@@ -80,7 +91,7 @@ jobs:
           key: ${{ env.BACKUP_CACHE_KEY }}
 
       - name: "Delete existing cache entry"
-        if: steps.check-cache.outputs.cache-hit == 'true'
+        if: ${{ steps.check-cache.outputs.cache-hit == 'true' }}
         run: |
             gh api --method DELETE \
               -H "Accept: application/vnd.github+json" \
@@ -89,18 +100,9 @@ jobs:
 
             rm ${{ env.DATA_PATH }}
 
-      - name: "Check out the 'jeffhandley/github-ml-labeler' repo"
-        uses: actions/checkout@v4
-        with:
-          repository: jeffhandley/github-ml-labeler
-
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
-
       - name: "Run Downloader"
         run: |
-          dotnet run -c Release --project src/Downloader -- \
+          ./labeler-build/Downloader/Downloader \
             ${{ format('--token "{0}"', inputs.github_token || secrets.GITHUB_TOKEN) }} \
             ${{ format('--repo "{0}"', inputs.repository || github.repository) }} \
             ${{ format('--pull-data "{0}"', env.DATA_PATH) }} \

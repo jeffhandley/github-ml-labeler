@@ -13,8 +13,13 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: labeler-build
-          key: 'github-ml-labeler'
+          key: 'github-ml-labeler/apps'
           fail-on-cache-miss: false
+
+      - name: "Show instructions for rebuilding"
+        if: ${{ steps.restore-apps.outputs.cache-hit == 'true' }}
+        run: echo "To rebuild the apps, delete the 'github-ml-labeler/apps' Action Cache entry"
+
     outputs:
       cache-hit: ${{ steps.restore-apps.outputs.cache-hit }}
 
@@ -48,4 +53,4 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: labeler-build
-          key: 'github-ml-labeler'
+          key: 'github-ml-labeler/apps'

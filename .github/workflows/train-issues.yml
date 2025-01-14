@@ -21,16 +21,21 @@ env:
   GH_TOKEN: ${{ github.token }}
 
 jobs:
+  build-labeler:
+    uses: jeffhandley/github-ml-labeler/.github/workflows/build-apps.yml@main
+
   train-issues:
     runs-on: ubuntu-24.04
-
+    needs: build-labeler
     steps:
-      - name: "Check out the 'jeffhandley/github-ml-labeler' repo"
-        uses: actions/checkout@v4
+      - name: "Restore the labeler apps from cache"
+        id: restore-apps
+        uses: actions/cache/restore@v4
         with:
-          repository: jeffhandley/github-ml-labeler
+          path: labeler-build
+          key: 'github-ml-labeler/apps'
+          fail-on-cache-miss: true
 
-      # Restore cache after checkout to ensure files aren't cleaned or removed
       - name: "Restore data from cache"
         id: restore-cache
         uses: actions/cache/restore@v4
@@ -48,7 +53,7 @@ jobs:
           fail-on-cache-miss: false
 
       - name: "Cache backup of existing model"
-        if: steps.check-cache.outputs.cache-hit == 'true'
+        if: ${{ steps.check-cache.outputs.cache-hit == 'true' }}
         id: backup-model
         uses: actions/cache/save@v4
         with:
@@ -56,7 +61,7 @@ jobs:
           key: ${{ env.MODEL_CACHE_KEY }}/backup
 
       - name: "Delete existing cache entry"
-        if: steps.check-cache.outputs.cache-hit == 'true'
+        if: ${{ steps.check-cache.outputs.cache-hit == 'true' }}
         run: |
             gh api --method DELETE \
               -H "Accept: application/vnd.github+json" \
@@ -64,10 +69,6 @@ jobs:
               /repos/${{ github.repository }}/actions/caches?key=${{ env.MODEL_CACHE_KEY }}
 
             rm ${{ env.MODEL_PATH }}
-
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
 
       - name: "Run Trainer"
         run: |
