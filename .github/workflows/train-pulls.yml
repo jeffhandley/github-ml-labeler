@@ -68,7 +68,7 @@ jobs:
 
       - name: "Run Trainer"
         run: |
-          dotnet run -c Release --project src/Trainer -- \
+          ./labeler-build/Trainer/Trainer \
             ${{ format('--pull-data "{0}"', env.DATA_PATH) }} \
             ${{ format('--pull-model "{0}"', env.MODEL_PATH) }}
 
