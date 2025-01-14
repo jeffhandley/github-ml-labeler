@@ -45,7 +45,7 @@ Invokes the Predictor, predicting and applying labels to issues and pull request
 
 The reusable workflows referenced above can be composed together into very simple workflows within a repository. In fact, this repository itself uses the reusable workflows in the prescribed manner. To adopt the modeler in your own repository, you can follow the example set in the 4 `labeler-*.yml` files in the `.github/workflows` folder.
 
-### `labeler-train.yml`
+### `labeler-stage.yml`
 
 This single workflow can be manually triggered from the Actions page, and each of the following steps can be enabled or disabled.
 
