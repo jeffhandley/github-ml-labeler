@@ -45,17 +45,6 @@ jobs:
   download-issues:
     runs-on: ubuntu-24.04
     steps:
-      - name: "Restore the staging apps from cache"
-        id: restore-apps
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            labeler-build/Downloader
-            labeler-build/Trainer
-            labeler-build/Tester
-          key: 'github-ml-labeler/apps/staging-apps'
-          fail-on-cache-miss: true
-
       - name: "Check cache for existing data"
         id: check-cache
         uses: actions/cache/restore@v4
@@ -101,9 +90,18 @@ jobs:
 
             rm ${{ env.DATA_PATH }}
 
+      - name: "Check out the 'jeffhandley/github-ml-labeler' repo"
+        uses: actions/checkout@v4
+        with:
+          repository: jeffhandley/github-ml-labeler
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
       - name: "Run Downloader"
         run: |
-          ./labeler-build/Downloader/Downloader \
+          dotnet run -c Release --project ./src/Downloader --  \
             ${{ format('--token "{0}"', inputs.github_token || secrets.GITHUB_TOKEN) }} \
             ${{ format('--repo "{0}"', inputs.repository || github.repository) }} \
             ${{ format('--issue-data "{0}"', env.DATA_PATH) }} \

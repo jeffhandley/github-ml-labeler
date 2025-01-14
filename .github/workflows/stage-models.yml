@@ -46,11 +46,11 @@ on:
         type: string
 
 jobs:
-  build-labeler:
-    uses: jeffhandley/github-ml-labeler/.github/workflows/build-apps.yml@main
+  build-predictor:
+    uses: jeffhandley/github-ml-labeler/.github/workflows/build-predictor.yml@main
 
   labeler-download-issues:
-    needs: build-labeler
+    needs: build-predictor
     if: ${{ inputs.download_issues }}
     permissions:
       issues: read
@@ -85,7 +85,7 @@ jobs:
       threshold: ${{ inputs.threshold }}
 
   labeler-download-pulls:
-    needs: build-labeler
+    needs: build-predictor
     if: ${{ inputs.download_pulls }}
     permissions:
       pull-requests: read

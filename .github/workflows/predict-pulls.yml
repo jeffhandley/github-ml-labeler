@@ -34,11 +34,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: "Restore the Predictor app from cache"
-        id: restore-apps
+        id: restore-predictor-app
         uses: actions/cache/restore@v4
         with:
           path: labeler-build/Predictor
-          key: 'github-ml-labeler/apps/predictor-app'
+          key: 'github-ml-labeler/predictor-app'
           fail-on-cache-miss: true
 
       - name: "Restore model from cache"

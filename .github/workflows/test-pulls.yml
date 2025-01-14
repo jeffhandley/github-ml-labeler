@@ -34,17 +34,17 @@ jobs:
   test-pulls:
     runs-on: ubuntu-24.04
     steps:
-      - name: "Restore the staging apps from cache"
-        id: restore-apps
-        uses: actions/cache/restore@v4
+      - name: "Check out the 'jeffhandley/github-ml-labeler' repo"
+        uses: actions/checkout@v4
         with:
-          path: |
-            labeler-build/Downloader
-            labeler-build/Trainer
-            labeler-build/Tester
-          key: 'github-ml-labeler/apps/staging-apps'
-          fail-on-cache-miss: true
+          repository: jeffhandley/github-ml-labeler
 
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      # Restore from cache after checkout out the repo to prevent
+      # the restored files from getting removed during checkout
       - name: "Restore model from cache"
         id: restore-cache
         uses: actions/cache/restore@v4
@@ -55,7 +55,7 @@ jobs:
 
       - name: "Run Tester"
         run: |
-          ./labeler-build/Tester/Tester \
+          dotnet run -c Release --project ./src/Tester --  \
             ${{ format('--token "{0}"', inputs.github_token || secrets.GITHUB_TOKEN) }} \
             ${{ format('--repo "{0}"',inputs.repository || github.repository) }} \
             ${{ format('--pull-model "{0}"', env.MODEL_PATH) }} \

@@ -1,0 +1,48 @@
+name: "Build Predictor App"
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  check-cache:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: "Check the cache for an existing build of the Predictor"
+        id: restore-predictor-app
+        uses: actions/cache/restore@v4
+        with:
+          path: labeler-build/Predictor
+          key: 'github-ml-labeler/predictor-app'
+          lookup-only: true
+          fail-on-cache-miss: false
+
+      - name: "Show instructions for rebuilding"
+        if: ${{ steps.restore-predictor-app.outputs.cache-hit }}
+        run: echo "To rebuild the predictor app, delete the 'github-ml-labeler/predictor-app' action cache entry and rerun the 'build-predictor' workflow."
+
+    outputs:
+      cache-hit: ${{ steps.restore-predictor-app.outputs.cache-hit }}
+
+  build-predictor:
+    runs-on: ubuntu-24.04
+    needs: check-cache
+    if: ${{ needs.check-cache.outputs.cache-hit != 'true' }}
+    steps:
+      - name: "Check out the 'jeffhandley/github-ml-labeler' repo"
+        uses: actions/checkout@v4
+        with:
+          repository: jeffhandley/github-ml-labeler
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: "Build Predictor"
+        run: dotnet publish --self-contained -r linux-x64 -c Release -o ./labeler-build/Predictor ./src/Predictor
+
+      - name: "Save Predictor app to cache"
+        uses: actions/cache/save@v4
+        with:
+          path: labeler-build/Predictor
+          key: 'github-ml-labeler/apps/predictor-app'
