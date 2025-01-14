@@ -89,18 +89,29 @@ jobs:
 
             rm ${{ env.DATA_PATH }}
 
-      - name: "Check out the 'jeffhandley/github-ml-labeler' repo"
-        uses: actions/checkout@v4
+      - name: "Restore the labeler apps from cache"
+        id: restore-apps
+        uses: actions/cache/restore@v4
         with:
-          repository: jeffhandley/github-ml-labeler
+          path: ./labeler-build
+          key: 'github-ml-labeler'
+          fail-on-cache-miss: false
 
-      - uses: actions/setup-dotnet@v4
+      - name: "Build the labeler apps if needed"
+        if: steps.restore-apps.outputs.cache-hit == 'false'
+        uses: jeffhandley/github-ml-labeler/.github/workflows/build-apps.yml@main
+
+      - name: "Restore the labeler apps from cache (retry after build)"
+        id: restore-apps-retry
+        uses: actions/cache/restore@v4
         with:
-          dotnet-version: '9.0.x'
+          path: ./labeler-build
+          key: 'github-ml-labeler'
+          fail-on-cache-miss: true
 
       - name: "Run Downloader"
         run: |
-          dotnet run -c Release --project src/Downloader -- \
+          ./labeler-build/Downloader/Downloader -- \
             ${{ format('--token "{0}"', inputs.github_token || secrets.GITHUB_TOKEN) }} \
             ${{ format('--repo "{0}"', inputs.repository || github.repository) }} \
             ${{ format('--issue-data "{0}"', env.DATA_PATH) }} \
