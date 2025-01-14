@@ -12,7 +12,11 @@ jobs:
         id: restore-apps
         uses: actions/cache/restore@v4
         with:
-          path: labeler-build
+          path: |
+            labeler-build/Downloader
+            labeler-build/Trainer
+            labeler-build/Tester
+            labeler-build/Predictor
           key: 'github-ml-labeler/apps'
           fail-on-cache-miss: false
 
@@ -52,5 +56,9 @@ jobs:
       - name: "Save builds to cache"
         uses: actions/cache/save@v4
         with:
-          path: labeler-build
+          path: |
+            labeler-build/Downloader
+            labeler-build/Trainer
+            labeler-build/Tester
+            labeler-build/Predictor
           key: 'github-ml-labeler/apps'

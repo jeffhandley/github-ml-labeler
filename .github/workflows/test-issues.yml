@@ -38,7 +38,7 @@ jobs:
         id: restore-apps
         uses: actions/cache/restore@v4
         with:
-          path: labeler-build
+          path: labeler-build/Tester
           key: 'github-ml-labeler/apps'
           fail-on-cache-miss: true
 
