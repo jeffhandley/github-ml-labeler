@@ -1,4 +1,4 @@
-name: "Labeler: Test Issue Model"
+name: "Test Issues Model"
 
 on:
   workflow_call:

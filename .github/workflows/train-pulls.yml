@@ -1,4 +1,4 @@
-name: "Labeler: Train Pulls"
+name: "Train Pulls Model"
 
 on:
   workflow_call:

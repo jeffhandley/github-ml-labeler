@@ -1,4 +1,4 @@
-name: "Labeler: Promote Pulls Model"
+name: "Promote Pulls Model"
 
 on:
   workflow_call:
@@ -23,7 +23,7 @@ permissions:
   actions: write
 
 jobs:
-  promote-pull-model:
+  promote-pulls:
     runs-on: ubuntu-latest
 
     steps:

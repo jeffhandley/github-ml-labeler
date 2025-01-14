@@ -1,7 +1,7 @@
-name: "Labeler: Train Models"
+name: "Stage Models"
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       download_issues:
         description: "Issues: Download Data"
@@ -22,6 +22,15 @@ on:
         description: "Pulls: Test Model"
         type: boolean
 
+      label_prefix:
+        description: "Label Prefix"
+        type: string
+        required: true
+      threshold:
+        description: "The minimum confidence score for a label prediction"
+        type: number
+        required: true
+
       data_limit:
         description: "Max number of items to include in the model"
         type: number
@@ -33,7 +42,7 @@ on:
         description: "The org/repo to download data from (defaults to current repository)"
         type: string
       cache_key_suffix:
-        description: "The optional cache key suffix to use for staging data/models (defaults to repository name)"
+        description: "The optional cache key suffix to use for staging data/models (defaults to 'staging')"
         type: string
         default: 'staging'
 
@@ -49,7 +58,7 @@ jobs:
       repository: ${{ inputs.repository || github.repository }}
       data_cache_key: ${{ inputs.cache_key_suffix }}
       issue_limit: ${{ inputs.data_limit && fromJSON(inputs.data_limit) || 0 }}
-      label_prefix: 'area-'
+      label_prefix: ${{ inputs.label_prefix }}
 
   labeler-train-issues:
     needs: labeler-download-issues
@@ -58,19 +67,19 @@ jobs:
       actions: write
     uses: jeffhandley/github-ml-labeler/.github/workflows/train-issues.yml@main
     with:
-      data_cache_key: ${{ inputs.cache_key_suffix || github.repository }}
-      model_cache_key: ${{ inputs.cache_key_suffix || github.repository }}
+      data_cache_key: ${{ inputs.cache_key_suffix }}
+      model_cache_key: ${{ inputs.cache_key_suffix }}
 
   labeler-test-issues:
     needs: labeler-train-issues
     if: ${{ inputs.test_issues && always() && (needs.labeler-train-issues.result == 'success' || needs.labeler-train-issues.result == 'skipped') }}
     uses: jeffhandley/github-ml-labeler/.github/workflows/test-issues.yml@main
     with:
-      github_token: ${{ github.token }}
+      github_token: ${{ inputs.github_token || github.token }}
       repository: ${{ inputs.repository || github.repository }}
-      model_cache_key: ${{ inputs.cache_key_suffix || github.repository }}
-      label_prefix: 'area-'
-      threshold: 0.40
+      model_cache_key: ${{ inputs.cache_key_suffix }}
+      label_prefix: ${{ inputs.label_prefix }}
+      threshold: ${{ inputs.threshold }}
 
   labeler-download-pulls:
     if: ${{ inputs.download_pulls }}
@@ -83,7 +92,7 @@ jobs:
       repository: ${{ inputs.repository || github.repository }}
       data_cache_key: ${{ inputs.cache_key_suffix }}
       pull_limit: ${{ inputs.data_limit && fromJSON(inputs.data_limit) || 0 }}
-      label_prefix: 'area-'
+      label_prefix: ${{ inputs.label_prefix }}
 
   labeler-train-pulls:
     needs: labeler-download-pulls
@@ -92,16 +101,16 @@ jobs:
       actions: write
     uses: jeffhandley/github-ml-labeler/.github/workflows/train-pulls.yml@main
     with:
-      data_cache_key: ${{ inputs.cache_key_suffix || github.repository }}
-      model_cache_key: ${{ inputs.cache_key_suffix || github.repository }}
+      data_cache_key: ${{ inputs.cache_key_suffix }}
+      model_cache_key: ${{ inputs.cache_key_suffix }}
 
   labeler-test-pulls:
     needs: labeler-train-pulls
     if: ${{ inputs.test_pulls && always() && (needs.labeler-train-pulls.result == 'success' || needs.labeler-train-pulls.result == 'skipped') }}
     uses: jeffhandley/github-ml-labeler/.github/workflows/test-pulls.yml@main
     with:
-      github_token: ${{ github.token }}
+      github_token: ${{ inputs.github_token || github.token }}
       repository: ${{ inputs.repository || github.repository }}
-      model_cache_key: ${{ inputs.cache_key_suffix || github.repository }}
-      label_prefix: 'area-'
-      threshold: 0.40
+      model_cache_key: ${{ inputs.cache_key_suffix }}
+      label_prefix: ${{ inputs.label_prefix }}
+      threshold: ${{ inputs.threshold }}

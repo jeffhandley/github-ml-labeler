@@ -1,0 +1,61 @@
+name: "Labeler: Stage Models"
+
+on:
+  # Dispatched via the Actions UI, stages new models for promotion consideration
+  # Each step of the workflow can be run independently: Download, Train, and Test
+  workflow_dispatch:
+    inputs:
+      download_issues:
+        description: "Issues: Download Data"
+        type: boolean
+      train_issues:
+        description: "Issues: Train Model"
+        type: boolean
+      test_issues:
+        description: "Issues: Test Model"
+        type: boolean
+      download_pulls:
+        description: "Pulls: Download Data"
+        type: boolean
+      train_pulls:
+        description: "Pulls: Train Model"
+        type: boolean
+      test_pulls:
+        description: "Pulls: Test Model"
+        type: boolean
+
+      data_limit:
+        description: "Max number of items to include in the model"
+        type: number
+
+      github_token:
+        description: "The GitHub token (defaults to action token)"
+        type: string
+      repository:
+        description: "The org/repo to download data from (defaults to current repository)"
+        type: string
+      cache_key_suffix:
+        description: "The optional cache key suffix to use for staging data/models (defaults to 'staging')"
+        type: string
+        default: 'staging'
+
+jobs:
+  labeler-stage-models:
+    permissions:
+      issues: read
+      pull-requests: read
+      actions: write
+    uses: jeffhandley/github-ml-labeler/.github/workflows/stage-models.yml@main
+    with:
+      download_issues: ${{ inputs.download_issues }}
+      train_issues: ${{ inputs.train_issues }}
+      test_issues: ${{ inputs.test_issues }}
+      download_pulls: ${{ inputs.download_pulls }}
+      train_pulls: ${{ inputs.train_pulls }}
+      test_pulls: ${{ inputs.test_pulls }}
+      data_limit: ${{ inputs.data_limit || 0 }}
+      github_token: ${{ inputs.github_token }}
+      repository: ${{ inputs.repository }}
+      cache_key_suffix: ${{ inputs.cache_key_suffix }}
+      label_prefix: 'area-'
+      threshold: 0.40
