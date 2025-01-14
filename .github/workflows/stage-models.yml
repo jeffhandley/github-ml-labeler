@@ -42,9 +42,8 @@ on:
         description: "The org/repo to download data from (defaults to current repository)"
         type: string
       cache_key_suffix:
-        description: "The optional cache key suffix to use for staging data/models (defaults to 'staging')"
+        description: "The optional cache key suffix to use for staging data/models"
         type: string
-        default: 'staging'
 
 jobs:
   build-labeler:
