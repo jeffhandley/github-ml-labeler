@@ -34,12 +34,15 @@ jobs:
   test-pulls:
     runs-on: ubuntu-24.04
     steps:
-      - name: "Restore the labeler apps from cache"
+      - name: "Restore the staging apps from cache"
         id: restore-apps
         uses: actions/cache/restore@v4
         with:
-          path: labeler-build/Tester
-          key: 'github-ml-labeler/apps'
+          path: |
+            labeler-build/Downloader
+            labeler-build/Trainer
+            labeler-build/Tester
+          key: 'github-ml-labeler/apps/staging-apps'
           fail-on-cache-miss: true
 
       - name: "Restore model from cache"

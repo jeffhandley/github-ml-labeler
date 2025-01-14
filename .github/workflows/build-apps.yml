@@ -8,24 +8,33 @@ jobs:
   check-cache:
     runs-on: ubuntu-24.04
     steps:
-      - name: "Restore the labeler apps from cache"
-        id: restore-apps
+      - name: "Check the cache for an existing build of the staging apps (Downloader, Trainer, Tester)"
+        id: restore-staging-apps
         uses: actions/cache/restore@v4
         with:
           path: |
             labeler-build/Downloader
             labeler-build/Trainer
             labeler-build/Tester
-            labeler-build/Predictor
-          key: 'github-ml-labeler/apps'
+          key: 'github-ml-labeler/apps/staging-apps'
+          fail-on-cache-miss: false
+          lookup-only: true
+
+      - name: "Check the cache for an existing build of the Predictor"
+        id: restore-predictor-app
+        uses: actions/cache/restore@v4
+        with:
+          path: labeler-build/Predictor
+          key: 'github-ml-labeler/apps/predictor-app'
+          lookup-only: true
           fail-on-cache-miss: false
 
       - name: "Show instructions for rebuilding"
-        if: ${{ steps.restore-apps.outputs.cache-hit == 'true' }}
-        run: echo "To rebuild the apps, delete the 'github-ml-labeler/apps' Action Cache entry"
+        if: ${{ steps.restore-staging-apps.outputs.cache-hit == 'true' || steps.restore-predictor-app.outputs.cache-hit }}
+        run: echo "To rebuild the apps, delete the 'github-ml-labeler/apps/*' action cache entries"
 
     outputs:
-      cache-hit: ${{ steps.restore-apps.outputs.cache-hit }}
+      cache-hit: ${{ steps.restore-staging-apps.outputs.cache-hit || steps.predictor-app-cached.outputs.cache-hit }}
 
   build-apps:
     runs-on: ubuntu-24.04
@@ -53,12 +62,17 @@ jobs:
       - name: "Build Predictor"
         run: dotnet publish --self-contained -r linux-x64 -c Release -o ./labeler-build/Predictor ./src/Predictor
 
-      - name: "Save builds to cache"
+      - name: "Save staging apps to cache (Downloader, Trainer, Tester)"
         uses: actions/cache/save@v4
         with:
           path: |
             labeler-build/Downloader
             labeler-build/Trainer
             labeler-build/Tester
-            labeler-build/Predictor
-          key: 'github-ml-labeler/apps'
+          key: 'github-ml-labeler/apps/staging-apps'
+
+      - name: "Save Predictor app to cache"
+        uses: actions/cache/save@v4
+        with:
+          path: labeler-build/Predictor
+          key: 'github-ml-labeler/apps/predictor-app'

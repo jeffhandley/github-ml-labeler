@@ -33,6 +33,7 @@ jobs:
         with:
           path: ${{ env.MODEL_PATH }}
           key: ${{ env.BACKUP_CACHE_KEY }}
+          lookup-only: true
           fail-on-cache-miss: false
 
       - name: "Abort if backup cache entry already exists"
@@ -43,7 +44,7 @@ jobs:
 
             exit 1
 
-      - name: "Check for existing promotion cache entry"
+      - name: "Restore existing promotion cache entry if one exists"
         if: ${{ steps.check-backup.outputs.cache-hit != 'true' }}
         id: check-promotion
         uses: actions/cache/restore@v4

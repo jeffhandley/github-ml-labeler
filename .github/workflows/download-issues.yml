@@ -45,12 +45,15 @@ jobs:
   download-issues:
     runs-on: ubuntu-24.04
     steps:
-      - name: "Restore the labeler apps from cache"
+      - name: "Restore the staging apps from cache"
         id: restore-apps
         uses: actions/cache/restore@v4
         with:
-          path: labeler-build/Downloader
-          key: 'github-ml-labeler/apps'
+          path: |
+            labeler-build/Downloader
+            labeler-build/Trainer
+            labeler-build/Tester
+          key: 'github-ml-labeler/apps/staging-apps'
           fail-on-cache-miss: true
 
       - name: "Check cache for existing data"
@@ -59,6 +62,7 @@ jobs:
         with:
           path: ${{ env.DATA_PATH }}
           key: ${{ env.DATA_CACHE_KEY }}
+          lookup-only: true
           fail-on-cache-miss: false
 
       - name: "Check for existing backup cache entry"
@@ -68,6 +72,7 @@ jobs:
         with:
           path: ${{ env.DATA_PATH }}
           key: ${{ env.BACKUP_CACHE_KEY }}
+          lookup-only: true
           fail-on-cache-miss: false
 
       - name: "Abort if backup cache entry already exists"

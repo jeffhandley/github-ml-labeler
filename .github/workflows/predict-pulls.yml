@@ -33,12 +33,12 @@ jobs:
   predict-pulls:
     runs-on: ubuntu-24.04
     steps:
-      - name: "Restore the labeler apps from cache"
+      - name: "Restore the Predictor app from cache"
         id: restore-apps
         uses: actions/cache/restore@v4
         with:
           path: labeler-build/Predictor
-          key: 'github-ml-labeler/apps'
+          key: 'github-ml-labeler/apps/predictor-app'
           fail-on-cache-miss: true
 
       - name: "Restore model from cache"

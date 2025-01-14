@@ -24,12 +24,15 @@ jobs:
   train-issues:
     runs-on: ubuntu-24.04
     steps:
-      - name: "Restore the labeler apps from cache"
+      - name: "Restore the staging apps from cache"
         id: restore-apps
         uses: actions/cache/restore@v4
         with:
-          path: labeler-build/Trainer
-          key: 'github-ml-labeler/apps'
+          path: |
+            labeler-build/Downloader
+            labeler-build/Trainer
+            labeler-build/Tester
+          key: 'github-ml-labeler/apps/staging-apps'
           fail-on-cache-miss: true
 
       - name: "Restore data from cache"
@@ -40,7 +43,7 @@ jobs:
           key: ${{ env.DATA_CACHE_KEY }}
           fail-on-cache-miss: true
 
-      - name: "Check for existing model cache entry"
+      - name: "Restore existing model cache entry if one exists"
         id: check-cache
         uses: actions/cache/restore@v4
         with:
@@ -56,7 +59,7 @@ jobs:
           path: ${{ env.MODEL_PATH }}
           key: ${{ env.MODEL_CACHE_KEY }}/backup
 
-      - name: "Delete existing cache entry"
+      - name: "Delete existing model cache entry and local copy"
         if: ${{ steps.check-cache.outputs.cache-hit == 'true' }}
         run: |
             gh api --method DELETE \
