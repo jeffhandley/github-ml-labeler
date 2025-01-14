@@ -43,7 +43,7 @@ env:
 
 jobs:
   download-pulls:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: "Check cache for existing data"
@@ -96,7 +96,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '9.0.x'
 
       - name: "Run Downloader"
         run: |

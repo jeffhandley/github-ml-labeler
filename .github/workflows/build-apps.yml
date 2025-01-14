@@ -1,0 +1,51 @@
+name: "Build Labeler apps"
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  check-cache:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: "Restore the labeler apps from cache"
+        id: restore-apps
+        uses: actions/cache/restore@v4
+        with:
+          path: labeler-build
+          key: 'github-ml-labeler'
+          fail-on-cache-miss: false
+    outputs:
+      cache-hit: ${{ steps.restore-apps.outputs.cache-hit }}
+
+  build-apps:
+    runs-on: ubuntu-24.04
+    needs: check-cache
+    if: ${{ needs.check-cache.outputs.cache-hit != 'true' }}
+    steps:
+      - name: "Check out the 'jeffhandley/github-ml-labeler' repo"
+        uses: actions/checkout@v4
+        with:
+          repository: jeffhandley/github-ml-labeler
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: "Build Downloader"
+        run: dotnet publish --self-contained -r linux-x64 -c Release -o ./labeler-build/Downloader ./src/Downloader
+
+      - name: "Build Trainer"
+        run: dotnet publish --self-contained -r linux-x64 -c Release -o ./labeler-build/Trainer ./src/Trainer
+
+      - name: "Build Tester"
+        run: dotnet publish --self-contained -r linux-x64 -c Release -o ./labeler-build/Tester ./src/Tester
+
+      - name: "Build Predictor"
+        run: dotnet publish --self-contained -r linux-x64 -c Release -o ./labeler-build/Predictor ./src/Predictor
+
+      - name: "Save builds to cache"
+        uses: actions/cache/save@v4
+        with:
+          path: labeler-build
+          key: 'github-ml-labeler'

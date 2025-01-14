@@ -31,7 +31,7 @@ env:
 
 jobs:
   predict-pulls:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: "Check out the 'jeffhandley/github-ml-labeler' repo"
@@ -50,7 +50,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '9.0.x'
 
       - name: "Run Predictor"
         run: |
