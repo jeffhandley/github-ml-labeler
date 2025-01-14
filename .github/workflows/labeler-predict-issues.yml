@@ -13,15 +13,18 @@ on:
         description: "The optional cache key suffix to use for loading the model (defaults to repository name)"
         type: string
 
+env:
+  ISSUE_NUMBERS: ${{ inputs.issue_numbers || github.event.issue.number }}
+
 jobs:
   predict-issues:
-    if: ${{ inputs.issue_numbers || github.event.issue.number }}
+    if: ${{ github.repository == 'jeffhandley/github-ml-labeler' && env.ISSUE_NUMBERS }}
     permissions:
       issues: write
     uses: jeffhandley/github-ml-labeler/.github/workflows/predict-issues.yml@main
     with:
       model_cache_key: ${{ inputs.model_cache_key || github.repository }}
-      issue_numbers: ${{ inputs.issue_numbers || github.event.issue.number }}
+      issue_numbers: ${{ env.ISSUE_NUMBERS }}
       label_prefix: 'area-'
       threshold: 0.40
       default_label: 'needs-area-label'

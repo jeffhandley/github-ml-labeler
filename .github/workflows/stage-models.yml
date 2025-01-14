@@ -1,7 +1,7 @@
-name: "Labeler: Train Models"
+name: "Stage Models"
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       download_issues:
         description: "Issues: Download Data"
@@ -22,6 +22,15 @@ on:
         description: "Pulls: Test Model"
         type: boolean
 
+      label_prefix:
+        description: "Label Prefix"
+        type: string
+        required: true
+      threshold:
+        description: "The minimum confidence score for a label prediction"
+        type: number
+        required: true
+
       data_limit:
         description: "Max number of items to include in the model"
         type: number
@@ -33,9 +42,17 @@ on:
         description: "The org/repo to download data from (defaults to current repository)"
         type: string
       cache_key_suffix:
-        description: "The optional cache key suffix to use for staging data/models (defaults to repository name)"
+        description: "The optional cache key suffix to use for staging data/models (defaults to 'staging')"
         type: string
         default: 'staging'
+
+env:
+  GH_TOKEN: ${{ inputs.github_token || github.token }}
+  REPOSITORY: ${{ inputs.repository || github.repository }}
+  CACHE_KEY_SUFFIX: ${{ inputs.cache_key_suffix || 'staging' }}
+  DATA_LIMIT: ${{ inputs.data_limit && fromJSON(inputs.data_limit) || 0 }}
+  LABEL_PREFIX: ${{ inputs.label_prefix }}
+  THRESHOLD: ${{ inputs.threshold }}
 
 jobs:
   labeler-download-issues:
@@ -45,11 +62,11 @@ jobs:
       actions: write
     uses: jeffhandley/github-ml-labeler/.github/workflows/download-issues.yml@main
     with:
-      github_token: ${{ inputs.github_token || github.token }}
-      repository: ${{ inputs.repository || github.repository }}
-      data_cache_key: ${{ inputs.cache_key_suffix }}
-      issue_limit: ${{ inputs.data_limit && fromJSON(inputs.data_limit) || 0 }}
-      label_prefix: 'area-'
+      github_token: ${{ env.GH_TOKEN }}
+      repository: ${{ env.REPOSITORY }}
+      data_cache_key: ${{ env.CACHE_KEY_SUFFIX }}
+      issue_limit: ${{ env.DATA_LIMIT }}
+      label_prefix: ${{ env.LABEL_PREFIX }}
 
   labeler-train-issues:
     needs: labeler-download-issues
@@ -58,19 +75,19 @@ jobs:
       actions: write
     uses: jeffhandley/github-ml-labeler/.github/workflows/train-issues.yml@main
     with:
-      data_cache_key: ${{ inputs.cache_key_suffix || github.repository }}
-      model_cache_key: ${{ inputs.cache_key_suffix || github.repository }}
+      data_cache_key: ${{ env.CACHE_KEY_SUFFIX }}
+      model_cache_key: ${{ env.CACHE_KEY_SUFFIX }}
 
   labeler-test-issues:
     needs: labeler-train-issues
     if: ${{ inputs.test_issues && always() && (needs.labeler-train-issues.result == 'success' || needs.labeler-train-issues.result == 'skipped') }}
     uses: jeffhandley/github-ml-labeler/.github/workflows/test-issues.yml@main
     with:
-      github_token: ${{ github.token }}
-      repository: ${{ inputs.repository || github.repository }}
-      model_cache_key: ${{ inputs.cache_key_suffix || github.repository }}
-      label_prefix: 'area-'
-      threshold: 0.40
+      github_token: ${{ env.GH_TOKEN }}
+      repository: ${{ env.REPOSITORY }}
+      model_cache_key: ${{ env.CACHE_KEY_SUFFIX }}
+      label_prefix: ${{ env.LABEL_PREFIX }}
+      threshold: ${{ env.THRESHOLD }}
 
   labeler-download-pulls:
     if: ${{ inputs.download_pulls }}
@@ -79,11 +96,11 @@ jobs:
       actions: write
     uses: jeffhandley/github-ml-labeler/.github/workflows/download-pulls.yml@main
     with:
-      github_token: ${{ inputs.github_token || github.token }}
-      repository: ${{ inputs.repository || github.repository }}
-      data_cache_key: ${{ inputs.cache_key_suffix }}
-      pull_limit: ${{ inputs.data_limit && fromJSON(inputs.data_limit) || 0 }}
-      label_prefix: 'area-'
+      github_token: ${{ env.GH_TOKEN }}
+      repository: ${{ env.REPOSITORY }}
+      data_cache_key: ${{ env.CACHE_KEY_SUFFIX }}
+      pull_limit: ${{ env.DATA_LIMIT }}
+      label_prefix: ${{ env.LABEL_PREFIX }}
 
   labeler-train-pulls:
     needs: labeler-download-pulls
@@ -92,16 +109,16 @@ jobs:
       actions: write
     uses: jeffhandley/github-ml-labeler/.github/workflows/train-pulls.yml@main
     with:
-      data_cache_key: ${{ inputs.cache_key_suffix || github.repository }}
-      model_cache_key: ${{ inputs.cache_key_suffix || github.repository }}
+      data_cache_key: ${{ env.CACHE_KEY_SUFFIX }}
+      model_cache_key: ${{ env.CACHE_KEY_SUFFIX }}
 
   labeler-test-pulls:
     needs: labeler-train-pulls
     if: ${{ inputs.test_pulls && always() && (needs.labeler-train-pulls.result == 'success' || needs.labeler-train-pulls.result == 'skipped') }}
     uses: jeffhandley/github-ml-labeler/.github/workflows/test-pulls.yml@main
     with:
-      github_token: ${{ github.token }}
-      repository: ${{ inputs.repository || github.repository }}
-      model_cache_key: ${{ inputs.cache_key_suffix || github.repository }}
-      label_prefix: 'area-'
-      threshold: 0.40
+      github_token: ${{ env.GH_TOKEN }}
+      repository: ${{ env.REPOSITORY }}
+      model_cache_key: ${{ env.CACHE_KEY_SUFFIX }}
+      label_prefix: ${{ env.LABEL_PREFIX }}
+      threshold: ${{ env.THRESHOLD }}

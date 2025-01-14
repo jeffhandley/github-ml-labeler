@@ -1,4 +1,4 @@
-name: "Labeler: Promote Issues Model"
+name: "Promote Issues Model"
 
 on:
   workflow_call:
@@ -23,7 +23,7 @@ permissions:
   actions: write
 
 jobs:
-  promote-issue-model:
+  promote-issues:
     runs-on: ubuntu-latest
 
     steps:

@@ -14,15 +14,18 @@ on:
         description: "The optional cache key suffix to use for loading the model (defaults to repository name)"
         type: string
 
+env:
+  PULL_NUMBERS: ${{ inputs.pull_numbers || github.event.number }}
+
 jobs:
   predict-pulls:
-    if: ${{ inputs.pull_numbers || github.event.number }}
+    if: ${{ github.repository == 'jeffhandley/github-ml-labeler' && env.PULL_NUMBERS }}
     permissions:
       pull-requests: write
     uses: jeffhandley/github-ml-labeler/.github/workflows/predict-pulls.yml@main
     with:
       model_cache_key: ${{ inputs.model_cache_key || github.repository }}
-      pull_numbers: ${{ inputs.pull_numbers || github.event.number }}
+      pull_numbers:
       label_prefix: 'area-'
       threshold: 0.40
       default_label: 'needs-area-label'
