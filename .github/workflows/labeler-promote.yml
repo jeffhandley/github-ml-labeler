@@ -1,6 +1,9 @@
 name: "Labeler: Promote Models"
 
+
 on:
+  # Dispatched via the Actions UI, promotes the staged models from
+  # a staging slot into the prediction environment
   workflow_dispatch:
     inputs:
       promote_issues:

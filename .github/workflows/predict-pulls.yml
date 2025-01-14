@@ -1,4 +1,4 @@
-name: "Labeler: Predict Pull Labels"
+name: "Predict Pull Labels"
 
 on:
   workflow_call:
