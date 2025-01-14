@@ -42,12 +42,8 @@ env:
   GH_TOKEN: ${{ github.token }}
 
 jobs:
-  build-labeler:
-    uses: jeffhandley/github-ml-labeler/.github/workflows/build-apps.yml@main
-
   download-pulls:
     runs-on: ubuntu-24.04
-    needs: build-labeler
     steps:
       - name: "Restore the labeler apps from cache"
         id: restore-apps

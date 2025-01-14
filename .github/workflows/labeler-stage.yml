@@ -8,21 +8,27 @@ on:
       download_issues:
         description: "Issues: Download Data"
         type: boolean
+        default: true
       train_issues:
         description: "Issues: Train Model"
         type: boolean
+        default: true
       test_issues:
         description: "Issues: Test Model"
         type: boolean
+        default: true
       download_pulls:
         description: "Pulls: Download Data"
         type: boolean
+        default: true
       train_pulls:
         description: "Pulls: Train Model"
         type: boolean
+        default: true
       test_pulls:
         description: "Pulls: Test Model"
         type: boolean
+        default: true
 
       data_limit:
         description: "Max number of items to include in the model"

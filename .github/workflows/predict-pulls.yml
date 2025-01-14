@@ -30,12 +30,8 @@ env:
   MODEL_CACHE_KEY: github-ml-labeler/pulls/model/${{ inputs.model_cache_key || github.repository }}
 
 jobs:
-  build-labeler:
-    uses: jeffhandley/github-ml-labeler/.github/workflows/build-apps.yml@main
-
   predict-pulls:
     runs-on: ubuntu-24.04
-    needs: build-labeler
     steps:
       - name: "Restore the labeler apps from cache"
         id: restore-apps
