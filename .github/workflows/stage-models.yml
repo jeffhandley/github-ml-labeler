@@ -74,8 +74,8 @@ jobs:
       model_cache_key: ${{ inputs.cache_key_suffix }}
 
   labeler-test-issues:
-    needs: labeler-train-issues
-    if: ${{ inputs.test_issues && always() && (needs.labeler-train-issues.result == 'success' || needs.labeler-train-issues.result == 'skipped') }}
+    needs: [labeler-download-issues, labeler-train-issues]
+    if: ${{ inputs.test_issues && always() && (needs.labeler-download-issues.result == 'success' || needs.labeler-download-issues.result == 'skipped') && (needs.labeler-train-issues.result == 'success' || needs.labeler-train-issues.result == 'skipped') }}
     uses: jeffhandley/github-ml-labeler/.github/workflows/test-issues.yml@main
     with:
       github_token: ${{ inputs.github_token || github.token }}
@@ -109,8 +109,8 @@ jobs:
       model_cache_key: ${{ inputs.cache_key_suffix }}
 
   labeler-test-pulls:
-    needs: labeler-train-pulls
-    if: ${{ inputs.test_pulls && always() && (needs.labeler-train-pulls.result == 'success' || needs.labeler-train-pulls.result == 'skipped') }}
+    needs: [labeler-download-pulls, labeler-train-pulls]
+    if: ${{ inputs.test_pulls && always() && (needs.labeler-download-pulls.result == 'success' || needs.labeler-download-pulls.result == 'skipped') && (needs.labeler-train-pulls.result == 'success' || needs.labeler-train-issues.result == 'skipped') }}
     uses: jeffhandley/github-ml-labeler/.github/workflows/test-pulls.yml@main
     with:
       github_token: ${{ inputs.github_token || github.token }}
