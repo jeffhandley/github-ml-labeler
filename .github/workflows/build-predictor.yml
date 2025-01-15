@@ -18,7 +18,7 @@ jobs:
           fail-on-cache-miss: false
 
       - name: "Show instructions for rebuilding"
-        if: ${{ steps.restore-predictor-app.outputs.cache-hit }}
+        if: ${{ steps.restore-predictor-app.outputs.cache-hit == 'true' }}
         run: echo "To rebuild the predictor app, delete the 'github-ml-labeler/predictor-app' action cache entry and rerun the 'build-predictor' workflow."
 
     outputs:
@@ -45,4 +45,4 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: labeler-build/Predictor
-          key: 'github-ml-labeler/apps/predictor-app'
+          key: 'github-ml-labeler/predictor-app'
