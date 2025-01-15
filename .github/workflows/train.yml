@@ -1,4 +1,4 @@
-name: "Stage Models"
+name: "Train Models"
 
 on:
   workflow_call:
