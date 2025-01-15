@@ -10,8 +10,6 @@ on:
 
 jobs:
   build-predictor:
-    # Skip execution if running in a fork
-    if: ${{ github.repository == 'jeffhandley/github-ml-labeler' }}
     permissions:
       actions: write
     uses: jeffhandley/github-ml-labeler/.github/workflows/build-predictor.yml@main
