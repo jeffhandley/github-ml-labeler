@@ -4,20 +4,21 @@ on:
   workflow_call:
     inputs:
       data_cache_key:
-        description: "The optional cache key suffix to use for loading the data (defaults to repository name)"
+        description: "The optional cache key suffix to use for loading the data"
         type: string
       model_cache_key:
-        description: "The optional cache key suffix to use for saving the model (defaults to repository name)"
+        description: "The cache key suffix to use for saving the model"
         type: string
+        required: true
 
 permissions:
   actions: write
 
 env:
   DATA_PATH: labeler-cache/pull-data.tsv
-  DATA_CACHE_KEY: github-ml-labeler/pulls/data/${{ inputs.data_cache_key || inputs.repository || github.repository }}
+  DATA_CACHE_KEY: github-ml-labeler/pulls/data${{ inputs.data_cache_key && format('/{0}', inputs.data_cache_key) }}
   MODEL_PATH: labeler-cache/pull-model.zip
-  MODEL_CACHE_KEY: github-ml-labeler/pulls/model/${{ inputs.model_cache_key || inputs.repository || github.repository }}
+  MODEL_CACHE_KEY: github-ml-labeler/pulls/model/${{ inputs.model_cache_key }}
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -31,7 +32,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: "9.0.x"
 
       # Restore from cache after checkout out the repo to prevent
       # the restored files from getting removed during checkout
@@ -52,7 +53,7 @@ jobs:
           fail-on-cache-miss: false
 
       - name: "Cache backup of existing model"
-        if: ${{ steps.check-cache.outputs.cache-hit == 'true' }}
+        if: ${{ steps.check-cache.outputs.cache-hit }}
         id: backup-model
         uses: actions/cache/save@v4
         with:
@@ -60,7 +61,7 @@ jobs:
           key: ${{ env.MODEL_CACHE_KEY }}/backup
 
       - name: "Delete existing model cache entry and local copy"
-        if: ${{ steps.check-cache.outputs.cache-hit == 'true' }}
+        if: ${{ steps.check-cache.outputs.cache-hit }}
         run: |
             gh api --method DELETE \
               -H "Accept: application/vnd.github+json" \

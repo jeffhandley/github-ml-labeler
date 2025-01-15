@@ -28,8 +28,13 @@ on:
         description: "Comma-separated list of retry delays in seconds"
         type: string
       data_cache_key:
-        description: "The optional cache key suffix to use for saving the data (defaults to repository name)"
+        description: "The optional cache key suffix to use for saving the data"
         type: string
+      backup_cache_key:
+        description: "The cache key suffix to use for backing up the last downloaded data"
+        type: string
+        required: true
+        default: "backup"
 
 permissions:
   issues: read
@@ -37,8 +42,8 @@ permissions:
 
 env:
   DATA_PATH: labeler-cache/issue-data.tsv
-  DATA_CACHE_KEY: github-ml-labeler/issues/data/${{ inputs.data_cache_key || inputs.repository || github.repository }}
-  BACKUP_CACHE_KEY: github-ml-labeler/issues/data/${{ inputs.data_cache_key || inputs.repository || github.repository }}/backup
+  DATA_CACHE_KEY: github-ml-labeler/issues/data${{ inputs.data_cache_key && format('/{0}', inputs.data_cache_key) }}
+  BACKUP_CACHE_KEY: github-ml-labeler/issues/data${{ inputs.data_cache_key && format('/{0}', inputs.data_cache_key) }}/${{ inputs.backup_cache_key }}
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -56,7 +61,7 @@ jobs:
 
       - name: "Check for existing backup cache entry"
         id: check-backup
-        if: ${{ steps.check-cache.outputs.cache-hit == 'true' }}
+        if: ${{ steps.check-cache.outputs.cache-hit }}
         uses: actions/cache/restore@v4
         with:
           path: ${{ env.DATA_PATH }}
@@ -65,7 +70,7 @@ jobs:
           fail-on-cache-miss: false
 
       - name: "Abort if backup cache entry already exists"
-        if: ${{ steps.check-backup.outputs.cache-hit == 'true' }}
+        if: ${{ steps.check-backup.outputs.cache-hit }}
         run: |
             echo "Cannot save backup of existing data. Backup cache key already exists."
             echo "Key: ${{ env.BACKUP_CACHE_KEY }}"
@@ -73,7 +78,7 @@ jobs:
             exit 1
 
       - name: "Cache backup of existing data"
-        if: ${{ steps.check-cache.outputs.cache-hit == 'true' }}
+        if: ${{ steps.check-cache.outputs.cache-hit }}
         id: backup-data
         uses: actions/cache/save@v4
         with:
@@ -81,7 +86,7 @@ jobs:
           key: ${{ env.BACKUP_CACHE_KEY }}
 
       - name: "Delete existing cache entry"
-        if: ${{ steps.check-cache.outputs.cache-hit == 'true' }}
+        if: ${{ steps.check-cache.outputs.cache-hit }}
         run: |
             gh api --method DELETE \
               -H "Accept: application/vnd.github+json" \
@@ -97,7 +102,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: "9.0.x"
 
       - name: "Run Downloader"
         run: |

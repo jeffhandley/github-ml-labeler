@@ -43,7 +43,7 @@ on:
       cache_key_suffix:
         description: "The cache key suffix to use for staging data/models"
         type: string
-        default: 'staging'
+        default: "staging"
 
 jobs:
   labeler-stage-models:
@@ -63,5 +63,5 @@ jobs:
       github_token: ${{ inputs.github_token }}
       repository: ${{ inputs.repository }}
       cache_key_suffix: ${{ inputs.cache_key_suffix }}
-      label_prefix: 'area-'
+      label_prefix: "area-"
       threshold: 0.40

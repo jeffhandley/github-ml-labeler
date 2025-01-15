@@ -1,0 +1,19 @@
+name: "Labeler: Build Predictor App"
+
+on:
+  # Allow dispatching the workflow via the Actions UI
+  workflow_dispatch:
+    inputs:
+      rebuild:
+        description: "Force a rebuild of the app even if it's already cached"
+        type: boolean
+
+jobs:
+  build-predictor:
+    # Skip execution if running in a fork
+    if: ${{ github.repository == 'jeffhandley/github-ml-labeler' }}
+    permissions:
+      actions: write
+    uses: jeffhandley/github-ml-labeler/.github/workflows/build-predictor.yml@main
+    with:
+      rebuild: ${{ inputs.rebuild }}
