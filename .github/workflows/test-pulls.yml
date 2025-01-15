@@ -23,12 +23,13 @@ on:
         description: "Max number of items to include in the test"
         type: number
       model_cache_key:
-        description: "The optional cache key suffix to use for loading the model (defaults to repository name)"
+        description: "The cache key suffix to use for loading the model"
         type: string
+        required: true
 
 env:
   MODEL_PATH: labeler-cache/pull-model.zip
-  MODEL_CACHE_KEY: github-ml-labeler/pulls/model/${{ inputs.model_cache_key || inputs.repository || github.repository }}
+  MODEL_CACHE_KEY: github-ml-labeler/pulls/model/${{ inputs.model_cache_key }}
 
 jobs:
   test-pulls:
@@ -41,7 +42,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: "9.0.x"
 
       # Restore from cache after checkout out the repo to prevent
       # the restored files from getting removed during checkout

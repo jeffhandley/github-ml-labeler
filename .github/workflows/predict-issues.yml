@@ -19,15 +19,18 @@ on:
         description: "Default Label (leave blank for no default label)"
         type: string
       model_cache_key:
-        description: "The optional cache key suffix to use for loading the model (defaults to repository name)"
+        description: "The cache key suffix to use for loading the model"
         type: string
+        required: true
+        default: "LIVE"
 
 permissions:
   issues: write
 
 env:
   MODEL_PATH: labeler-cache/issue-model.zip
-  MODEL_CACHE_KEY: github-ml-labeler/issues/model/${{ inputs.model_cache_key || github.repository }}
+  MODEL_CACHE_KEY: github-ml-labeler/issues/model/${{ inputs.model_cache_key }}
+  BUILD_CACHE_KEY: "github-ml-labeler/predictor-app"
 
 jobs:
   predict-issues:
@@ -38,7 +41,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: labeler-build/Predictor
-          key: 'github-ml-labeler/predictor-app'
+          key: ${{ env.BUILD_CACHE_KEY }}
           fail-on-cache-miss: true
 
       - name: "Restore model from cache"

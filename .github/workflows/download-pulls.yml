@@ -28,8 +28,12 @@ on:
         description: "Comma-separated list of retry delays in seconds"
         type: string
       data_cache_key:
-        description: "The optional cache key suffix to use for saving the data (defaults to repository name)"
+        description: "The optional cache key suffix to use for saving the data"
         type: string
+      backup_cache_key:
+        description: "The cache key suffix to use for backing up the last downloaded data"
+        type: string
+        default: "backup"
 
 permissions:
   pull-requests: read
@@ -37,8 +41,8 @@ permissions:
 
 env:
   DATA_PATH: labeler-cache/pull-data.tsv
-  DATA_CACHE_KEY: github-ml-labeler/pulls/data/${{ inputs.data_cache_key || inputs.repository || github.repository }}
-  BACKUP_CACHE_KEY: github-ml-labeler/pulls/data/${{ inputs.data_cache_key || inputs.repository || github.repository }}/backup
+  DATA_CACHE_KEY: github-ml-labeler/pulls/data${{ inputs.data_cache_key && format('/{0}', inputs.data_cache_key) }}
+  BACKUP_CACHE_KEY: github-ml-labeler/pulls/data${{ inputs.data_cache_key && format('/{0}', inputs.data_cache_key) }}/${{ inputs.backup_cache_key }}
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -97,7 +101,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: "9.0.x"
 
       - name: "Run Downloader"
         run: |

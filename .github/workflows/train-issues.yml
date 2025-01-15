@@ -4,20 +4,21 @@ on:
   workflow_call:
     inputs:
       data_cache_key:
-        description: "The optional cache key suffix to use for loading the data (defaults to repository name)"
+        description: "The optional cache key suffix to use for loading the data"
         type: string
       model_cache_key:
-        description: "The optional cache key suffix to use for saving the model (defaults to repository name)"
+        description: "The cache key suffix to use for saving the model"
         type: string
+        required: true
 
 permissions:
   actions: write
 
 env:
   DATA_PATH: labeler-cache/issue-data.tsv
-  DATA_CACHE_KEY: github-ml-labeler/issues/data/${{ inputs.data_cache_key || inputs.repository || github.repository }}
+  DATA_CACHE_KEY: github-ml-labeler/issues/data${{ inputs.data_cache_key && format('/{0}', inputs.data_cache_key) }}
   MODEL_PATH: labeler-cache/issue-model.zip
-  MODEL_CACHE_KEY: github-ml-labeler/issues/model/${{ inputs.model_cache_key || inputs.repository || github.repository }}
+  MODEL_CACHE_KEY: github-ml-labeler/issues/model/${{ inputs.model_cache_key }}
   GH_TOKEN: ${{ github.token }}
 
 jobs:
@@ -31,7 +32,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: "9.0.x"
 
       # Restore from cache after checkout out the repo to prevent
       # the restored files from getting removed during checkout

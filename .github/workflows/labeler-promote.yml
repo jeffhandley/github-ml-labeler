@@ -15,14 +15,13 @@ on:
         type: boolean
         required: true
       model_cache_key:
-        description: "The cache key suffix to promote"
+        description: "The cache key suffix to promote into the 'LIVE' cache"
         type: string
         required: true
-        default: 'staging'
+        default: "staging"
       backup_cache_key:
         description: "The cache key suffix to use for backing up the currently promoted model"
         type: string
-        required: true
         default: "backup"
 
 permissions:
