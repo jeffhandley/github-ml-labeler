@@ -39,7 +39,7 @@ jobs:
               /repos/${{ github.repository }}/actions/caches?key=${{ env.BUILD_CACHE_KEY }}
 
     outputs:
-      needs-build: ${{ steps.restore-predictor-app.outputs.cache-hit == 'false' || inputs.rebuild }}
+      needs-build: ${{ steps.restore-predictor-app.outputs.cache-hit != 'true' || inputs.rebuild }}
 
   build-predictor:
     runs-on: ubuntu-24.04

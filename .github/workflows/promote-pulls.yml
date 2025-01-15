@@ -45,7 +45,7 @@ jobs:
             exit 1
 
       - name: "Restore existing promotion cache entry if one exists"
-        if: ${{ steps.check-backup.outputs.cache-hit == 'false'}}
+        if: ${{ steps.check-backup.outputs.cache-hit != 'true'}}
         id: check-promotion
         uses: actions/cache/restore@v4
         with:
