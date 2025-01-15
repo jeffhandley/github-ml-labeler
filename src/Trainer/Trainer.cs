@@ -52,7 +52,7 @@ static void CreateModel(string dataPath, string modelPath, ModelType type)
 
     var loader = mlContext.Data.CreateTextLoader(textLoaderOptions);
     var data = loader.Load(dataPath);
-    var split = mlContext.Data.TrainTestSplit(data, testFraction: 0.1);
+    var split = mlContext.Data.TrainTestSplit(data, testFraction: 0.2);
 
     Console.WriteLine("Building pipeline...");
 
