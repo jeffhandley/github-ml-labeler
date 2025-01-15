@@ -17,8 +17,8 @@ on:
       model_cache_key:
         description: "The cache key suffix to promote"
         type: string
-        default: 'staging'
         required: true
+        default: 'staging'
       backup_cache_key:
         description: "The cache key suffix to use for backing up the currently promoted model"
         type: string
