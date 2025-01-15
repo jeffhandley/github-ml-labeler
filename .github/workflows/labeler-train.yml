@@ -1,4 +1,4 @@
-name: "Labeler: Stage Models"
+name: "Labeler: Train Models"
 
 on:
   # Dispatched via the Actions UI, stages new models for promotion consideration
@@ -47,7 +47,7 @@ on:
         default: "staging"
 
 jobs:
-  labeler-stage-models:
+  labeler-train:
     permissions:
       issues: read
       pull-requests: read
