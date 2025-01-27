@@ -49,13 +49,12 @@ jobs:
   download-pulls:
     runs-on: ubuntu-24.04
     steps:
-      - name: "Check cache for existing data"
+      - name: "Restore existing data from cache"
         id: check-cache
         uses: actions/cache/restore@v4
         with:
           path: ${{ env.DATA_PATH }}
           key: ${{ env.DATA_CACHE_KEY }}
-          lookup-only: true
           fail-on-cache-miss: false
 
       - name: "Check for existing backup cache entry"
