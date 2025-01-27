@@ -27,7 +27,7 @@ jobs:
           fail-on-cache-miss: false
 
       - name: "Show instructions for rebuilding"
-        if: ${{ steps.restore-predictor-app.outputs.cache-hit == 'true' && inputs.rebuild }}
+        if: ${{ steps.restore-predictor-app.outputs.cache-hit == 'true' && !inputs.rebuild }}
         run: echo "To rebuild the predictor app, delete the '${{ env.BUILD_CACHE_KEY }}' action cache entry or rerun the 'build-predictor' workflow with 'rebuild' set to true."
 
       - name: "Delete existing cache entry"
