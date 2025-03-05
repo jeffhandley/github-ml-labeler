@@ -18,7 +18,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: labeler-build/Predictor
-          key: issue-labeler/predictor-app
+          key: github-ml-labeler/predictor-app
           fail-on-cache-miss: true
 
   restore-issue-model:
